@@ -40,9 +40,9 @@ class ResumeAPIView(APIView):
         """
         Create a new resume.
         """
-
+        print(request.data)
         file_name = request.data.get("file")
-        user_id = request.data.get("user")
+        user_id = request.data.get("user_id")
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
@@ -113,14 +113,20 @@ class GenerateResume(APIView):
 
     def post(self, request):
         """ take a user id and a job id, return an ai generated resume base on users master resume """
+        print(request.data)
         job_id = request.data.get("job_id")
         user_id = request.data.get("user_id")
         try:
             user = User.objects.get(id=user_id)
             job = Job.objects.get(id=job_id)
             resume = Resume.objects.get(user=user, is_master=True)
-        except (User.DoesNotExist, Resume.DoesNotExist, Job.DoesNotExist):
+        except User.DoesNotExist:
             return Response({"details": "No user for user's id"}, status=status.HTTP_400_BAD_REQUEST)
+        except Resume.DoesNotExist:
+            return Response({"details": "User does not have a master resume"}, status=status.HTTP_400_BAD_REQUEST)
+        except Job.DoesNotExist:
+            return Response({"details": "No job for jobs's id"}, status=status.HTTP_400_BAD_REQUEST)
+
         resume_serializer = ResumeSerializer(resume)
         job_serializer = JobSerializer(job)
         tailored_resume = generate_resume(job_serializer.data["job_description"],

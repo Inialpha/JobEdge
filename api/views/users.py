@@ -55,7 +55,19 @@ class UserAPIView(APIView):
         user.delete()
         return Response({"message": "User deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
-
+class ProfileView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        user = request.user
+        data = {
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "is_staff": user.is_staff,
+            "has_master_resume": user.has_master_resume
+        }
+        return Response(data)
 
 from authemail.views import Signup
 class CustomSignup(Signup):
