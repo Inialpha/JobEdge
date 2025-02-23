@@ -1,45 +1,52 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.shortcuts import get_object_or_404
-from django.core.validators import URLValidator, validate_email
-from django.core.exceptions import ValidationError
-from ..models import Resume, Job, User
-from ..serializers.resume import ResumeSerializer
-from file_reader import File
-from ai import ai, generate_resume
-from django.db.models import Q
-from ..serializers.job import JobSerializer 
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from fastapi import APIRouter, Depends, HTTPException
+from schemas.resume import ResumeCreate, ResumeUpdate, ResumeResponse
+from models.resume import Resume
+from storage, gey_db import DBStorage
+import uuid
 
-class ResumeAPIView(APIView):
-    """
-    API View for managing resumes.
-    """
+router = APIRouter(prefix="/resumes", tags=["Resumes"])
 
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+@router.post("/", response_model=ResumeResponse)
+def create_resume(resume: ResumeCreate, db: DBStorage = Depends(get_db)):
+    new_resume = Resume(**resume.dict())
+    db.new(new_resume)
+    db.save()
+    return new_resume
 
-    def get(self, request, pk=None):
-        """
-        Retrieve a single resume by ID or list all resumes.
-        """
-        if pk:
-            # Fetch a single resume
-            resume = get_object_or_404(Resume, pk=pk)
-            serializer = ResumeSerializer(resume)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            # Fetch all resumes
-            resumes = Resume.objects.all()
-            serializer = ResumeSerializer(resumes, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+@router.get("/{resume_id}", response_model=ResumeResponse)
+def get_resume(resume_id: uuid.UUID, db: DBStorage = Depends(get_db)):
+    resume = db.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    return resume
 
+@router.patch("/{resume_id}", response_model=ResumeResponse)
+def update_resume(resume_id: uuid.UUID, resume_data: ResumeUpdate, db: DBStorage = Depends(get_db)):
+    resume = db.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    for key, value in resume_data.dict(exclude_unset=True).items():
+        setattr(resume, key, value)
+
+    db.save()
+    return resume
+
+@router.delete("/{resume_id}")
+def delete_resume(resume_id: uuid.UUID, db: DBStorage = Depends(get_db)):
+    resume = db.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    db.delete(resume)
+    db.save()
+    return {"message": "Resume deleted"}
+
+"""
     def post(self, request):
-        """
+        
         Create a new resume.
-        """
+        
         print(request.data)
         file_name = request.data.get("file")
         user_id = request.data.get("user_id")
@@ -89,9 +96,9 @@ class ResumeAPIView(APIView):
             return Response({"error": "An error occured"}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk):
-        """
+    
         Update an existing resume.
-        """
+        
         resume = get_object_or_404(Resume, pk=pk)
         serializer = ResumeSerializer(resume, data=request.data)
         if serializer.is_valid():
@@ -100,9 +107,9 @@ class ResumeAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        """
+        
         Delete a resume.
-        """
+        
         resume = get_object_or_404(Resume, pk=pk)
         resume.delete()
         return Response({"message": "Resume deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
@@ -112,7 +119,7 @@ class GenerateResume(APIView):
         pass
 
     def post(self, request):
-        """ take a user id and a job id, return an ai generated resume base on users master resume """
+        take a user id and a job id, return an ai generated resume base on users master resume 
         print(request.data)
         job_id = request.data.get("job_id")
         user_id = request.data.get("user_id")
@@ -156,12 +163,12 @@ class GenerateResume(APIView):
 
 
 def generate_resume_text(instance):
-    """
+
     Generates a formatted resume-like text from the given instance.
     
     :param instance: A dictionary containing the instance data.
     :return: A formatted text string.
-    """
+    
     text_parts = []
     
     # Name
@@ -228,3 +235,5 @@ def generate_resume_text(instance):
         text_parts.append(", ".join(languages))
 
     return "\n".join(text_parts)
+
+    """
