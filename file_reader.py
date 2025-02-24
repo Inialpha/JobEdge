@@ -1,26 +1,30 @@
 import filetype
-import textract
 import pymupdf
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 def use_pymupdf(filename):
-    doc = pymupdf.open(filename)
+    doc = pymupdf.open(stream=filename)
     text = ""
     for page in doc:
         text += page.get_text()
     return text
 
-def use_textract(filename):
-    try:
-        text = textract.process(filename)
-        return text.decode('utf-8')
-    except textract.exceptions.ShellError:
-        return None
+#def use_textract(filename):
+#    try:
+#        text = textract.process(filename)
+#        return text.decode('utf-8')
+#    except textract.exceptions.ShellError:
+#        return None
 
 class File:
     """ A file class """
     def __init__(self, filename):
         """ initialize a file """
-        self.name = filename
+        if isinstance(filename, InMemoryUploadedFile):
+            self.name = BytesIO(filename.read())
+        else:
+            self.name = filename
         self.type = self._get_type()
         self.content = ""
         self.extention = ""
@@ -43,7 +47,8 @@ class File:
             return use_pymupdf(self.name)
 
         if self.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-            return use_textract(self.name)
+            pass
+            #return use_textract(self.name)
 
 
 
