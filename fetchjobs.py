@@ -1,5 +1,6 @@
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
+from google_jobs import get_google_jobs
 
 
 def fetch_jobs(page, num_page):
@@ -25,10 +26,9 @@ def fetch_jobs(page, num_page):
 
 def structure(job):
     def get_timestamp(time_str):
+        dt = datetime.fromisoformat(time_str.replace("Z", "+00:00"))
 
-    dt = datetime.fromisoformat(time_str.replace("Z", "+00:00"))
-
-    return int(dt.timestamp())
+        return int(dt.timestamp())
 
     print(job.get("job_title"))
     job['job_id_from_source'] = job.get('job_id')
@@ -43,18 +43,69 @@ def structure(job):
 from api.serializers.job import JobSerializer
 num_pages = 20
 
-for page in range(5):
-    jobs = fetch_jobs(page * num_pages + 1, num_pages)
+def get_rapidapi_jobs():
+    for page in range(5):
+        jobs = fetch_jobs(page * num_pages + 1, num_pages)
 
-    for job in jobs:
-        try:
-            structured_job = structure(job)
+        for job in jobs:
+            try:
+                structured_job = structure(job)
+                serializer = JobSerializer(data=structured_job)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    print("serializer error", serializer.errors)
 
-            serializer = JobSerializer(data=job)
-            if serializer.is_valid():
-                serializer.save()
-            else:
-                print("serializer error", serializer.errors)
+            except Exception as e:
+                print("error", e)
 
-        except Exception as e:
-            print("error", e)
+
+
+def structure_google_job(job):
+    def get_timestamp(time_str):
+        dt = datetime.fromisoformat(time_str.replace("Z", "+00:00"))
+        return int(dt.timestamp())
+
+    print(job.get("title"))
+    job['job_title'] = job.get('title')
+    job['job_description'] = job.get('description')
+    job['job_location'] = job.get('location')
+    job['job_id_from_source'] = job.get('job_id')
+    job['job_google_link'] = job.get('share_link', '')
+    job['employer_name'] = job.get('company_name', '')
+    job['employer_logo'] = job.get('thumbnail', '')
+    job['job_publisher'] = "Google"
+    job['job_apply_links'] = job.get('apply_options')
+    job['job_apply_link'] = job.get('apply_options')[0].get('link')
+
+    job['job_employment_type'] = job.get('detected_extensions', {}).get("schedule_type", "").lower()
+    job['job_employment_types'] = [job.get('detected_extensions').get("schedule_type").lower()]
+    job_highlights = {item["title"]: item["items"] for item in job.get("job_highlights", {})}
+    job["job_qualifications"] = job_highlights.get("Qualifications")
+    job["job_responsibilities"] = job_highlights.get("Responsibilities")
+    job["Benefits"] = job_highlights.get("Benefits", [])
+    time_days_ago = job.get('detected_extensions').get("posted_at", "").split(" ")
+
+    try:
+        print(time_days_ago)
+        timestamp = int(time_days_ago[0])
+        job["job_posted_at_timestamp"] = str(datetime.now() - timedelta(days=timestamp))
+    except (IndexError, ValueError):
+        pass
+    return job
+
+
+jobs = get_google_jobs()
+print(jobs[1])
+for job in jobs:
+    try:
+        structured_job = structure_google_job(job)
+        print("structured.......")
+        serializer = JobSerializer(data=structured_job)
+        if serializer.is_valid():
+            print("valid.......")
+            serializer.save()
+        else:
+            print("serializer error", serializer.errors)
+    except Exception as e:
+        print("error", e)
