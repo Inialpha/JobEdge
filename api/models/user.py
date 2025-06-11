@@ -13,7 +13,7 @@ class User(EmailAbstractUser, PermissionsMixin):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=256)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=128)
+    password = models.CharField(max_length=128, null=True, blank=True)
     is_staff = models.BooleanField(default=False)
     has_master_resume = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

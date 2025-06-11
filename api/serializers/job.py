@@ -1,8 +1,48 @@
 from rest_framework import serializers
 
+from ..models.job import Job
 
-class JobSerializer(serializers.Serializer):
-    id = serializers.CharField(read_only=True)
+class JobSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Job
+        fields = [
+            "id",
+            "job_id_from_source",
+            "job_google_link",
+            "job_publisher",
+            "job_title",
+            "job_description",
+            "job_qualifications",
+            "job_responsibilities",
+            "job_benefits",
+            "employer_name",
+            "employer_logo",
+            "employer_website",
+            "job_location",
+            "job_city",
+            "job_state",
+            "job_country",
+            "job_is_remote",
+            "job_employment_type",
+            "job_employment_types",
+            "job_salary",
+            "job_min_salary",
+            "job_max_salary",
+            "job_salary_currency",
+            "job_salary_period",
+            "job_apply_link",
+            "job_apply_links",
+            "job_apply_is_direct",
+            "job_posted_at_timestamp",
+            "job_valid_through",
+            "job_last_checked",
+            "is_active",
+        ]
+
+
+
+
+    """id = serializers.CharField(read_only=True)
     job_title = serializers.CharField(max_length=255)
     job_posted_at_timestamp = serializers.CharField(max_length=255)
     job_id_from_source = serializers.CharField(max_length=255, write_only=True)
@@ -41,7 +81,7 @@ class JobSerializer(serializers.Serializer):
     job_responsibilities = serializers.ListField(
         child=serializers.CharField(),
         default=list
-    )
+    )"""
 
     def create(self, validated_data):
         from api.models.job import Job

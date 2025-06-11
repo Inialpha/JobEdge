@@ -2,6 +2,7 @@ from django.urls import path
 from .views.resumes import ResumeAPIView, GenerateResume
 from .views.users import UserAPIView, CustomSignup, ProfileView
 from .views.jobs import JobSearchAPIView, JobAPIView
+from .views.auth import GoogleSignup
 # import authemail
 from authemail import views
 
@@ -22,6 +23,7 @@ urlpatterns = [
     # ..........signup......... #
     path('auth/signup', CustomSignup.as_view(), name='custom-signup'),
     path('auth/signup/', CustomSignup.as_view(), name='custom-signup'),
+    path('auth/google/signup', GoogleSignup.as_view()),
     
     path('auth/verify-email/', views.SignupVerify.as_view(),
          name='authemail-signup-verify'),
