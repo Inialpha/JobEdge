@@ -1,0 +1,851 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+    <title> - Smcltd | Career Page</title>
+
+    <meta property="og:site_name" content="Manatal" />
+
+    
+    <link rel='shortcut icon' type='image/x-icon' href='https://manatal-backend-public-assets.s3.amazonaws.com/media/career_portal_logo_direct_upload/68d85e97-31db-4c54-b0dd-b0b440450974_smcltd.jpg' />
+    <meta property='og:image' content="https://manatal-backend-public-assets.s3.amazonaws.com/media/career_portal_logo_direct_upload/68d85e97-31db-4c54-b0dd-b0b440450974_smcltd.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    
+
+    
+      <meta property="og:title" content="Smcltd | Career Page" />
+      <meta property="og:description" content="" />
+    
+
+    <meta property="og:type" content="smcltd | job | jobs" />
+  
+
+  <link rel="stylesheet" type="text/css" href="https://manatal-backend-static.s3.amazonaws.com/static/career_page/css/theme_3/style.css">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.9.0/css/all.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  <script src="https://manatal-backend-static.s3.amazonaws.com/static/career_page/js/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/js/bootstrap.min.js" integrity="sha384-+sLIOodYLS7CIrQpBjl+C7nPvqq+FbNUBDunl/OZv93DB7Ln/533i8e/mZXLi/P+" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" crossorigin="anonymous"></script>
+
+  <script src="https://browser.sentry-cdn.com/6.9.0/bundle.min.js" integrity="sha384-WO22OE751vRf/HrLRHFis3ipNR16hUk5Q0qW9ascPaSswHI9Q/0ZFMaMvJ0ZgmSI" crossorigin="anonymous"></script>
+  <script async src="https://manatal-backend-static.s3.amazonaws.com/static/career_page/js/utills.js"></script>
+  
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-WNGRBS6');</script>
+  <!-- End Google Tag Manager -->
+  
+  <style>
+    .primary-color {
+      color: #1976d2;
+    }
+
+    .bg-primary-color {
+      background-color: #1976d2;
+    }
+
+    .btn-info,
+    .btn-info:hover {
+      background-color: #1976d2;
+    }
+
+    .btn-apply,
+    .btn-apply:hover {
+      background-color: #1976d2 !important;
+      border-color: #1976d2 !important;
+    }
+
+    .search-form {
+      width: fit-content;
+      margin: 0px auto 20px;
+      padding: 10px;
+      width: 60%;
+    }
+
+    .select2-container {
+      width: 100% !important;
+    }
+
+    .search-dropdown-options {
+      position: absolute;
+      margin: 5px -12px;
+      width: calc(100% - 17px);
+      border: 1px solid #cacaca;
+      border-top: 0px;
+      z-index: 1;
+      background: #fff;
+      max-height: 200px;
+      overflow: auto;
+      border-radius: 0px 0px 6px 6px;
+    }
+
+    .search-dropdown-options li {
+      cursor: pointer;
+    }
+
+    .search-dropdown-options ul li:hover {
+      background-color: #5897fb;
+      color: white;
+    }
+
+    .search-dropdown-options label {
+      width: calc(100% - 22px);
+      font-size: 14px;
+    }
+
+    .search-dropdown-placeholder {
+      font-size: 14px;
+      margin: 3px;
+      cursor: pointer;
+    }
+
+    .select2-container--default .select2-selection--single {
+      height: 38px !important;
+    }
+
+    .select2-container--default .select2-selection--single {
+      height: 38px !important;
+      border: 1px solid #ced4da !important;
+    }
+
+    .select2-selection__arrow {
+      height: 36px !important;
+    }
+
+    .select2-results__option {
+      font-size: 14px;
+    }
+
+    .select2-selection__rendered {
+      line-height: 38px !important;
+      font-size: 14px;
+      color: #969696;
+    }
+
+    .width-100 {
+      width: 100%;
+    }
+
+    ::-webkit-input-placeholder {
+      /* Chrome/Opera/Safari */
+      font-size: 14px;
+      color: #969696;
+    }
+
+    ::-moz-placeholder {
+      /* Firefox 19+ */
+      font-size: 14px;
+      color: #969696;
+    }
+
+    :-ms-input-placeholder {
+      /* IE 10+ */
+      font-size: 14px;
+      color: #969696;
+    }
+
+    :-moz-placeholder {
+      /* Firefox 18- */
+      font-size: 14px;
+      color: #969696;
+    }
+
+    @media (max-width: 575px) {
+      .search-form {
+        width: 100%;
+      }
+      .display-4{
+        font-size: 2.5rem;
+      }
+    }
+
+    .positions {
+      font-size: 16px;
+      color: #808080;
+    }
+
+    .serach_count {
+      padding: 4px;
+    }
+
+    .empty-result {
+      color: #808080;
+    }
+
+    .fa-chevron-right {
+      padding: 0px 8px;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&amp;display=swap" rel="stylesheet">
+  
+</head>
+
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WNGRBS6"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+      <a class="navbar-brand" href="/smcltd">
+        
+        <img src="https://manatal-backend-public-assets.s3.amazonaws.com/media/career_portal_logo_direct_upload/68d85e97-31db-4c54-b0dd-b0b440450974_smcltd.jpg" height="44">
+        
+      </a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ml-auto">
+          
+
+<!--Website-->
+
+
+<!--Phone number-->
+
+
+<!--Mail to-->
+
+
+<!-- Twitter -->
+
+
+<!--Facebook-->
+
+
+
+
+
+
+
+
+
+
+
+
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <main>
+    
+
+<div id="app">
+  <div class="banner d-flex flex-column justify-content-center align-items-center text-center" id="jobs-banner-img" style="background-color:#1976d2;
+        "
+  >
+    <h1 class="mt-5">Come work with us</h1>
+    <p class="mt-1">We&#x27;re looking for great people to join our growing team</p>
+    <a href="#openings" >
+      <button
+          type="button"
+          class="btn btn-lg btn-outline-light mt-4"
+          
+          >
+
+          View Openings
+      </button>
+    </a>
+  </div>
+  <div class="gallery container mt-5 pt-1 pb-4">
+    <div class="row px-5">
+        
+        
+        
+    </div>
+  </div>
+  <div class="container mb-5 px-xl-5">
+    
+  </div>
+  <hr id="openings" class="mt-5 mx-5" />
+  <div class="mt-5 text-center">
+      <h1 id="scroll">Our Openings</h1>
+      <h4 class="positions">
+        
+        9 Open Positions
+        
+      </h4>
+  </div>
+  
+  <div class="container mb-5 px-xl-5">
+    <ul class="list-unstyled mx-3 mx-sm-4 mx-md-5 px-lg-5 pb-4">
+      <template v-if="jobs.results && jobs.results.length > 0">
+        <!-- after_js -->
+        <li v-for="job in jobs.results" class="media">
+          <div class="media-body">
+            <a :href="getJobUrl(job)" class="text-secondary">
+              <h5 lang="en"
+                class="mt-0 mb-1 primary-color job-position-break ">
+                [[ job.position_name ]]
+                <i v-if="job.is_pinned_in_career_page" class="fas fa-bookmark"></i>
+              </h5>
+            </a>
+            <span class="text-secondary">
+              <span v-if="job.city || job.state || job.country" style="margin-right: 10px;">
+                <i class="fas fa-map-marker-alt" ></i> [[ getLocationString(job) ]]
+              </span>
+              
+              <br>
+              
+            </span>
+          </div>
+          <a :href="getJobUrl(job)">
+            <button
+              type="button"
+              class="btn btn-secondary btn-apply"
+              style="background-color:#1976d2;"
+              >Apply</button>
+          </a>
+          <br v-if ="job.city || job.state || job.country != 1">
+          <br v-if ="job.city || job.state || job.country != 1">
+        </li>
+        <!-- after_js -->
+      </template>
+      <template v-else-if="jobs && jobs.length == 0">
+        <!-- before_js -->
+        
+          <li class="media">
+            <div class="media-body">
+              <a href="/smcltd/job/QW7V9WR9" class="text-secondary">
+                <h5 lang="en"
+                  class="mt-0 mb-1 primary-color job-position-break ">
+                  Quality Control (Metrology Lab/Med device Night Shift &amp; 2nd)
+                  
+                </h5>
+              </a>
+              <span class="text-secondary">
+
+              
+                
+                  <span style="margin-right: 10px;"><i class="fas fa-map-marker-alt" ></i> Ayer, Massachusetts, United States </span>
+                  
+                
+              
+              
+              <br>
+              
+
+              
+              
+              </span>
+            </div>
+            <a href="/smcltd/job/QW7V9WR9">
+              <button
+                type="button"
+                class="btn btn-secondary btn-apply"
+                style="background-color:#1976d2;"
+                >Apply</button>
+            </a>
+          </li>
+        
+          <li class="media">
+            <div class="media-body">
+              <a href="/smcltd/job/LR83W5XR" class="text-secondary">
+                <h5 lang="en"
+                  class="mt-0 mb-1 primary-color job-position-break ">
+                  QC Inspector I
+                  
+                </h5>
+              </a>
+              <span class="text-secondary">
+
+              
+                
+                  <span style="margin-right: 10px;"><i class="fas fa-map-marker-alt" ></i> Ayer, Massachusetts, United States </span>
+                  
+                
+              
+              
+              <br>
+              
+
+              
+              
+              </span>
+            </div>
+            <a href="/smcltd/job/LR83W5XR">
+              <button
+                type="button"
+                class="btn btn-secondary btn-apply"
+                style="background-color:#1976d2;"
+                >Apply</button>
+            </a>
+          </li>
+        
+          <li class="media">
+            <div class="media-body">
+              <a href="/smcltd/job/L7R3798X" class="text-secondary">
+                <h5 lang="en"
+                  class="mt-0 mb-1 primary-color job-position-break ">
+                  Quality Inspector (Night Shift 8pm-8am)
+                  
+                </h5>
+              </a>
+              <span class="text-secondary">
+
+              
+                
+                  <span style="margin-right: 10px;"><i class="fas fa-map-marker-alt" ></i> Ayer, Massachusetts, United States </span>
+                  
+                
+              
+              
+              <br>
+              
+
+              
+              
+              </span>
+            </div>
+            <a href="/smcltd/job/L7R3798X">
+              <button
+                type="button"
+                class="btn btn-secondary btn-apply"
+                style="background-color:#1976d2;"
+                >Apply</button>
+            </a>
+          </li>
+        
+          <li class="media">
+            <div class="media-body">
+              <a href="/smcltd/job/L43W75Y5" class="text-secondary">
+                <h5 lang="en"
+                  class="mt-0 mb-1 primary-color job-position-break ">
+                  Manufacturing Engineer
+                  
+                </h5>
+              </a>
+              <span class="text-secondary">
+
+              
+                
+                  <span style="margin-right: 10px;"><i class="fas fa-map-marker-alt" ></i> Ayer, Massachusetts, United States </span>
+                  
+                
+              
+              
+              <br>
+              
+
+              
+              
+              </span>
+            </div>
+            <a href="/smcltd/job/L43W75Y5">
+              <button
+                type="button"
+                class="btn btn-secondary btn-apply"
+                style="background-color:#1976d2;"
+                >Apply</button>
+            </a>
+          </li>
+        
+          <li class="media">
+            <div class="media-body">
+              <a href="/smcltd/job/L3XV749V" class="text-secondary">
+                <h5 lang="en"
+                  class="mt-0 mb-1 primary-color job-position-break ">
+                  Automation Engineer
+                  
+                </h5>
+              </a>
+              <span class="text-secondary">
+
+              
+                
+                  <span style="margin-right: 10px;"><i class="fas fa-map-marker-alt" ></i> Ayer, Massachusetts, United States </span>
+                  
+                
+              
+              
+              <br>
+              
+
+              
+              
+              </span>
+            </div>
+            <a href="/smcltd/job/L3XV749V">
+              <button
+                type="button"
+                class="btn btn-secondary btn-apply"
+                style="background-color:#1976d2;"
+                >Apply</button>
+            </a>
+          </li>
+        
+          <li class="media">
+            <div class="media-body">
+              <a href="/smcltd/job/QXRW7X33" class="text-secondary">
+                <h5 lang="en"
+                  class="mt-0 mb-1 primary-color job-position-break ">
+                  Project Manager (Contract Manufacturing/Assembly Equipment
+                  
+                </h5>
+              </a>
+              <span class="text-secondary">
+
+              
+                
+                  <span style="margin-right: 10px;"><i class="fas fa-map-marker-alt" ></i> Ayer, Massachusetts, United States </span>
+                  
+                
+              
+              
+              <br>
+              
+
+              
+              
+              </span>
+            </div>
+            <a href="/smcltd/job/QXRW7X33">
+              <button
+                type="button"
+                class="btn btn-secondary btn-apply"
+                style="background-color:#1976d2;"
+                >Apply</button>
+            </a>
+          </li>
+        
+          <li class="media">
+            <div class="media-body">
+              <a href="/smcltd/job/QV5R7VX8" class="text-secondary">
+                <h5 lang="en"
+                  class="mt-0 mb-1 primary-color job-position-break ">
+                  Quality Engineer (Med Device/Healthcare/ISO 13485 EXP)
+                  
+                </h5>
+              </a>
+              <span class="text-secondary">
+
+              
+                
+                  <span style="margin-right: 10px;"><i class="fas fa-map-marker-alt" ></i> Ayer, Massachusetts, United States </span>
+                  
+                
+              
+              
+              <br>
+              
+
+              
+              
+              </span>
+            </div>
+            <a href="/smcltd/job/QV5R7VX8">
+              <button
+                type="button"
+                class="btn btn-secondary btn-apply"
+                style="background-color:#1976d2;"
+                >Apply</button>
+            </a>
+          </li>
+        
+          <li class="media">
+            <div class="media-body">
+              <a href="/smcltd/job/LR8Y7386" class="text-secondary">
+                <h5 lang="en"
+                  class="mt-0 mb-1 primary-color job-position-break ">
+                  Automation Technician
+                  
+                </h5>
+              </a>
+              <span class="text-secondary">
+
+              
+                
+                  <span style="margin-right: 10px;"><i class="fas fa-map-marker-alt" ></i> Ayer, Massachusetts, United States </span>
+                  
+                
+              
+              
+              <br>
+              
+
+              
+              
+              </span>
+            </div>
+            <a href="/smcltd/job/LR8Y7386">
+              <button
+                type="button"
+                class="btn btn-secondary btn-apply"
+                style="background-color:#1976d2;"
+                >Apply</button>
+            </a>
+          </li>
+        
+          <li class="media">
+            <div class="media-body">
+              <a href="/smcltd/job/L8W3W863" class="text-secondary">
+                <h5 lang="en"
+                  class="mt-0 mb-1 primary-color job-position-break ">
+                  Manufacturing Associate
+                  
+                </h5>
+              </a>
+              <span class="text-secondary">
+
+              
+                
+                  <span style="margin-right: 10px;"><i class="fas fa-map-marker-alt" ></i> Ayer, Massachusetts, United States </span>
+                  
+                
+              
+              
+              <br>
+              
+
+              
+              
+              </span>
+            </div>
+            <a href="/smcltd/job/L8W3W863">
+              <button
+                type="button"
+                class="btn btn-secondary btn-apply"
+                style="background-color:#1976d2;"
+                >Apply</button>
+            </a>
+          </li>
+        
+        <!-- before_js -->
+      </template>
+      <template v-else>
+        <h5 class="text-center empty-result">We did not find any job matching your search criteria.</h5>
+      </template>
+    </ul>
+
+    <div class="row justify-content-center" v-if="display_django_pagination">
+      <div class="col-md-2 col-6">
+          
+          <button type="button" disabled="disabled" class="btn btn-light m-auto d-block text-center">
+            Previous
+          </button>
+          
+      </div>
+      <div class="col-md-2 col-6">
+          
+            <button type="button" disabled="disabled" class="btn btn-light m-auto d-block text-center">
+              Next
+            </button>
+          
+      </div>
+    </div>
+
+
+    <div class="row justify-content-center" v-if="jobs && (jobs.next || jobs.previous)">
+      <div class="col-md-2 col-6">
+        <button type="button"
+        v-if="jobs.previous"
+        class="btn btn-secondary btn-apply m-auto d-block text-center"
+        style="background-color:#1976d2;"
+        @click="paginateResults('prev')"
+        >
+          Previous
+        </button>
+        <button type="button"
+        v-else
+        class="btn btn-light m-auto d-block text-center"
+        disabled
+        >
+          Previous
+        </button>
+      </div>
+      <div class="col-md-2 col-6">
+          <button type="button"
+          v-if="jobs.next"
+          class="btn btn-secondary btn-apply m-auto d-block text-center"
+          style="background-color:#1976d2;"
+          @click="paginateResults('next')"
+          >
+            Next
+          </button>
+          <button type="button"
+          v-else
+          class="btn btn-light m-auto d-block text-center"
+          disabled
+          >
+            Next
+          </button>
+      </div>
+    </div>
+  </div>
+
+  
+</div>
+
+  </main>
+  
+  <footer class="py-4 text-center bg-primary-color">
+    <a href="https://www.manatal.com/features/career-page?utm_source=careers-page.com&utm_medium=powered_by_manatal" alt="Manatal" style="color:#ffffff;">
+      Powered by <strong>Manatal</strong>
+    </a>
+  </footer>
+
+  
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.12.1/polyfill.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.7.16/vue.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.3/axios.min.js" crossorigin="anonymous"></script>
+
+  <script type="text/javascript">
+    var bannerImageURL = "";
+    
+
+    var banner = document.getElementById('jobs-banner-img');
+    var bannerHeight = (window.innerWidth * 600) /1600; // 1600 x 600 is the suggested image side for the banner
+    if (banner && bannerImageURL && bannerHeight >= 450) {
+      banner.style.setProperty('min-height', bannerHeight + 'px');
+    }
+  </script>
+
+
+  <script>
+  const baseUrl = "https://www.careers-page.com";
+  const clientSlug = "smcltd";
+  const country_list = []
+  const organization_list = []
+  const city_list = []
+  const enable_search_by_city = "False";
+  const organization_singular_name = "department";
+  const organization_plural_name = "departments";
+
+  const vm = new Vue({
+  delimiters: ['[[', ']]'],
+  el: '#app',
+  data: {
+    organizationName: organization_singular_name,
+    organizationNames: organization_plural_name,
+    jobs: [],
+    showCityDropdown: false,
+    showCountryDropdown: false,
+    showOrgDropdown: false,
+    locations: enable_search_by_city === 'True' ? city_list : country_list,
+    organizations: organization_list,
+    countrySelected: [],
+    citySelected: [],
+    organizationSelected: [],
+    searchTerm: '',
+    selectedLocation: '',
+    selectedOrganization: '',
+    currentPage: 1,
+    pageSize: 50,
+    apiBaseURL: `${baseUrl}/api/v1.0/c/${clientSlug}/`,
+    display_django_pagination: true,
+    display_search_positions: false,
+    count: 0,
+    isSearching: false,
+  },
+  mounted() {
+    let that = this;
+    $(document).mouseup(function(e)
+    {
+        let container = $(".search-dropdown-options");
+        if (!container.is(e.target) && container.has(e.target).length === 0)
+        {
+          that.showCityDropdown = false;
+          that.showCountryDropdown = false;
+          that.showOrgDropdown = false;
+
+          container.hide();
+        }
+    });
+  },
+  created() {
+    var regex = new RegExp("[\\?&]search=([^&#]*)"),
+    results = regex.exec(location.search);
+    this.searchTerm = results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    if (this.searchTerm && this.searchTerm.length > 0) {
+      this.searchJobs();
+    }
+  },
+  methods: {
+    paginateResults(direction){
+      this.currentPage = direction === 'prev' ? this.currentPage - 1 : this.currentPage+1;
+      this.searchJobs();
+    },
+    toggleCity(city, country) {
+      const ids = country.cities.map(obj => obj.id);
+      let isAllCitySelected = true;
+      for (let i = 0; i < ids.length; i++) {
+        const isCitySelected = this.citySelected.filter(obj => obj.toString() === ids[i].toString()).length > 0;
+        if (!isCitySelected) {
+          isAllCitySelected = false;
+          break;
+        }
+      }
+      if (!isAllCitySelected) {
+        this.countrySelected = this.countrySelected.filter(obj => obj.toString() !== country.id.toString());
+      } else {
+        this.countrySelected.push(country.id.toString());
+      }
+    },
+    toggleCountries(val) {
+      const isSelected = this.countrySelected.filter(obj => obj.toString() === val.id.toString()).length > 0;
+      if (isSelected) {
+        const ids = val.cities.map(obj => obj.id);
+        for (let i = 0; i < ids.length; i++) {
+          const isCitySelected = this.citySelected.filter(obj => obj.toString() === ids[i].toString());
+          if (isCitySelected) {
+            this.citySelected.push(ids[i]);
+          }
+        }
+      } else {
+        const ids = val.cities.map(obj => obj.id);
+        for (let i = 0; i < ids.length; i++) {
+          this.citySelected = this.citySelected.filter(obj => obj !== ids[i]);
+        }
+      }
+    },
+    getJobUrl(job){
+      return `${baseUrl}/${clientSlug}/job/${job.hash}`;
+    },
+    getLocationString(job){
+      return `${job.city ? job.city+',': ''} ${job.state ? job.state+',': ''} ${job.country}`;
+    },
+    searchJobs() {
+      this.display_django_pagination = false;
+      this.display_search_positions = true;
+      let url = this.apiBaseURL+'jobs/?page_size='+this.pageSize+'&page='+this.currentPage+'&';
+
+      let selectedLocationType = enable_search_by_city === 'True' ? 'city_new__in' : 'country_new__in';
+      let selectedLocations = enable_search_by_city === 'True' ? this.citySelected.map(obj => obj).concat() : this.countrySelected.map(obj => obj).concat();
+      let selectedOrganizations = this.organizationSelected.map(obj => obj).concat()
+
+      url += `${this.searchTerm ? 'search='+this.searchTerm+'&' : ''}${selectedLocations ? selectedLocationType+'='+selectedLocations+'&' : ''}${selectedOrganizations ? 'organization__in='+selectedOrganizations+'&' : ''}`;
+      url += `ordering=-is_pinned_in_career_page,-last_published_at`;
+      this.isSearching = true;
+      axios
+        .get(url)
+        .then(response => {
+          this.isSearching = false;
+          this.count = response.data.count
+          this.jobs = response.data;
+          $(".search-dropdown-options").hide();
+        })
+        .catch(error => console.log(error))
+    }
+  }
+  });
+  </script>
+
+</body>
+
+</html>

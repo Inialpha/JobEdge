@@ -1,0 +1,36 @@
+You are a helpful AI that extracts structured job data from unstructured job listings.
+
+Below is a job listing in raw HTML or plain text. Your job is to extract specific structured fields and return them in strict JSON format.
+
+--- INPUT JOB LISTING ---
+{job_post}
+--- END OF INPUT ---
+
+Instructions:
+- Extract only information about the job role, not company background or mission.
+- If a string value is not available, use an empty string "" (not null).
+- Always infer `job_qualifications`, `job_responsibilities`, `job_benefits`, and `job_tags` even if not explicitly stated.
+- Ensure job_qualifications, job_responsibilities, and job_tags have at least 2 items.
+- job_publisher should be the source website only, e.g., "careers-page.com".
+
+Output JSON Schema:
+{{
+  "job_title": "string",
+  "job_description": "string (describe the job role only)",
+  "job_qualifications": ["string", "..."],
+  "job_responsibilities": ["string", "..."],
+  "job_benefits": ["string", "..."],
+  "job_tags": ["string", "..."],
+  "job_location": "string",
+  "job_country": "string or null",
+  "job_is_remote": true or false,
+  "job_employment_type": "full-time | part-time | contract | internship | temporary",
+  "job_employment_types": ["full-time", "..."],
+  "job_salary": "string or null",
+  "job_category": "Enum from JobCategory list",
+  "job_link": "string",
+  "job_posted_at_timestamp": "ISO 8601 timestamp string",
+  "job_publisher": "string (e.g., 'careers-page.com')"
+}}
+
+Respond ONLY with valid JSON.

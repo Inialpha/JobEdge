@@ -1,5 +1,7 @@
 from serpapi import GoogleSearch
 from dotenv import load_dotenv
+import json
+import os
 
 load_dotenv()
 
@@ -23,7 +25,7 @@ def get_google_jobs():
         all_jobs.extend(results.get("jobs_results", []))
     return all_jobs
 
-"""print(f"Total jobs fetched: {len(all_jobs)}")
-search = GoogleSearch(params)
-results = search.get_dict()
-jobs_results = results["jobs_results"]"""
+
+jobs = get_google_jobs()
+with open("job.json", "w") as f:
+    json.dump(jobs, f, indent=" ")

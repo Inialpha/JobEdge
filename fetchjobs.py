@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime, timedelta
 from google_jobs import get_google_jobs
+import dateparser
 
 
 def fetch_jobs(page, num_page):
@@ -29,17 +30,26 @@ def structure(job):
         dt = datetime.fromisoformat(time_str.replace("Z", "+00:00"))
 
         return int(dt.timestamp())
-
+    structured_job = {}
     print(job.get("job_title"))
-    job['job_id_from_source'] = job.get('job_id')
-    job['job_employment_type'] = job.get('job_employment_type').lower()
-    job['job_employment_types'] = [job_type.lower() for job_type in
+    structured_job['job_employment_type'] = job.get('job_employment_type').lower()
+    structured_job['job_employment_types'] = [job_type.lower() for job_type in
         job.get('job_employment_types', [])]
 
-    job["job_qualifications"] = job.get("job_highlights", {}).get("Qualifications")
-    job["job_responsibilities"] = job.get("job_highlights", {}).get("Responsibilities")
-    timestamp = str(job.get("job_posted_at_timestamp")) or get_timestamp(job.get("job_posted_at_datetime_utc"))
-    job["job_posted_at_timestamp"] = timestamp
+    structured_job["job_qualifications"] = job.get("job_qualifications", [])
+    structured_job["job_responsibilities"] = job.get("job_responsibilities")
+    structured_job["job_benefits"] = job.get("job_benefits", [])
+    structured_job["job_title"] = jobget("job_title", "")
+    structured_job["job_location"] = job.get("job_location", "")
+    
+    structured_job["job_country"] = job("job_country", "")
+    structured_job["job_is_remote"] = job.get("job_is_remote", False)
+    structured_job["job_salary"] = job.get("job_salary", "")
+    structured_job["job_apply_link"] = job.get("job_apply_link", "")
+    structured_job["job_html"]
+    structured_job["job_posted_at_timestamp"] = dateparser.parse(job.get"job_posted_at_timestamp", "")
+    structured_job["company"] = job.get("company", {})
+
 from api.serializers.job import JobSerializer
 num_pages = 20
 
@@ -95,17 +105,20 @@ def structure_google_job(job):
     return job
 
 
-jobs = get_google_jobs()
-print(jobs[1])
-for job in jobs:
-    try:
-        structured_job = structure_google_job(job)
-        print("structured.......")
-        serializer = JobSerializer(data=structured_job)
-        if serializer.is_valid():
-            print("valid.......")
-            serializer.save()
-        else:
-            print("serializer error", serializer.errors)
-    except Exception as e:
-        print("error", e)
+def create_job(job):
+    structured_jobs = stucture(job)
+if __name__ == "__main__":
+    jobs = get_google_jobs()
+    print(jobs[1])
+    for job in jobs:
+        try:
+            structured_job = structure_google_job(job)
+            print("structured.......")
+            serializer = JobSerializer(data=structured_job)
+            if serializer.is_valid():
+                print("valid.......")
+                serializer.save()
+            else:
+                print("serializer error", serializer.errors)
+        except Exception as e:
+            print("error", e)
