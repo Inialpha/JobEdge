@@ -5,10 +5,10 @@ from .base_model import BaseModel
 
 class Company(BaseModel):
     company_name = models.CharField(max_length=500)
-    company_description = models.TextField()
-    company_logo = models.URLField(blank=True, null=True, validators=[URLValidator()])
-    company_website = models.URLField(blank=True, null=True, validators=[URLValidator()])
-    platform = models.CharField(max_length=255)
+    company_description = models.TextField(blank=True, null=True, default="")
+    company_logo = models.URLField(blank=True, null=True, validators=[URLValidator()], max_length=500)
+    company_website = models.URLField(blank=True, null=True, validators=[URLValidator()], max_length=500)
+    platform = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
-        return self.company_name
+        return f"{self.company_name} - {self.platform}"

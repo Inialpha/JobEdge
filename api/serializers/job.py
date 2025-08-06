@@ -19,7 +19,6 @@ class JobSerializer(serializers.ModelSerializer):
             "job_location",
             "job_country",
             "job_is_remote",
-            "job_employment_type",
             "job_employment_types",
             "job_salary",
             "job_apply_link",

@@ -8,7 +8,8 @@ class Job(BaseModel):
     EMPLOYMENT_TYPES = [
         ('full-time', 'Full-time'),
         ('part-time', 'Part-time'),
-        ('contractor', 'Contractor')
+        ('contractor', 'Contractor'),
+        ('contract', 'Contract')
     ]
     #  Job Identfication 
     job_publisher = models.CharField(max_length=255)
@@ -20,26 +21,25 @@ class Job(BaseModel):
     job_responsibilities = models.JSONField(default=list)
     job_html = models.TextField()
     job_category = models.CharField(max_length=255)
-    job_tag = models.JSONField(default=list)
+    job_tags = models.JSONField(default=list)
 
     # Employment Type
-    job_employment_type = models.CharField(max_length=20, choices=EMPLOYMENT_TYPES, default='full-time')
     job_employment_types = models.JSONField(default=list)
 
     # Salary & Compensation
     job_benefits = models.JSONField(blank=True, null=True, default=list)
-    job_salary = models.PositiveIntegerField(blank=True, null=True, validators=[MinValueValidator(0)])
+    job_salary = models.CharField(max_length=255, blank=True, null=True)
 
     # Location & Remote Work
     job_is_remote = models.BooleanField(default=False)
-    job_location = models.CharField(max_length=255)
-    job_country = models.CharField(max_length=255)
+    job_location = models.CharField(max_length=255, blank=True, null=True, default="")
+    job_country = models.CharField(max_length=255, blank=True, null=True, default="")
 
     # Employer Details
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="jobs", help_text="Company associated with the job")
     
     # Application Information
-    job_apply_link = models.URLField(validators=[URLValidator()], max_length=500)
+    job_apply_link = models.URLField(validators=[URLValidator()], max_length=500, unique=True)
 
     # Tracking
     job_posted_at_timestamp = models.CharField(max_length=255)
@@ -48,4 +48,4 @@ class Job(BaseModel):
 
 
     def __str__(self):
-        return f"{self.job_title} at {self.employer_name}"
+        return f"{self.job_title} at {self.company.company_name}"
