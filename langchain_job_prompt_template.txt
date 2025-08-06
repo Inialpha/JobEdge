@@ -15,7 +15,7 @@ Instructions:
 
 Output JSON Schema:
 {{
-  "job_title": "string",
+  "job_title": "string" (do not include company name),
   "job_description": "string (describe the job role only)",
   "job_qualifications": ["string", "..."],
   "job_responsibilities": ["string", "..."],
