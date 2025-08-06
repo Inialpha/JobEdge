@@ -97,14 +97,12 @@ def get_from_linkedin(company_name):
 def get_company_details(platform_url, company_name):
     carees_page_details = get_from_careers_page(platform_url, company_name)
     linkedin_details = get_from_linkedin(company_name)
-    print(carees_page_details)
-    print(linkedin_details)
     comapany_details = {
         "company_logo": carees_page_details.get("company_logo") or
             linkedin_details.get("company_logo"),
-        "company_website": carees_page_details.get("company_logo") or
+        "company_website": carees_page_details.get("company_website") or
             linkedin_details.get("company_website"),
-        "company_description": carees_page_details.get("company_logo") or
+        "company_description": carees_page_details.get("company_description") or
             linkedin_details.get("company_description")
     }
 

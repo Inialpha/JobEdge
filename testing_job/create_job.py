@@ -17,7 +17,6 @@ def structure(job):
     structured_job["job_tags"] = job.get("job_tags", [])
 
     # Employment Type
-    structured_job['job_employment_type'] = job.get('job_employment_type').lower()
     structured_job['job_employment_types'] = [job_type.lower() for job_type in
         job.get('job_employment_types', [])]
     
@@ -48,12 +47,11 @@ from api.serializers.job import JobSerializer
 def create_job(job):
     try:
         structured_job = structure(job)
-        print("structured ----------", structured_job)
         serializer = JobSerializer(data=structured_job)
         if serializer.is_valid():
             return serializer.save()
         else:
             print("serializer error", serializer.errors)
+            raise ValueError(serializer.errors)
     except Exception as e:
-        raise e
         print(e)

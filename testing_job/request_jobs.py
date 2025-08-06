@@ -4,6 +4,8 @@ from testing_job import job_construction_ai
 from serpapi import GoogleSearch
 import re
 import os
+from api.models.job import Job
+
 
 api_key = os.getenv("SERPAPI_KEY")
 
@@ -39,13 +41,13 @@ def get_html_and_text(url):
         return None
 
 def get_careers_page_jobs():
-    max_pages: int = 1
+    max_pages: int = 20
 
     params = {
         "q": "site:careers-page.com inurl:job/",
         "engine": "google",
         "api_key": api_key,
-        "tbs": "qdr:d2",  # posted in last 24 hours
+        "tbs": "qdr:d1",  # posted in last 24 hours
         "num": 10,
     }
 
@@ -70,6 +72,12 @@ def get_careers_page_jobs():
             if match_link:
                 company_name = match_link.group(2)
                 job_link = match_link.group(1)
+                try:
+                    db_job = Job.objects.get(job_apply_link=job_link)
+                    if db_job:
+                        continue
+                except Job.DoesNotExist:
+                    pass
                 job_details = get_html_and_text(job_link)
                 if not job_details:
                     continue
@@ -87,8 +95,7 @@ def get_careers_page_jobs():
                     "job_text": job_details.get("text"),
                 })
                 job_count += 1
-                print(job_count)
-                break
+                print(f"Jobs: {job_count}")
 
         page_count += 1
         if page_count >= max_pages:

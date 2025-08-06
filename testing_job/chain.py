@@ -19,7 +19,9 @@ prompt = PromptTemplate(
 
 # Initialize the LLM
 llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
+    # model="llama-3.3-70b-versatile",
+    # model="mistral-saba-24b",
+    model="llama-3.1-8b-instant",
     temperature=0,
     max_tokens=None,
     timeout=None,
