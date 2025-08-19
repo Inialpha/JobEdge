@@ -49,6 +49,3 @@ urlpatterns = [
 
     path('users/me/', views.UserMe.as_view(), name='authemail-me'),
 ]
-
-
-

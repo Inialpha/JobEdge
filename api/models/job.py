@@ -32,8 +32,7 @@ class Job(BaseModel):
 
     # Location & Remote Work
     job_is_remote = models.BooleanField(default=False)
-    job_location = models.CharField(max_length=255, blank=True, null=True, default="")
-    job_country = models.CharField(max_length=255, blank=True, null=True, default="")
+    job_location = models.JSONField(default=dict)  # stores country, state, city
 
     # Employer Details
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="jobs", help_text="Company associated with the job")
