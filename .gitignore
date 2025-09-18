@@ -2,3 +2,6 @@ initialize.sh
 /media
 delete.sql
 /venv
+.env
+api/.env
+__pycache__

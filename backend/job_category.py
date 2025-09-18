@@ -1,0 +1,28 @@
+from enum import Enum
+from pydantic import BaseModel
+
+class JobCategory(str, Enum):
+    ADMINISTRATIVE = "Administrative & Office Support"
+    AGRICULTURE = "Agriculture, Forestry & Fishing"
+    ARTS = "Arts, Culture & Entertainment"
+    BUSINESS = "Business, Consulting & Management"
+    COMMUNITY = "Community & Social Services"
+    CONSTRUCTION = "Construction & Skilled Trades"
+    CUSTOMER_SERVICE = "Customer Service"
+    EDUCATION = "Education & Training"
+    ENGINEERING = "Engineering & Technical"
+    FINANCE = "Finance & Accounting"
+    HEALTHCARE = "Healthcare & Medical"
+    HOSPITALITY = "Hospitality & Tourism"
+    HUMAN_RESOURCES = "Human Resources (HR)"
+    INFORMATION_TECHNOLOGY = "Information Technology (IT) & Software Development"
+    LEGAL = "Legal & Law Enforcement"
+    MANUFACTURING = "Manufacturing & Production"
+    MARKETING = "Marketing, Advertising & PR"
+    MEDIA = "Media & Communications"
+    REAL_ESTATE = "Real Estate & Property"
+    RETAIL = "Retail & Sales"
+    SCIENCE = "Science & Research"
+    SUPPLY_CHAIN = "Supply Chain & Logistics"
+    TRANSPORTATION = "Transportation"
+    UTILITIES = "Utilities & Energy"
