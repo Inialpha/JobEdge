@@ -5,7 +5,8 @@ import asyncio
 import aiohttp
 from urllib.parse import urlparse
 from serpapi import GoogleSearch
-
+from job_services.company_details import details_from_career_page, details_from_linkedin
+from bs4 import BeautifulSoup
 
 class CareerPageJobs:
     def __init__(self, json_file="career_page.json"):
@@ -55,6 +56,7 @@ class CareerPageJobs:
         if not serpapi_key:
             raise ValueError("Missing SERPAPI_API_KEY in environment")
 
+        print("\nSearching for jobs on carees-page\n")
         search = GoogleSearch({
             "q": "site:careers-page.com inurl:job",
             "api_key": serpapi_key,
@@ -87,12 +89,13 @@ class CareerPageJobs:
             platform = f"careers-page.com/{company}"
 
             if company not in self.jobs:
-                self.jobs[company] = {"platform": platform, "jobs": []}
+                self.jobs[company] = {**self.get_company_details(company), "platform": platform, "jobs": []}
 
             if any(j["job_link"] == link for j in self.jobs[company]["jobs"]):
                 continue
 
             self.jobs[company]["jobs"].append({
+                **self.get_job_details(html),
                 "job_link": link,
                 "date": date,
                 "job_html": html
@@ -108,3 +111,65 @@ class CareerPageJobs:
             print(f"[Saved] Jobs saved to {self.json_file}")
         except Exception as e:
             print(f"[Save Error] {e}")
+
+
+    def get_company_details(self, company_name: str) -> dict:
+        carees_page_details = details_from_career_page(company_name)
+        linkedin_details = details_from_linkedin(company_name)
+        details = {
+            "company_logo":
+                carees_page_details["company_logo"] or
+                linkedin_details["company_logo"],
+            "company_description": 
+                carees_page_details["company_description"] or
+                linkedin_details["company_description"],
+            "company_website":
+                carees_page_details["company_website"] or
+                linkedin_details["company_website"]
+        }
+        return details
+
+    def get_job_details(self, html):
+        """
+        Extracts job details (title, datePosted, salary, description) from a job posting HTML.
+        Uses the JSON-LD structured data for reliable fields,
+        and falls back to body/meta for description if not found.
+        """
+        soup = BeautifulSoup(html, "html.parser")
+
+        json_ld_tag = soup.find("script", type="application/ld+json")
+        job_data = {}
+        if json_ld_tag:
+            try:
+                job_data = json.loads(json_ld_tag.string)
+            except json.JSONDecodeError:
+                raise json.JSONDecodeError
+        address = job_data.get("jobLocation", {}).get("address", {})
+        details = {
+            "job_title": job_data.get("title"),
+            "job_posted_at_timestamp": job_data.get("datePosted"),
+            "job_salary": job_data.get("baseSalary") or job_data.get("salaryRange") or None,
+            "location": {
+                "country": address.get("addressCountry"),
+                "state": address.get("addressLocality"),
+                "city": address.get("addressLocality")
+            },
+            "valid_through": job_data.get("validThrough"),
+            "employment_types": [job_data.get("employmentType")]
+        }
+
+        description = None
+        if "description" in job_data and job_data["description"]:
+            description = job_data["description"]
+        else:
+            meta_desc = soup.find("meta", property="og:description")
+            if meta_desc and meta_desc.get("content"):
+                description = meta_desc["content"]
+            else:
+                body_text = soup.body.get_text(separator="\n", strip=True) if soup.body else ""
+                description = re.sub(r"\s+", " ", body_text).strip()
+
+        description = BeautifulSoup(description, "html.parser").get_text(" ", strip=True)
+        details["job_text"] = description
+
+        return details
