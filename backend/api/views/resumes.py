@@ -159,15 +159,14 @@ class GenerateResumeFromJobDescription(APIView):
     def post(self, request):
         """
         Take a user id and a job description, return an ai generated resume based on user's master resume.
+        User ID is extracted from the authenticated user.
         """
         job_description = request.data.get("job_description")
-        user_id = request.data.get("user_id")
+        # Get user_id from request data if provided, otherwise use authenticated user
+        user_id = request.data.get("user_id") or request.user.id
         
         if not job_description:
             return Response({"details": "Job description is required"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if not user_id:
-            return Response({"details": "User ID is required"}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
             user = User.objects.get(id=user_id)

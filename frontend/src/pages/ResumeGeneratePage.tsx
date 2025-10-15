@@ -33,7 +33,6 @@ export default function JobDescriptionForm() {
     try {
       const url = `${import.meta.env.VITE_API_URL}/resume/generate/`;
       const data = {
-        user_id: user.id,
         job_description: description
       };
 
