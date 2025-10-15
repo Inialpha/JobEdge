@@ -1,10 +1,16 @@
 import { useState } from 'react';
-import { Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { postRequest } from '@/utils/apis';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 
 export default function JobDescriptionForm() {
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('idle'); // idle, loading, success, error
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.user);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,30 +21,37 @@ export default function JobDescriptionForm() {
       return;
     }
 
+    if (!user.hasMasterResume) {
+      setStatus('error');
+      setMessage('Please upload a master resume first');
+      return;
+    }
+
     setStatus('loading');
     setMessage('');
 
     try {
-      // Replace with your actual backend endpoint
-      const response = await fetch('https://your-api-endpoint.com/api/jobs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          description: description,
-          timestamp: new Date().toISOString()
-        }),
-      });
+      const url = `${import.meta.env.VITE_API_URL}/resume/generate/`;
+      const data = {
+        job_description: description
+      };
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      const response = await postRequest(url, data);
+
+      if (response.ok) {
+        const resume = await response.json();
+        setStatus('success');
+        setMessage('Resume generated successfully!');
+        
+        // Navigate to resume page with generated resume
+        setTimeout(() => {
+          navigate('/resume', { state: { resume: resume } });
+        }, 1500);
+      } else {
+        const error = await response.json();
+        setStatus('error');
+        setMessage(error.details || 'Failed to generate resume');
       }
-
-      const data = await response.json();
-      setStatus('success');
-      setMessage('Job description submitted successfully!');
-      setDescription(''); // Clear the textarea
     } catch (error) {
       setStatus('error');
       setMessage(`Error: ${error.message}`);
@@ -56,10 +69,10 @@ export default function JobDescriptionForm() {
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Submit Job Description
+            Generate Tailored Resume
           </h1>
           <p className="text-gray-600">
-            Enter the job description below and submit it to the backend
+            Enter the job description below and we'll generate a tailored resume for you
           </p>
         </div>
 
@@ -111,13 +124,13 @@ export default function JobDescriptionForm() {
             >
               {status === 'loading' ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Submitting...
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Generating Resume...
                 </>
               ) : (
                 <>
                   <Send className="w-5 h-5" />
-                  Submit
+                  Generate Resume
                 </>
               )}
             </button>
@@ -132,12 +145,14 @@ export default function JobDescriptionForm() {
           </div>
         </form>
 
-        {/* API Configuration Note */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <strong>Note:</strong> Update the API endpoint in the code (line 19) to point to your actual backend URL.
-          </p>
-        </div>
+        {!user.hasMasterResume && (
+          <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm text-yellow-800">
+              <strong>Note:</strong> You need to upload a master resume before you can generate tailored resumes. 
+              Please visit your profile to upload one.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

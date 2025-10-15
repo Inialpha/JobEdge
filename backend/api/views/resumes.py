@@ -149,6 +149,69 @@ class GenerateResume(APIView):
         return Response(new_resume.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class GenerateResumeFromJobDescription(APIView):
+    """
+    API View for generating a resume from a job description without needing a job_id.
+    """
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """
+        Take a user id and a job description, return an ai generated resume based on user's master resume.
+        User ID is extracted from the authenticated user.
+        """
+        job_description = request.data.get("job_description")
+        # Use authenticated user only for security
+        user_id = request.user.id
+        
+        if not job_description:
+            return Response({"details": "Job description is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = User.objects.get(id=user_id)
+            resume = Resume.objects.get(user=user, is_master=True)
+        except User.DoesNotExist:
+            return Response({"details": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
+        except Resume.DoesNotExist:
+            return Response({"details": "No master resume found for user"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        resume_serializer = ResumeSerializer(resume)
+        
+        # Generate tailored resume using AI
+        tailored_resume = generate_resume(job_description, resume_serializer.data["text"])
+        
+        if not tailored_resume:
+            return Response({"details": "Failed to generate resume"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        tailored_resume["text"] = generate_resume_text(tailored_resume)
+        tailored_resume["user"] = user_id
+
+        # Validate URL fields - preserve AI-generated values if valid
+        url_fields = ["linkedin", "website"]
+        url_validator = URLValidator()
+        for url_field in url_fields:
+            try:
+                url_validator(tailored_resume.get(url_field, ""))
+                # Keep the AI-generated URL as it's valid - no changes needed
+                pass
+            except ValidationError as e:
+                # If invalid, set to None
+                tailored_resume[url_field] = None
+
+        new_resume = ResumeSerializer(data=tailored_resume)
+        if new_resume.is_valid():
+            try:
+                new_resume.save()
+                return Response(new_resume.data, status=status.HTTP_200_OK)
+            except Exception as e:
+                print("error", e)
+                return Response({"details": "Failed to save resume"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            print(new_resume.errors)
+            return Response(new_resume.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 def generate_resume_text(instance):
     """
     Generates a formatted resume-like text from the given instance.
