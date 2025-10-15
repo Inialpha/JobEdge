@@ -6,6 +6,7 @@ import AccordionResume from "@/pages/ResumeForm";
 import Signup from "@/pages/Signup";
 import Login from "@/pages/Login";
 import AdminDashboard from "@/pages/admin/Dashboard"
+import TailorResumePage from "@/pages/TailorResumePage";
 
 
 const routes = createBrowserRouter(
@@ -18,6 +19,7 @@ const routes = createBrowserRouter(
       <Route path="resume" element={
           <AccordionResume />
       }/>
+      <Route path="tailor-resume" element={<TailorResumePage />} />
       <Route path="dashboard" element={<AdminDashboard />} />
 
     </Route>
