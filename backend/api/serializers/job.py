@@ -1,6 +1,14 @@
 from rest_framework import serializers
+from api.models.job import Job
 
 
+class JobSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Job
+        fields = '__all__'
+
+
+"""
 class JobSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     job_title = serializers.CharField(max_length=255)
@@ -39,3 +47,4 @@ class JobSerializer(serializers.Serializer):
         job = Job(**validated_data)
         job.save()
         return job
+"""

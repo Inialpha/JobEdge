@@ -8,6 +8,7 @@ from serpapi import GoogleSearch
 from job_services.company_details import details_from_career_page, details_from_linkedin
 from bs4 import BeautifulSoup
 
+
 class CareerPageJobs:
     def __init__(self, json_file="career_page.json"):
         self.json_file = json_file
@@ -91,12 +92,12 @@ class CareerPageJobs:
             if company not in self.jobs:
                 self.jobs[company] = {**self.get_company_details(company), "platform": platform, "jobs": []}
 
-            if any(j["job_link"] == link for j in self.jobs[company]["jobs"]):
+            if any(j["job_apply_link"] == link for j in self.jobs[company]["jobs"]):
                 continue
 
             self.jobs[company]["jobs"].append({
                 **self.get_job_details(html),
-                "job_link": link,
+                "job_apply_link": link,
                 "date": date,
                 "job_html": html
             })
@@ -149,7 +150,7 @@ class CareerPageJobs:
             "job_title": job_data.get("title"),
             "job_posted_at_timestamp": job_data.get("datePosted"),
             "job_salary": job_data.get("baseSalary") or job_data.get("salaryRange") or None,
-            "location": {
+            "job_location": {
                 "country": address.get("addressCountry"),
                 "state": address.get("addressLocality"),
                 "city": address.get("addressLocality")
@@ -171,5 +172,4 @@ class CareerPageJobs:
 
         description = BeautifulSoup(description, "html.parser").get_text(" ", strip=True)
         details["job_text"] = description
-
         return details

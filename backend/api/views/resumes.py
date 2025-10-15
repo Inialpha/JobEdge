@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from ..models import Resume, Job, User
 from ..serializers.resume import ResumeSerializer
 from file_reader import File
-from AI_engine.ai import ai, generate_resume
+from ai_services.ai import ai, generate_resume
 from django.db.models import Q
 from ..serializers.job import JobSerializer 
 from rest_framework.authentication import TokenAuthentication

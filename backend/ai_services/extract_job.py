@@ -1,11 +1,12 @@
 from groq import Groq
 import json
+import os
 
-client = Groq()
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 def extract_job_details(job_text):
     completion = client.chat.completions.create(
-        model="",
+        model="groq/compound",
         messages=[
             {
                 "role": "system",
@@ -23,7 +24,6 @@ def extract_job_details(job_text):
 
     {{
       "job_description": "<Brief but complete natural-language summary of the role>",
-      "job_html": "<Preserve HTML if available, otherwise null>",
       "job_qualifications": ["List qualifications or required experience"],
       "job_responsibilities": ["List responsibilities or duties"],
       "job_category": "<Industry or category>",
@@ -36,13 +36,12 @@ def extract_job_details(job_text):
           "city": "<City>",
           "state": "<State or region>",
           "country": "<Country>",
-          "is_remote": <true or false>
       }}
     }}
 
     Rules:
     - Never fabricate information.
-    - Use null or [] where data is missing.
+    - Use None or [] where data is missing.
     - Respond ONLY with a valid JSON object.
 
     --- JOB CONTENT START ---
@@ -52,22 +51,20 @@ def extract_job_details(job_text):
             }
         ],
         temperature=0,
-        max_completion_tokens=8192,
+        #max_completion_tokens=8192,
         top_p=1,
-        reasoning_effort="medium",
+        #reasoning_effort="medium",
         stream=True,
     )
 
     collected = ""
     for chunk in completion:
         content = chunk.choices[0].delta.content or ""
-        print(content, end="")
+        #print(content, end="")
         collected += content
 
-    # Optional: Parse JSON
     try:
         result = json.loads(collected)
-        print("\n\nParsed JSON Result:\n", json.dumps(result, indent=2))
         return result
     except json.JSONDecodeError:
         print("\n\n⚠️ Output not valid JSON. Check above text.")
