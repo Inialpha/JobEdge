@@ -1,4 +1,9 @@
 initialize.sh
 /media
 delete.sql
-/venv
+venv/
+.env
+api/.env
+__pycache__/
+frontend/node_modules/
+node_modules/

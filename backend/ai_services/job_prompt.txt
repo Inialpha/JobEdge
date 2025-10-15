@@ -1,0 +1,41 @@
+from langchain.prompts import PromptTemplate
+
+job_extraction_prompt = PromptTemplate(
+    input_variables=["job_text"],
+    template="""
+You are a precise information extraction assistant. 
+You will read the job posting content below and extract structured details according to the given schema.
+
+--- JOB CONTENT START ---
+{job_text}
+--- JOB CONTENT END ---
+
+Return a JSON object that follows **this schema**:
+
+{{
+  "job_description": "<A concise but complete summary of the role responsibilities, purpose, and work environment in natural language>",
+  "job_html": "<Preserve the original HTML if available, otherwise return None>",
+  "job_qualifications": ["List each qualification, degree, or required experience as a separate string"],
+  "job_responsibilities": ["List each major duty or task as a separate string"],
+  "job_category": "<One or two words describing the industry or category, e.g. 'Healthcare', 'Technology', 'Finance'>",
+  "job_tags": ["Extract relevant keywords such as skills, tools, job levels, etc."],
+  "job_employment_types": ["Full-Time", "Part-Time", "Contract", etc.],
+  "job_benefits": ["List benefits like health insurance, bonuses, paid leave, etc."],
+  "job_salary": "<Extract salary information if mentioned, otherwise null>",
+  "job_is_remote": <true if the job allows remote work, else false>,
+  "job_location": {{
+      "city": "<City if available>",
+      "country": "<Country if mentioned>",
+      "is_remote": <true or false>
+  }}
+}}
+
+Rules:
+- Never invent data not found in the text.
+- Use short, clear sentences.
+- If a section is missing, return null or an empty list.
+- Keep all extracted data in valid JSON format only.
+
+Now analyze and return the JSON object.
+"""
+)
