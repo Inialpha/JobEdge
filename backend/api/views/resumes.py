@@ -162,8 +162,8 @@ class GenerateResumeFromJobDescription(APIView):
         User ID is extracted from the authenticated user.
         """
         job_description = request.data.get("job_description")
-        # Get user_id from request data if provided, otherwise use authenticated user
-        user_id = request.data.get("user_id") or request.user.id
+        # Use authenticated user only for security
+        user_id = request.user.id
         
         if not job_description:
             return Response({"details": "Job description is required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -187,14 +187,15 @@ class GenerateResumeFromJobDescription(APIView):
         tailored_resume["text"] = generate_resume_text(tailored_resume)
         tailored_resume["user"] = user_id
 
-        # Validate URL fields
+        # Validate URL fields - preserve AI-generated values if valid
         url_fields = ["linkedin", "website"]
         url_validator = URLValidator()
         for url_field in url_fields:
             try:
                 url_validator(tailored_resume.get(url_field, ""))
-                tailored_resume[url_field] = request.data.get(url_field)
+                # Keep the AI-generated URL as it's valid
             except ValidationError as e:
+                # If invalid, set to None
                 tailored_resume[url_field] = None
 
         new_resume = ResumeSerializer(data=tailored_resume)
