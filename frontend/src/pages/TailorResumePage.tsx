@@ -37,6 +37,15 @@ interface Education {
   gpa?: string;
 }
 
+interface Project {
+  name: string;
+  description: string;
+  technologies?: string;
+  link?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
 interface ResumeSection<T> {
   title?: string;
   content: T;
@@ -51,7 +60,7 @@ interface GeneratedResume {
     experience?: ResumeSection<Experience[] | string>;
     education?: ResumeSection<Education[] | string>;
     skills?: ResumeSection<string | string[]>;
-    projects?: ResumeSection<unknown>;
+    projects?: ResumeSection<Project[] | string>;
   };
 }
 
