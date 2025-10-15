@@ -193,7 +193,8 @@ class GenerateResumeFromJobDescription(APIView):
         for url_field in url_fields:
             try:
                 url_validator(tailored_resume.get(url_field, ""))
-                # Keep the AI-generated URL as it's valid
+                # Keep the AI-generated URL as it's valid - no changes needed
+                pass
             except ValidationError as e:
                 # If invalid, set to None
                 tailored_resume[url_field] = None
