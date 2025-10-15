@@ -8,10 +8,57 @@ import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { postRequest } from "@/utils/apis";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
+interface ContactInfo {
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  city?: string;
+  country?: string;
+  linkedin?: string;
+  website?: string;
+}
+
+interface Experience {
+  role: string;
+  organization: string;
+  startDate: string;
+  endDate: string;
+  location?: string;
+  responsibilities?: string[];
+}
+
+interface Education {
+  degree: string;
+  field: string;
+  institution: string;
+  graduationDate?: string;
+  gpa?: string;
+}
+
+interface ResumeSection<T> {
+  title?: string;
+  content: T;
+}
+
+interface GeneratedResume {
+  message?: string;
+  template?: string;
+  resume?: {
+    contact?: ResumeSection<ContactInfo>;
+    summary?: ResumeSection<string>;
+    experience?: ResumeSection<Experience[] | string>;
+    education?: ResumeSection<Education[] | string>;
+    skills?: ResumeSection<string | string[]>;
+    projects?: ResumeSection<unknown>;
+  };
+}
+
 export default function TailorResumePage() {
   const [jobDescription, setJobDescription] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
-  const [generatedResume, setGeneratedResume] = useState<any>(null);
+  const [generatedResume, setGeneratedResume] = useState<GeneratedResume | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -208,7 +255,7 @@ export default function TailorResumePage() {
                       <div>
                         <h4 className="font-semibold text-lg mb-2">Experience</h4>
                         {Array.isArray(generatedResume.resume.experience.content) ? (
-                          generatedResume.resume.experience.content.map((exp: any, index: number) => (
+                          generatedResume.resume.experience.content.map((exp: Experience, index: number) => (
                             <div key={index} className="mb-3">
                               <h5 className="font-medium">{exp.role} at {exp.organization}</h5>
                               <p className="text-sm text-gray-600">{exp.startDate} - {exp.endDate}</p>
@@ -232,7 +279,7 @@ export default function TailorResumePage() {
                       <div>
                         <h4 className="font-semibold text-lg mb-2">Education</h4>
                         {Array.isArray(generatedResume.resume.education.content) ? (
-                          generatedResume.resume.education.content.map((edu: any, index: number) => (
+                          generatedResume.resume.education.content.map((edu: Education, index: number) => (
                             <div key={index} className="mb-2">
                               <h5 className="font-medium">{edu.degree} in {edu.field}</h5>
                               <p className="text-sm text-gray-600">{edu.institution}</p>
