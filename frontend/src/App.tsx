@@ -7,11 +7,13 @@ import Signup from "@/pages/Signup";
 import Login from "@/pages/Login";
 import AdminDashboard from "@/pages/admin/Dashboard"
 import TailorResumePage from "@/pages/TailorResumePage";
+import LandingPage from "@/pages/LandingPage";
 
 
 const routes = createBrowserRouter(
   createRoutesFromElements(
     <Route>
+      <Route path="/" element={<LandingPage />} />
       <Route path="signup" element={<Signup />} />
       <Route path="login" element={<Login />} />
       <Route path="jobs/detail" element={<JobDetails />} />
