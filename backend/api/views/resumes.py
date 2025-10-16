@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from ..models import Resume, Job, User
 from ..serializers.resume import ResumeSerializer
 from file_reader import File
-from ai_services.ai import ai, generate_resume
+from ai_services.resume_extractor import ai, generate_resume
 from django.db.models import Q
 from ..serializers.job import JobSerializer 
 from rest_framework.authentication import TokenAuthentication
@@ -42,14 +42,17 @@ class ResumeAPIView(APIView):
         """
 
         file_name = request.data.get("file")
-        user_id = request.data.get("user")
+        user_id = request.user.id
+        #user_id = request.data.get("user")
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
+            print("No user for user's id")
             return Response({"details": "No user for user's id"}, status=status.HTTP_400_BAD_REQUEST)
 
         file = File(file_name)
         resume_data = ai(file.text)
+        print(resume_data)
         resume_data['file'] = file_name
         resume_data["text"] = file.text
         resume_data['user'] = user_id
@@ -83,6 +86,10 @@ class ResumeAPIView(APIView):
                 user.has_master_resume = True
                 user.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                print(serializer.errors)
+
+            print("status=status.HTTP_400_BAD_REQUEST)")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print(e)
@@ -166,20 +173,24 @@ class GenerateResumeFromJobDescription(APIView):
         user_id = request.user.id
         
         if not job_description:
+            print("Job description is required")
             return Response({"details": "Job description is required"}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
             user = User.objects.get(id=user_id)
             resume = Resume.objects.get(user=user, is_master=True)
         except User.DoesNotExist:
+            print("User not found")
             return Response({"details": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
         except Resume.DoesNotExist:
+            print("No master resume found for user")
             return Response({"details": "No master resume found for user"}, status=status.HTTP_400_BAD_REQUEST)
         
         resume_serializer = ResumeSerializer(resume)
         
         # Generate tailored resume using AI
         tailored_resume = generate_resume(job_description, resume_serializer.data["text"])
+        print(tailored_resume)
         
         if not tailored_resume:
             return Response({"details": "Failed to generate resume"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -198,7 +209,8 @@ class GenerateResumeFromJobDescription(APIView):
             except ValidationError as e:
                 # If invalid, set to None
                 tailored_resume[url_field] = None
-
+        if not tailored_resume.get("summary") and tailored_resume.get("professionalSummary"):
+            tailored_resume["summary"] = tailored_resume.get("professionalSummary")
         new_resume = ResumeSerializer(data=tailored_resume)
         if new_resume.is_valid():
             try:
