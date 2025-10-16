@@ -208,7 +208,7 @@ export default function ResumeEditor({ generatedResume }: { generatedResume: any
 
   const updateEditingItemField = useCallback((field: string, value: string | string[]) => {
     if (editingItemData) {
-      setEditingItemData((prev) => ({ ...prev!, [field]: value }))
+      setEditingItemData((prev) => prev ? { ...prev, [field]: value } : prev)
     }
   }, [editingItemData])
 
