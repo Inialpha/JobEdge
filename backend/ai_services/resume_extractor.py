@@ -48,76 +48,73 @@ def ai(text: str):
     try:
         system_message = (
             "You are an expert information extractor. "
-            "Only extract relevant information from the resume. "
-            "Provide keywords relevant for job search. "
-            "Do not modify the extracted information. "
-            "If any value is missing, return null for that field. "
-            "Return only valid JSON matching the specified schema."
+            "Read the given resume text and output structured JSON that exactly matches the schema below. "
+            "Each field includes a description to guide your extraction. "
+            "Do not guess or invent any information. "
+            "If something is missing, set its value to should be None, empty list, or empty string. "
+            "Ensure the final output is valid JSON — no explanations or extra text."
         )
 
         user_prompt = f"""
-Extract information from this resume text below and return it as JSON matching this schema:
+Extract the resume information using this JSON schema and descriptions:
 
 {{
-  "keywords": ["..."],
-  "name": "string",
-  "summary": "string",
-  "address": "string",
-  "email": "string",
-  "linkedin": "string",
-  "phone_number": "string or null",
-  "website": "string",
-  "professional_experiences": [
-    {{
-      "organization": "string",
-      "role": "string",
-      "time": "string",
-      "responsibilities": ["..."]
-    }}
-  ],
-  "skills": ["..."],
-  "projects": [
-    {{
-      "name": "string",
-      "description": "string or list of strings"
-    }}
-  ],
-  "educations": [
-    {{
-      "school_name": "string",
-      "certificate": "string",
-      "time": "string"
-    }}
-  ],
-  "languages": ["..."]
+  "keywords": List[str] — Keywords or phrases that summarize the candidate's expertise and are useful for job search.
+  "name": str — Full name of the candidate as written on the resume.
+  "summary": str — A concise summary describing the candidate’s professional profile and strengths.
+  "address": str — Candidate’s residential or contact address.
+  "email": str — Professional email address for communication.
+  "linkedin": str — Link to the candidate’s LinkedIn profile.
+  "phone_number": str or null — Candidate’s phone number (include country code if present).
+  "website": str or null — Personal or portfolio website link.
+  "professional_experiences": List[Object] — A list of previous work experiences, each with:
+      {{
+        "organization": str — The name of the company or organization.
+        "role": str — The job title or position held.
+        "time": str — The period spent at the organization (e.g., 'Jan 2021 – Dec 2023').
+        "responsibilities": List[str] — Key tasks, achievements, or responsibilities handled in this role.
+      }}
+  "skills": List[str] — List of technical and soft skills mentioned in the resume.
+  "projects": List[Object] — List of notable projects completed, each with:
+      {{
+        "name": str — The name or title of the project, including relevant tags or technologies.
+        "description": str or List[str] — Description of the project or bullet points summarizing it.
+      }}
+  "educations": List[Object] — List of educational qualifications, each with:
+      {{
+        "school_name": str — The institution's name.
+        "certificate": str — The degree, diploma, or qualification received.
+        "time": str — The duration or time period of study.
+      }}
+  "languages": List[str] — List of languages the candidate can read, write, or speak.
 }}
 
 Resume Text:
 {text}
+
+Return the extracted information as a JSON object following this structure.
 """
 
         completion = client.chat.completions.create(
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": user_prompt},
             ],
             temperature=0,
-            max_completion_tokens=8192,
+            #max_completion_tokens=8192,
             top_p=1,
-            reasoning_effort="medium",
+            #reasoning_effort="medium",
             stream=False,
         )
 
         output = completion.choices[0].message.content.strip()
 
-        # Parse the AI output as JSON
         try:
-            parsed = json.loads(output)
-            return Resume(**parsed).dict()
+            return extract_json_dict(output)
         except json.JSONDecodeError:
             print("⚠️ AI output was not valid JSON. Returning raw text.")
-            return {"raw_output": output}
+            return None
 
     except Exception as e:
         print("❌ Error in ai():", e)
@@ -143,31 +140,91 @@ Master Resume:
 Job Description:
 {job}
 
-Return a JSON object in the same structure as the master resume, but tailored for this job.
-"""
+Extract the resume information using this JSON schema and descriptions:
+
+{{
+  "keywords": List[str] — Keywords or phrases that summarize the candidate's expertise and are useful for job search.
+  "name": str — Full name of the candidate as written on the resume.
+  "summary": str — A concise summary describing the candidate’s professional profile and strengths.
+  "address": str — Candidate’s residential or contact address.
+  "email": str — Professional email address for communication.
+  "linkedin": str — Link to the candidate’s LinkedIn profile.
+  "phone_number": str or null — Candidate’s phone number (include country code if present).
+  "website": str or null — Personal or portfolio website link.
+  "professional_experiences": List[Object] — A list of previous work experiences, each with:
+      {{
+        "organization": str — The name of the company or organization.
+        "role": str — The job title or position held.
+        "time": str — The period spent at the organization (e.g., 'Jan 2021 – Dec 2023').
+        "responsibilities": List[str] — Key tasks, achievements, or responsibilities handled in this role.
+      }}
+  "skills": List[str] — List of technical and soft skills mentioned in the resume.
+  "projects": List[Object] — List of notable projects completed, each with:
+      {{
+        "name": str — The name or title of the project, including relevant tags or technologies.
+        "description": str or List[str] — Description of the project or bullet points summarizing it.
+      }}
+  "educations": List[Object] — List of educational qualifications, each with:
+      {{
+        "school_name": str — The institution's name.
+        "certificate": str — The degree, diploma, or qualification received.
+        "time": str — The duration or time period of study.
+      }}
+  "languages": List[str] — List of languages the candidate can read, write, or speak.
+}}
+
+
+Return the extracted information as a JSON object following this structure.
+        """
+
 
         completion = client.chat.completions.create(
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": user_prompt},
             ],
             temperature=0,
-            max_completion_tokens=8192,
+            #max_completion_tokens=8192,
             top_p=1,
-            reasoning_effort="medium",
+            #reasoning_effort="medium",
             stream=False,
         )
 
         output = completion.choices[0].message.content.strip()
 
         try:
-            parsed = json.loads(output)
-            return parsed
+            return extract_json_dict(output)
         except json.JSONDecodeError:
             print("⚠️ AI output was not valid JSON. Returning raw text.")
-            return {"raw_output": output}
+            return None
 
     except Exception as e:
         print("❌ Error in generate_resume():", e)
         return None
+
+
+import json
+import re
+
+def extract_json_dict(text):
+    """
+    Extracts and returns the dictionary part from a string
+    that contains JSON wrapped in backticks or markdown formatting.
+    """
+    # Try to find the JSON block between ```json ... ```
+    match = re.search(r'```(?:json)?\s*({.*})\s*```', text, re.DOTALL)
+    if match:
+        json_str = match.group(1)
+    else:
+        # fallback: extract first {...} block if no backticks
+        match = re.search(r'({.*})', text, re.DOTALL)
+        if not match:
+            raise ValueError("No JSON object found in text.")
+        json_str = match.group(1)
+
+    # Convert to Python dict
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON structure: {e}")

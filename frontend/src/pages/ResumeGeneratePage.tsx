@@ -21,11 +21,11 @@ export default function JobDescriptionForm() {
       return;
     }
 
-    if (!user.hasMasterResume) {
+    /*if (!user.hasMasterResume) {
       setStatus('error');
       setMessage('Please upload a master resume first');
       return;
-    }
+    }*/
 
     setStatus('loading');
     setMessage('');
