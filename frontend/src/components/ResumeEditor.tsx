@@ -5,9 +5,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { generatePDF, Preview } from "@/components/pdfGenerator"
+import { generatePDF } from "@/components/pdfGenerator"
 import { PreviewModal } from "@/components/preview-modal"
-import { useLocation } from 'react-router-dom';
+import { Pencil, Save, X } from "lucide-react"
 
 type ContactInfo = {
   name: string
@@ -19,7 +19,7 @@ type ContactInfo = {
   address: string
 }
 
-type ProfessionalExperience = {
+type WorkExperience = {
   organization: string
   role: string
   startDate: string
@@ -86,7 +86,7 @@ export const getEditableResume = (resume: any) => {
 }
 
 
-export default function ResumeEditor({ generatedResume }) {
+export default function ResumeEditor({ generatedResume }: { generatedResume: any }) {
   console.log("resume", generatedResume)
   const [resume, setResume] = useState<Record<string, ResumeSection>>({
     contact: {
@@ -124,6 +124,12 @@ export default function ResumeEditor({ generatedResume }) {
   })
 
   const [editMode, setEditMode] = useState<Record<string, boolean>>({})
+  const [editingItemIndex, setEditingItemIndex] = useState<Record<string, number | null>>({
+    experience: null,
+    education: null,
+    projects: null,
+  })
+  const [editingItemData, setEditingItemData] = useState<WorkExperience | Education | Project | null>(null)
   const [newExperience, setNewExperience] = useState<WorkExperience>({
     organization: "",
     role: "",
@@ -170,6 +176,41 @@ export default function ResumeEditor({ generatedResume }) {
   const toggleEditMode = useCallback((section: string) => {
     setEditMode((prev) => ({ ...prev, [section]: !prev[section] }))
   }, [])
+
+  const startEditingItem = useCallback((section: string, index: number, item: WorkExperience | Education | Project) => {
+    setEditingItemIndex((prev) => ({ ...prev, [section]: index }))
+    setEditingItemData(JSON.parse(JSON.stringify(item))) // Deep clone
+  }, [])
+
+  const cancelEditingItem = useCallback((section: string) => {
+    setEditingItemIndex((prev) => ({ ...prev, [section]: null }))
+    setEditingItemData(null)
+  }, [])
+
+  const saveEditingItem = useCallback((section: string) => {
+    const index = editingItemIndex[section]
+    if (index !== null && editingItemData) {
+      setResume((prev) => {
+        const newContent = [...(prev[section].content as any[])]
+        newContent[index] = editingItemData
+        return {
+          ...prev,
+          [section]: {
+            ...prev[section],
+            content: newContent,
+          },
+        }
+      })
+      setEditingItemIndex((prev) => ({ ...prev, [section]: null }))
+      setEditingItemData(null)
+    }
+  }, [editingItemIndex, editingItemData])
+
+  const updateEditingItemField = useCallback((field: string, value: string | string[]) => {
+    if (editingItemData) {
+      setEditingItemData((prev) => ({ ...prev!, [field]: value }))
+    }
+  }, [editingItemData])
 
   const renderContactForm = useCallback(() => {
     const content = resume.contact.content as ContactInfo
@@ -354,6 +395,205 @@ export default function ResumeEditor({ generatedResume }) {
     )
   }, [newProject, addItem])
 
+  const renderEditableItem = useCallback((section: string, item: WorkExperience | Education | Project, index: number) => {
+    const isEditing = editingItemIndex[section] === index
+    
+    if (!isEditing) {
+      return (
+        <div key={index} className="mb-4 p-4 border rounded-lg relative">
+          {Object.entries(item).map(([key, value]) => (
+            <p key={key} className="mb-1">
+              <span className="font-semibold capitalize">{key.replace(/([A-Z])/g, " $1").trim()}:</span>
+              {Array.isArray(value) ? (
+                <ul className="list-disc list-inside">
+                  {value.map((v, i) => (
+                    <li key={i}>{v}</li>
+                  ))}
+                </ul>
+              ) : (
+                ` ${value}`
+              )}
+            </p>
+          ))}
+          <Button
+            size="sm"
+            variant="outline"
+            className="mt-2"
+            onClick={() => startEditingItem(section, index, item)}
+          >
+            <Pencil className="w-4 h-4 mr-2" />
+            Edit
+          </Button>
+        </div>
+      )
+    }
+
+    // Render edit form for the specific item
+    if (section === "experience" && editingItemData) {
+      const exp = editingItemData as WorkExperience
+      return (
+        <div key={index} className="mb-4 p-4 border rounded-lg bg-gray-50">
+          <Input
+            placeholder="Organization"
+            value={exp.organization}
+            onChange={(e) => updateEditingItemField("organization", e.target.value)}
+            className="mb-2"
+          />
+          <Input
+            placeholder="Role"
+            value={exp.role}
+            onChange={(e) => updateEditingItemField("role", e.target.value)}
+            className="mb-2"
+          />
+          <div className="flex gap-2 mb-2">
+            <Input
+              placeholder="Start Date"
+              value={exp.startDate}
+              onChange={(e) => updateEditingItemField("startDate", e.target.value)}
+            />
+            <Input
+              placeholder="End Date"
+              value={exp.endDate}
+              onChange={(e) => updateEditingItemField("endDate", e.target.value)}
+            />
+          </div>
+          <Input
+            placeholder="Location"
+            value={exp.location}
+            onChange={(e) => updateEditingItemField("location", e.target.value)}
+            className="mb-2"
+          />
+          {exp.responsibilities.map((resp, idx) => (
+            <Input
+              key={idx}
+              placeholder={`Responsibility ${idx + 1}`}
+              value={resp}
+              onChange={(e) => {
+                const newResponsibilities = [...exp.responsibilities]
+                newResponsibilities[idx] = e.target.value
+                updateEditingItemField("responsibilities", newResponsibilities)
+              }}
+              className="mb-2"
+            />
+          ))}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const newResponsibilities = [...exp.responsibilities, ""]
+              updateEditingItemField("responsibilities", newResponsibilities)
+            }}
+            className="mb-2"
+          >
+            Add Responsibility
+          </Button>
+          <div className="flex gap-2 mt-2">
+            <Button size="sm" onClick={() => saveEditingItem(section)}>
+              <Save className="w-4 h-4 mr-2" />
+              Save
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => cancelEditingItem(section)}>
+              <X className="w-4 h-4 mr-2" />
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )
+    }
+
+    if (section === "education" && editingItemData) {
+      const edu = editingItemData as Education
+      return (
+        <div key={index} className="mb-4 p-4 border rounded-lg bg-gray-50">
+          <Input
+            placeholder="Institution"
+            value={edu.institution}
+            onChange={(e) => updateEditingItemField("institution", e.target.value)}
+            className="mb-2"
+          />
+          <Input
+            placeholder="Degree"
+            value={edu.degree}
+            onChange={(e) => updateEditingItemField("degree", e.target.value)}
+            className="mb-2"
+          />
+          <Input
+            placeholder="Field of Study"
+            value={edu.field}
+            onChange={(e) => updateEditingItemField("field", e.target.value)}
+            className="mb-2"
+          />
+          <Input
+            placeholder="Graduation Date"
+            value={edu.graduationDate}
+            onChange={(e) => updateEditingItemField("graduationDate", e.target.value)}
+            className="mb-2"
+          />
+          <Input
+            placeholder="GPA"
+            value={edu.gpa}
+            onChange={(e) => updateEditingItemField("gpa", e.target.value)}
+            className="mb-2"
+          />
+          <div className="flex gap-2 mt-2">
+            <Button size="sm" onClick={() => saveEditingItem(section)}>
+              <Save className="w-4 h-4 mr-2" />
+              Save
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => cancelEditingItem(section)}>
+              <X className="w-4 h-4 mr-2" />
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )
+    }
+
+    if (section === "projects" && editingItemData) {
+      const proj = editingItemData as Project
+      return (
+        <div key={index} className="mb-4 p-4 border rounded-lg bg-gray-50">
+          <Input
+            placeholder="Project Name"
+            value={proj.name}
+            onChange={(e) => updateEditingItemField("name", e.target.value)}
+            className="mb-2"
+          />
+          <Textarea
+            placeholder="Project Description"
+            value={proj.description}
+            onChange={(e) => updateEditingItemField("description", e.target.value)}
+            className="mb-2"
+          />
+          <Input
+            placeholder="Technologies Used"
+            value={proj.technologies}
+            onChange={(e) => updateEditingItemField("technologies", e.target.value)}
+            className="mb-2"
+          />
+          <Input
+            placeholder="Project Link"
+            value={proj.link}
+            onChange={(e) => updateEditingItemField("link", e.target.value)}
+            className="mb-2"
+          />
+          <div className="flex gap-2 mt-2">
+            <Button size="sm" onClick={() => saveEditingItem(section)}>
+              <Save className="w-4 h-4 mr-2" />
+              Save
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => cancelEditingItem(section)}>
+              <X className="w-4 h-4 mr-2" />
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )
+    }
+
+    return null
+  }, [editingItemIndex, editingItemData, startEditingItem, saveEditingItem, cancelEditingItem, updateEditingItemField])
+
   const renderContent = useCallback(
     (section: string) => {
       const content = resume[section].content
@@ -373,6 +613,20 @@ export default function ResumeEditor({ generatedResume }) {
         return content || <Button onClick={() => toggleEditMode(section)}>Add {resume[section].title}</Button>
       }
       if (Array.isArray(content)) {
+        // For experience, education, and projects, render editable items
+        if (section === "experience" || section === "education" || section === "projects") {
+          return content.length > 0 ? (
+            <div>
+              {content.map((item, index) => {
+                if (typeof item === 'string') return null
+                return renderEditableItem(section, item as WorkExperience | Education | Project, index)
+              })}
+            </div>
+          ) : (
+            <Button onClick={() => toggleEditMode(section)}>Add {resume[section].title}</Button>
+          )
+        }
+        // For other array sections (if any), use default rendering
         return content.length > 0 ? (
           <div>
             {content.map((item, index) => (
@@ -405,7 +659,7 @@ export default function ResumeEditor({ generatedResume }) {
         </p>
       ))
     },
-    [resume, toggleEditMode],
+    [resume, toggleEditMode, renderEditableItem],
   )
 
   return (
