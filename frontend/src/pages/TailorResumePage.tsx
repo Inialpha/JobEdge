@@ -8,6 +8,7 @@ import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { postRequest } from "@/utils/apis";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import ResumeEditor from "@/components/ResumeEditor"
+import { useNavigate } from "react-router-dom";
 
 interface ContactInfo {
   name?: string;
@@ -71,6 +72,8 @@ export default function TailorResumePage() {
   const [generatedResume, setGeneratedResume] = useState<GeneratedResume | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  const navigate = useNavigate();
 
   const handleGenerateResume = async () => {
     if (!jobDescription.trim()) {
@@ -94,6 +97,9 @@ export default function TailorResumePage() {
       if (response.ok) {
         const result = await response.json();
         setGeneratedResume(result);
+        navigate("/resume-builder", {
+          state: {resume: result}
+        }),
         setError('');
       } else {
         const errorData = await response.json();
