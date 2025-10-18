@@ -110,7 +110,7 @@ export default function ResumeBuilder() {
     }
   ]);
 
-  const selectTemplate = (template: Template) => {
+  const selectTemplate = (template: Template, event?: React.MouseEvent) => {
     setCurrentTemplate(template);
     document.querySelectorAll('.template-card').forEach(card => {
       card.classList.remove('active');
@@ -205,6 +205,13 @@ export default function ResumeBuilder() {
     updatePreview();
   }, [currentTemplate, name, jobTitle, location, phone, email, summary, skills, experiences, degree, institution, eduYear, certifications, projects, awards]);
 
+  // Simple HTML escaping to prevent XSS
+  const escapeHtml = (text: string): string => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  };
+
   const updatePreview = () => {
     const preview = document.getElementById('resumePreview');
     if (!preview) return;
@@ -214,43 +221,43 @@ export default function ResumeBuilder() {
     if (currentTemplate === 'modern') {
       preview.innerHTML = `
         <div class="sidebar">
-          <div class="resume-name">${name}</div>
-          <div class="resume-title">${jobTitle}</div>
+          <div class="resume-name">${escapeHtml(name)}</div>
+          <div class="resume-title">${escapeHtml(jobTitle)}</div>
           <div class="resume-contact">
-            ${location}<br>
-            ${phone}<br>
-            ${email}
+            ${escapeHtml(location)}<br>
+            ${escapeHtml(phone)}<br>
+            ${escapeHtml(email)}
           </div>
           ${skills.length > 0 ? `
             <div class="resume-section-title">Skills</div>
             <div class="resume-content">
-              ${skills.map(skill => `<div class="skill-tag">${skill}</div>`).join('')}
+              ${skills.map(skill => `<div class="skill-tag">${escapeHtml(skill)}</div>`).join('')}
             </div>
           ` : ''}
           ${degree ? `
             <div class="resume-section-title">Education</div>
             <div class="resume-content">
-              <div><strong>${degree}</strong></div>
-              <div>${institution}</div>
-              <div>${eduYear}</div>
+              <div><strong>${escapeHtml(degree)}</strong></div>
+              <div>${escapeHtml(institution)}</div>
+              <div>${escapeHtml(eduYear)}</div>
             </div>
           ` : ''}
         </div>
         <div class="main-content">
           ${summary ? `
             <div class="resume-section-title">Professional Summary</div>
-            <div class="resume-content">${summary}</div>
+            <div class="resume-content">${escapeHtml(summary)}</div>
           ` : ''}
           ${experiences.length > 0 ? `
             <div class="resume-section-title">Experience</div>
             <div class="resume-content">
               ${experiences.map(exp => `
                 <div class="job-header">
-                  <span class="job-title">${exp.title}</span>
-                  <span class="job-duration">${exp.duration}</span>
+                  <span class="job-title">${escapeHtml(exp.title)}</span>
+                  <span class="job-duration">${escapeHtml(exp.duration)}</span>
                 </div>
                 <ul>
-                  ${exp.responsibilities.map(resp => `<li>${resp}</li>`).join('')}
+                  ${exp.responsibilities.map(resp => `<li>${escapeHtml(resp)}</li>`).join('')}
                 </ul>
               `).join('')}
             </div>
@@ -259,8 +266,8 @@ export default function ResumeBuilder() {
             <div class="resume-section-title">Certifications</div>
             <div class="resume-content">
               ${certifications.map(cert => `
-                <div><strong>${cert.name}</strong></div>
-                <div>${cert.issuer} - ${cert.year}</div>
+                <div><strong>${escapeHtml(cert.name)}</strong></div>
+                <div>${escapeHtml(cert.issuer)} - ${escapeHtml(cert.year)}</div>
               `).join('<br>')}
             </div>
           ` : ''}
@@ -268,9 +275,9 @@ export default function ResumeBuilder() {
             <div class="resume-section-title">Projects</div>
             <div class="resume-content">
               ${projects.map(proj => `
-                <div><strong>${proj.name}</strong></div>
-                <div>${proj.description}</div>
-                <div><em>${proj.technologies}</em></div>
+                <div><strong>${escapeHtml(proj.name)}</strong></div>
+                <div>${escapeHtml(proj.description)}</div>
+                <div><em>${escapeHtml(proj.technologies)}</em></div>
               `).join('<br>')}
             </div>
           ` : ''}
@@ -278,7 +285,7 @@ export default function ResumeBuilder() {
             <div class="resume-section-title">Awards</div>
             <div class="resume-content">
               ${awards.map(award => `
-                <div><strong>${award.title}</strong> - ${award.organization} (${award.year})</div>
+                <div><strong>${escapeHtml(award.title)}</strong> - ${escapeHtml(award.organization)} (${escapeHtml(award.year)})</div>
               `).join('<br>')}
             </div>
           ` : ''}
@@ -287,24 +294,24 @@ export default function ResumeBuilder() {
     } else if (currentTemplate === 'creative') {
       preview.innerHTML = `
         <div class="resume-header">
-          <div class="resume-name">${name}</div>
-          <div class="resume-title">${jobTitle}</div>
-          <div class="resume-contact">${location} | ${phone} | ${email}</div>
+          <div class="resume-name">${escapeHtml(name)}</div>
+          <div class="resume-title">${escapeHtml(jobTitle)}</div>
+          <div class="resume-contact">${escapeHtml(location)} | ${escapeHtml(phone)} | ${escapeHtml(email)}</div>
         </div>
         ${summary ? `
           <div class="resume-section-title">Professional Summary</div>
-          <div class="resume-content">${summary}</div>
+          <div class="resume-content">${escapeHtml(summary)}</div>
         ` : ''}
         ${experiences.length > 0 ? `
           <div class="resume-section-title">Experience</div>
           <div class="resume-content">
             ${experiences.map(exp => `
               <div class="job-header">
-                <span class="job-title">${exp.title}</span>
-                <span class="job-duration">${exp.duration}</span>
+                <span class="job-title">${escapeHtml(exp.title)}</span>
+                <span class="job-duration">${escapeHtml(exp.duration)}</span>
               </div>
               <ul>
-                ${exp.responsibilities.map(resp => `<li>${resp}</li>`).join('')}
+                ${exp.responsibilities.map(resp => `<li>${escapeHtml(resp)}</li>`).join('')}
               </ul>
             `).join('')}
           </div>
@@ -312,23 +319,23 @@ export default function ResumeBuilder() {
         ${degree ? `
           <div class="resume-section-title">Education</div>
           <div class="resume-content">
-            <div><strong>${degree}</strong></div>
-            <div>${institution}</div>
-            <div>${eduYear}</div>
+            <div><strong>${escapeHtml(degree)}</strong></div>
+            <div>${escapeHtml(institution)}</div>
+            <div>${escapeHtml(eduYear)}</div>
           </div>
         ` : ''}
         ${skills.length > 0 ? `
           <div class="resume-section-title">Skills</div>
           <div class="resume-content">
-            ${skills.map(skill => `<span class="skill-tag">${skill}</span>`).join(' ')}
+            ${skills.map(skill => `<span class="skill-tag">${escapeHtml(skill)}</span>`).join(' ')}
           </div>
         ` : ''}
         ${certifications.length > 0 ? `
           <div class="resume-section-title">Certifications</div>
           <div class="resume-content">
             ${certifications.map(cert => `
-              <div><strong>${cert.name}</strong></div>
-              <div>${cert.issuer} - ${cert.year}</div>
+              <div><strong>${escapeHtml(cert.name)}</strong></div>
+              <div>${escapeHtml(cert.issuer)} - ${escapeHtml(cert.year)}</div>
             `).join('<br>')}
           </div>
         ` : ''}
@@ -336,9 +343,9 @@ export default function ResumeBuilder() {
           <div class="resume-section-title">Projects</div>
           <div class="resume-content">
             ${projects.map(proj => `
-              <div><strong>${proj.name}</strong></div>
-              <div>${proj.description}</div>
-              <div><em>${proj.technologies}</em></div>
+              <div><strong>${escapeHtml(proj.name)}</strong></div>
+              <div>${escapeHtml(proj.description)}</div>
+              <div><em>${escapeHtml(proj.technologies)}</em></div>
             `).join('<br>')}
           </div>
         ` : ''}
@@ -346,7 +353,7 @@ export default function ResumeBuilder() {
           <div class="resume-section-title">Awards</div>
           <div class="resume-content">
             ${awards.map(award => `
-              <div><strong>${award.title}</strong> - ${award.organization} (${award.year})</div>
+              <div><strong>${escapeHtml(award.title)}</strong> - ${escapeHtml(award.organization)} (${escapeHtml(award.year)})</div>
             `).join('<br>')}
           </div>
         ` : ''}
@@ -354,23 +361,23 @@ export default function ResumeBuilder() {
     } else {
       // Classic and Minimal templates
       preview.innerHTML = `
-        <div class="resume-name">${name}</div>
-        <div class="resume-title">${jobTitle}</div>
-        <div class="resume-contact">${location} | ${phone} | ${email}</div>
+        <div class="resume-name">${escapeHtml(name)}</div>
+        <div class="resume-title">${escapeHtml(jobTitle)}</div>
+        <div class="resume-contact">${escapeHtml(location)} | ${escapeHtml(phone)} | ${escapeHtml(email)}</div>
         ${summary ? `
           <div class="resume-section-title">Professional Summary</div>
-          <div class="resume-content">${summary}</div>
+          <div class="resume-content">${escapeHtml(summary)}</div>
         ` : ''}
         ${experiences.length > 0 ? `
           <div class="resume-section-title">Professional Experience</div>
           <div class="resume-content">
             ${experiences.map(exp => `
               <div class="job-header">
-                <span class="job-title">${exp.title}</span>
-                <span class="job-duration">${exp.duration}</span>
+                <span class="job-title">${escapeHtml(exp.title)}</span>
+                <span class="job-duration">${escapeHtml(exp.duration)}</span>
               </div>
               <ul>
-                ${exp.responsibilities.map(resp => `<li>${resp}</li>`).join('')}
+                ${exp.responsibilities.map(resp => `<li>${escapeHtml(resp)}</li>`).join('')}
               </ul>
             `).join('')}
           </div>
@@ -378,23 +385,23 @@ export default function ResumeBuilder() {
         ${degree ? `
           <div class="resume-section-title">Education</div>
           <div class="resume-content">
-            <div><strong>${degree}</strong></div>
-            <div>${institution}</div>
-            <div>${eduYear}</div>
+            <div><strong>${escapeHtml(degree)}</strong></div>
+            <div>${escapeHtml(institution)}</div>
+            <div>${escapeHtml(eduYear)}</div>
           </div>
         ` : ''}
         ${skills.length > 0 ? `
           <div class="resume-section-title">Skills</div>
           <div class="resume-content">
-            ${skills.map(skill => `<span class="skill-tag">${skill}</span>`).join(' ')}
+            ${skills.map(skill => `<span class="skill-tag">${escapeHtml(skill)}</span>`).join(' ')}
           </div>
         ` : ''}
         ${certifications.length > 0 ? `
           <div class="resume-section-title">Certifications</div>
           <div class="resume-content">
             ${certifications.map(cert => `
-              <div><strong>${cert.name}</strong></div>
-              <div>${cert.issuer} - ${cert.year}</div>
+              <div><strong>${escapeHtml(cert.name)}</strong></div>
+              <div>${escapeHtml(cert.issuer)} - ${escapeHtml(cert.year)}</div>
             `).join('<br>')}
           </div>
         ` : ''}
@@ -402,9 +409,9 @@ export default function ResumeBuilder() {
           <div class="resume-section-title">Projects</div>
           <div class="resume-content">
             ${projects.map(proj => `
-              <div><strong>${proj.name}</strong></div>
-              <div>${proj.description}</div>
-              <div><em>${proj.technologies}</em></div>
+              <div><strong>${escapeHtml(proj.name)}</strong></div>
+              <div>${escapeHtml(proj.description)}</div>
+              <div><em>${escapeHtml(proj.technologies)}</em></div>
             `).join('<br>')}
           </div>
         ` : ''}
@@ -412,7 +419,7 @@ export default function ResumeBuilder() {
           <div class="resume-section-title">Awards</div>
           <div class="resume-content">
             ${awards.map(award => `
-              <div><strong>${award.title}</strong> - ${award.organization} (${award.year})</div>
+              <div><strong>${escapeHtml(award.title)}</strong> - ${escapeHtml(award.organization)} (${escapeHtml(award.year)})</div>
             `).join('<br>')}
           </div>
         ` : ''}
@@ -436,7 +443,7 @@ export default function ResumeBuilder() {
       };
       html2pdf().set(opt).from(element).save();
     } else {
-      alert('PDF library not loaded. Please ensure html2pdf.js is included.');
+      console.error('PDF library not loaded. Please ensure html2pdf.js is included.');
     }
   };
 
