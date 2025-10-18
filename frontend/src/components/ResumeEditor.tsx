@@ -8,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { generatePDF } from "@/components/pdfGenerator"
 import { PreviewModal } from "@/components/preview-modal"
 import { Pencil, Save, X } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ContactInfo = {
   name: string
@@ -88,6 +89,7 @@ export const getEditableResume = (resume: any) => {
 
 export default function ResumeEditor({ generatedResume }: { generatedResume: any }) {
   console.log("resume", generatedResume)
+  const [selectedTemplate, setSelectedTemplate] = useState('modern');
   const [resume, setResume] = useState<Record<string, ResumeSection>>({
     contact: {
       title: "Contact",
@@ -707,8 +709,22 @@ export default function ResumeEditor({ generatedResume }: { generatedResume: any
         </Accordion>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button onClick={() => setIsPreviewOpen(true)}>Preview</Button>
-        <Button onClick={() => generatePDF(resume)}>Download as PDF</Button>
+        {/* Template Selector */}
+        <div className="space-y-2">
+          <Label htmlFor="template">Resume Template</Label>
+          <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+            <SelectTrigger id="template" className="w-full">
+              <SelectValue placeholder="Select a template" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="modern">Modern</SelectItem>
+              <SelectItem value="classic">Classic</SelectItem>
+              <SelectItem value="minimalist">Minimalist</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+          <Button onClick={() => setIsPreviewOpen(true)}>Preview</Button>
+          <Button onClick={() => generatePDF(resume)}>Download as PDF</Button>
       </CardFooter>
       <PreviewModal isOpen={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} resume={resume} />
     </Card>
