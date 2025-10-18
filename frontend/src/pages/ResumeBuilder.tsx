@@ -1,561 +1,224 @@
-import { useState, useEffect } from 'react';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } from 'docx';
-import { saveAs } from 'file-saver';
-
-// Types
-type Skill = string;
-
-type Experience = {
-  title: string;
-  duration: string;
-  responsibilities: string[];
-};
-
-type Certification = {
-  name: string;
-  issuer: string;
-  year: string;
-};
-
-type Project = {
-  name: string;
-  description: string;
-  technologies: string;
-};
-
-type Award = {
-  title: string;
-  organization: string;
-  year: string;
-};
-
-type Template = 'classic' | 'modern' | 'minimal' | 'creative';
+import { useState, useCallback, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation } from '@/types/resume';
+import { getEditableResume } from '@/utils/resumeUtils';
+import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
+import { ResumePreview } from '@/components/ResumePreview';
+import { createRoot } from 'react-dom/client';
 
 export default function ResumeBuilder() {
+  const location = useLocation();
+  const passedResume = location.state?.resume;
+  
   const [currentTemplate, setCurrentTemplate] = useState<Template>('classic');
-  const [skills, setSkills] = useState<Skill[]>([
-    'Python', 'R', 'SQL', 'TensorFlow', 'PyTorch', 'Machine Learning', 
-    'Deep Learning', 'NLP', 'Data Analysis', 'AWS', 'Docker'
-  ]);
-  const [newSkill, setNewSkill] = useState('');
+  const [resume, setResume] = useState<ResumeData>(() => getEditableResume(passedResume));
   
-  const [name, setName] = useState('VIKAS GUPTA');
-  const [jobTitle, setJobTitle] = useState('Senior Machine Learning Engineer');
-  const [location, setLocation] = useState('New York, NY');
-  const [phone, setPhone] = useState('(123) 456-7800');
-  const [email, setEmail] = useState('Vikas@techvikasika.com');
-  const [summary, setSummary] = useState('Results-driven Data Scientist with 5+ years of experience solving business challenges using machine learning, statistical analysis, and data-driven strategies. Skilled in building predictive models, recommendation systems, and NLP tools.');
+  // Separate states for adding new items
+  const [newExperience, setNewExperience] = useState<ProfessionalExperience>({
+    organization: '',
+    role: '',
+    startDate: '',
+    endDate: '',
+    location: '',
+    responsibilities: ['']
+  });
   
-  const [degree, setDegree] = useState('Bachelor of Technology (Computer Science)');
-  const [institution, setInstitution] = useState('Indian Institute of Technology (IIT)');
-  const [eduYear, setEduYear] = useState('2011-2015');
+  const [newEducation, setNewEducation] = useState<Education>({
+    institution: '',
+    degree: '',
+    field: '',
+    startDate: '',
+    endDate: '',
+    gpa: ''
+  });
   
-  const [experiences, setExperiences] = useState<Experience[]>([
-    {
-      title: 'Data Scientist | AppItron Solutions, New York, NY',
-      duration: 'Jun 2020 - Present',
-      responsibilities: [
-        'Built a customer churn prediction model (XGBoost) with 85% accuracy, improving retention by 28%',
-        'Created a real-time Tableau dashboard to track marketing campaigns, cutting decision time by 40%',
-        'Led a team of 3 data analysts in A/B testing for product features, boosting user engagement by 15%'
-      ]
-    },
-    {
-      title: 'Machine Learning Engineer | TechNova Inc, San Francisco, CA',
-      duration: 'Jan 2018 - May 2020',
-      responsibilities: [
-        'Developed recommendation engine using collaborative filtering, increasing sales by 20%',
-        'Implemented sentiment analysis tool for customer feedback using BERT',
-        'Optimized ML pipelines reducing model training time by 50%'
-      ]
-    }
-  ]);
+  const [newProject, setNewProject] = useState<Project>({
+    name: '',
+    description: '',
+    technologies: '',
+    link: ''
+  });
   
-  const [certifications, setCertifications] = useState<Certification[]>([
-    {
-      name: 'AWS Certified Machine Learning - Specialty',
-      issuer: 'Amazon Web Services',
-      year: '2021'
-    },
-    {
-      name: 'Deep Learning Specialization',
-      issuer: 'Coursera (Andrew Ng)',
-      year: '2019'
-    }
-  ]);
+  const [newCertification, setNewCertification] = useState<Certification>({
+    name: '',
+    issuer: '',
+    year: ''
+  });
   
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      name: 'Customer Segmentation Analysis',
-      description: 'Developed K-means clustering model to segment 100K+ customers, enabling targeted marketing campaigns',
-      technologies: 'Python, Scikit-learn, Pandas'
-    },
-    {
-      name: 'Fraud Detection System',
-      description: 'Built real-time fraud detection using Random Forest achieving 92% accuracy',
-      technologies: 'Python, TensorFlow, AWS Lambda'
-    }
-  ]);
-  
-  const [awards, setAwards] = useState<Award[]>([
-    {
-      title: 'Best Innovation Award',
-      organization: 'AppItron Solutions',
-      year: '2022'
-    },
-    {
-      title: 'Data Science Excellence',
-      organization: 'TechNova Inc',
-      year: '2019'
-    }
-  ]);
+  const [newAward, setNewAward] = useState<Award>({
+    title: '',
+    organization: '',
+    year: ''
+  });
 
-  const selectTemplate = (template: Template, event?: React.MouseEvent) => {
+  // Handler callbacks using useCallback
+  const updateResume = useCallback((field: keyof ResumeData, value: string | ProfessionalExperience[] | Education[] | Project[] | Certification[] | Award[] | PersonalInformation) => {
+    setResume(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  const updatePersonalInfo = useCallback((field: keyof ResumeData['personalInformation'], value: string) => {
+    setResume(prev => ({
+      ...prev,
+      personalInformation: { ...prev.personalInformation, [field]: value }
+    }));
+  }, []);
+
+  const selectTemplate = useCallback((template: Template, event?: React.MouseEvent) => {
     setCurrentTemplate(template);
     document.querySelectorAll('.template-card').forEach(card => {
       card.classList.remove('active');
     });
-    event?.target && (event.target as HTMLElement).closest('.template-card')?.classList.add('active');
-  };
-
-  const addSkill = () => {
-    if (newSkill.trim()) {
-      setSkills([...skills, newSkill.trim()]);
-      setNewSkill('');
+    if (event?.target) {
+      (event.target as HTMLElement).closest('.template-card')?.classList.add('active');
     }
-  };
+  }, []);
 
-  const removeSkill = (index: number) => {
-    setSkills(skills.filter((_, i) => i !== index));
-  };
+  const addSkill = useCallback((skill: string) => {
+    if (skill.trim()) {
+      const currentSkills = resume.skills.split(" • ").filter(s => s.trim());
+      updateResume('skills', [...currentSkills, skill.trim()].join(" • "));
+    }
+  }, [resume.skills, updateResume]);
 
-  const addExperience = () => {
-    setExperiences([...experiences, {
-      title: '',
-      duration: '',
-      responsibilities: ['']
-    }]);
-  };
+  const removeSkill = useCallback((index: number) => {
+    const currentSkills = resume.skills.split(" • ").filter(s => s.trim());
+    const updated = currentSkills.filter((_, i) => i !== index);
+    updateResume('skills', updated.join(" • "));
+  }, [resume.skills, updateResume]);
 
-  const updateExperience = (index: number, field: keyof Experience, value: string | string[]) => {
-    const updated = [...experiences];
+  const addExperienceItem = useCallback(() => {
+    if (newExperience.organization && newExperience.role) {
+      updateResume('professionalExperience', [...resume.professionalExperience, newExperience]);
+      setNewExperience({
+        organization: '',
+        role: '',
+        startDate: '',
+        endDate: '',
+        location: '',
+        responsibilities: ['']
+      });
+    }
+  }, [newExperience, resume.professionalExperience, updateResume]);
+
+  const updateExperience = useCallback((index: number, field: keyof ProfessionalExperience, value: string | string[]) => {
+    const updated = [...resume.professionalExperience];
     updated[index] = { ...updated[index], [field]: value };
-    setExperiences(updated);
-  };
+    updateResume('professionalExperience', updated);
+  }, [resume.professionalExperience, updateResume]);
 
-  const removeExperience = (index: number) => {
-    setExperiences(experiences.filter((_, i) => i !== index));
-  };
+  const removeExperience = useCallback((index: number) => {
+    updateResume('professionalExperience', resume.professionalExperience.filter((_, i) => i !== index));
+  }, [resume.professionalExperience, updateResume]);
 
-  const addResponsibility = (expIndex: number) => {
-    const updated = [...experiences];
-    updated[expIndex].responsibilities.push('');
-    setExperiences(updated);
-  };
+  const addEducationItem = useCallback(() => {
+    if (newEducation.institution && newEducation.degree) {
+      updateResume('education', [...resume.education, newEducation]);
+      setNewEducation({
+        institution: '',
+        degree: '',
+        field: '',
+        startDate: '',
+        endDate: '',
+        gpa: ''
+      });
+    }
+  }, [newEducation, resume.education, updateResume]);
 
-  const updateResponsibility = (expIndex: number, respIndex: number, value: string) => {
-    const updated = [...experiences];
+  const updateEducationItem = useCallback((index: number, field: keyof Education, value: string) => {
+    const updated = [...resume.education];
+    updated[index] = { ...updated[index], [field]: value };
+    updateResume('education', updated);
+  }, [resume.education, updateResume]);
+
+  const removeEducation = useCallback((index: number) => {
+    updateResume('education', resume.education.filter((_, i) => i !== index));
+  }, [resume.education, updateResume]);
+
+  const addProjectItem = useCallback(() => {
+    if (newProject.name) {
+      updateResume('projects', [...resume.projects, newProject]);
+      setNewProject({
+        name: '',
+        description: '',
+        technologies: '',
+        link: ''
+      });
+    }
+  }, [newProject, resume.projects, updateResume]);
+
+  const updateProjectItem = useCallback((index: number, field: keyof Project, value: string) => {
+    const updated = [...resume.projects];
+    updated[index] = { ...updated[index], [field]: value };
+    updateResume('projects', updated);
+  }, [resume.projects, updateResume]);
+
+  const removeProject = useCallback((index: number) => {
+    updateResume('projects', resume.projects.filter((_, i) => i !== index));
+  }, [resume.projects, updateResume]);
+
+  const addCertificationItem = useCallback(() => {
+    if (newCertification.name) {
+      updateResume('certifications', [...resume.certifications, newCertification]);
+      setNewCertification({
+        name: '',
+        issuer: '',
+        year: ''
+      });
+    }
+  }, [newCertification, resume.certifications, updateResume]);
+
+  const updateCertificationItem = useCallback((index: number, field: keyof Certification, value: string) => {
+    const updated = [...resume.certifications];
+    updated[index] = { ...updated[index], [field]: value };
+    updateResume('certifications', updated);
+  }, [resume.certifications, updateResume]);
+
+  const removeCertification = useCallback((index: number) => {
+    updateResume('certifications', resume.certifications.filter((_, i) => i !== index));
+  }, [resume.certifications, updateResume]);
+
+  const addAwardItem = useCallback(() => {
+    if (newAward.title) {
+      updateResume('awards', [...resume.awards, newAward]);
+      setNewAward({
+        title: '',
+        organization: '',
+        year: ''
+      });
+    }
+  }, [newAward, resume.awards, updateResume]);
+
+  const updateAwardItem = useCallback((index: number, field: keyof Award, value: string) => {
+    const updated = [...resume.awards];
+    updated[index] = { ...updated[index], [field]: value };
+    updateResume('awards', updated);
+  }, [resume.awards, updateResume]);
+
+  const removeAward = useCallback((index: number) => {
+    updateResume('awards', resume.awards.filter((_, i) => i !== index));
+  }, [resume.awards, updateResume]);
+
+  const updateResponsibility = useCallback((expIndex: number, respIndex: number, value: string) => {
+    const updated = [...resume.professionalExperience];
     updated[expIndex].responsibilities[respIndex] = value;
-    setExperiences(updated);
-  };
+    updateResume('professionalExperience', updated);
+  }, [resume.professionalExperience, updateResume]);
 
-  const addCertification = () => {
-    setCertifications([...certifications, { name: '', issuer: '', year: '' }]);
-  };
+  const addResponsibility = useCallback((expIndex: number) => {
+    const updated = [...resume.professionalExperience];
+    updated[expIndex].responsibilities.push('');
+    updateResume('professionalExperience', updated);
+  }, [resume.professionalExperience, updateResume]);
 
-  const updateCertification = (index: number, field: keyof Certification, value: string) => {
-    const updated = [...certifications];
-    updated[index] = { ...updated[index], [field]: value };
-    setCertifications(updated);
-  };
-
-  const removeCertification = (index: number) => {
-    setCertifications(certifications.filter((_, i) => i !== index));
-  };
-
-  const addProject = () => {
-    setProjects([...projects, { name: '', description: '', technologies: '' }]);
-  };
-
-  const updateProject = (index: number, field: keyof Project, value: string) => {
-    const updated = [...projects];
-    updated[index] = { ...updated[index], [field]: value };
-    setProjects(updated);
-  };
-
-  const removeProject = (index: number) => {
-    setProjects(projects.filter((_, i) => i !== index));
-  };
-
-  const addAward = () => {
-    setAwards([...awards, { title: '', organization: '', year: '' }]);
-  };
-
-  const updateAward = (index: number, field: keyof Award, value: string) => {
-    const updated = [...awards];
-    updated[index] = { ...updated[index], [field]: value };
-    setAwards(updated);
-  };
-
-  const removeAward = (index: number) => {
-    setAwards(awards.filter((_, i) => i !== index));
-  };
-
+  // Update preview when resume or template changes
   useEffect(() => {
-    updatePreview();
-  }, [currentTemplate, name, jobTitle, location, phone, email, summary, skills, experiences, degree, institution, eduYear, certifications, projects, awards]);
-
-  // Simple HTML escaping to prevent XSS
-  const escapeHtml = (text: string): string => {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  };
-
-  const updatePreview = () => {
-    const preview = document.getElementById('resumePreview');
-    if (!preview) return;
-
-    preview.className = `resume-preview ${currentTemplate}-template`;
-    
-    if (currentTemplate === 'modern') {
-      preview.innerHTML = `
-        <div class="sidebar">
-          <div class="resume-name">${escapeHtml(name)}</div>
-          <div class="resume-title">${escapeHtml(jobTitle)}</div>
-          <div class="resume-contact">
-            ${escapeHtml(location)}<br>
-            ${escapeHtml(phone)}<br>
-            ${escapeHtml(email)}
-          </div>
-          ${skills.length > 0 ? `
-            <div class="resume-section-title">Skills</div>
-            <div class="resume-content">
-              ${skills.map(skill => `<div class="skill-tag">${escapeHtml(skill)}</div>`).join('')}
-            </div>
-          ` : ''}
-          ${degree ? `
-            <div class="resume-section-title">Education</div>
-            <div class="resume-content">
-              <div><strong>${escapeHtml(degree)}</strong></div>
-              <div>${escapeHtml(institution)}</div>
-              <div>${escapeHtml(eduYear)}</div>
-            </div>
-          ` : ''}
-        </div>
-        <div class="main-content">
-          ${summary ? `
-            <div class="resume-section-title">Professional Summary</div>
-            <div class="resume-content">${escapeHtml(summary)}</div>
-          ` : ''}
-          ${experiences.length > 0 ? `
-            <div class="resume-section-title">Experience</div>
-            <div class="resume-content">
-              ${experiences.map(exp => `
-                <div class="job-header">
-                  <span class="job-title">${escapeHtml(exp.title)}</span>
-                  <span class="job-duration">${escapeHtml(exp.duration)}</span>
-                </div>
-                <ul>
-                  ${exp.responsibilities.map(resp => `<li>${escapeHtml(resp)}</li>`).join('')}
-                </ul>
-              `).join('')}
-            </div>
-          ` : ''}
-          ${certifications.length > 0 ? `
-            <div class="resume-section-title">Certifications</div>
-            <div class="resume-content">
-              ${certifications.map(cert => `
-                <div><strong>${escapeHtml(cert.name)}</strong></div>
-                <div>${escapeHtml(cert.issuer)} - ${escapeHtml(cert.year)}</div>
-              `).join('<br>')}
-            </div>
-          ` : ''}
-          ${projects.length > 0 ? `
-            <div class="resume-section-title">Projects</div>
-            <div class="resume-content">
-              ${projects.map(proj => `
-                <div><strong>${escapeHtml(proj.name)}</strong></div>
-                <div>${escapeHtml(proj.description)}</div>
-                <div><em>${escapeHtml(proj.technologies)}</em></div>
-              `).join('<br>')}
-            </div>
-          ` : ''}
-          ${awards.length > 0 ? `
-            <div class="resume-section-title">Awards</div>
-            <div class="resume-content">
-              ${awards.map(award => `
-                <div><strong>${escapeHtml(award.title)}</strong> - ${escapeHtml(award.organization)} (${escapeHtml(award.year)})</div>
-              `).join('<br>')}
-            </div>
-          ` : ''}
-        </div>
-      `;
-    } else if (currentTemplate === 'creative') {
-      preview.innerHTML = `
-        <div class="resume-header">
-          <div class="resume-name">${escapeHtml(name)}</div>
-          <div class="resume-title">${escapeHtml(jobTitle)}</div>
-          <div class="resume-contact">${escapeHtml(location)} | ${escapeHtml(phone)} | ${escapeHtml(email)}</div>
-        </div>
-        ${summary ? `
-          <div class="resume-section-title">Professional Summary</div>
-          <div class="resume-content">${escapeHtml(summary)}</div>
-        ` : ''}
-        ${experiences.length > 0 ? `
-          <div class="resume-section-title">Experience</div>
-          <div class="resume-content">
-            ${experiences.map(exp => `
-              <div class="job-header">
-                <span class="job-title">${escapeHtml(exp.title)}</span>
-                <span class="job-duration">${escapeHtml(exp.duration)}</span>
-              </div>
-              <ul>
-                ${exp.responsibilities.map(resp => `<li>${escapeHtml(resp)}</li>`).join('')}
-              </ul>
-            `).join('')}
-          </div>
-        ` : ''}
-        ${degree ? `
-          <div class="resume-section-title">Education</div>
-          <div class="resume-content">
-            <div><strong>${escapeHtml(degree)}</strong></div>
-            <div>${escapeHtml(institution)}</div>
-            <div>${escapeHtml(eduYear)}</div>
-          </div>
-        ` : ''}
-        ${skills.length > 0 ? `
-          <div class="resume-section-title">Skills</div>
-          <div class="resume-content">
-            ${skills.map(skill => `<span class="skill-tag">${escapeHtml(skill)}</span>`).join(' ')}
-          </div>
-        ` : ''}
-        ${certifications.length > 0 ? `
-          <div class="resume-section-title">Certifications</div>
-          <div class="resume-content">
-            ${certifications.map(cert => `
-              <div><strong>${escapeHtml(cert.name)}</strong></div>
-              <div>${escapeHtml(cert.issuer)} - ${escapeHtml(cert.year)}</div>
-            `).join('<br>')}
-          </div>
-        ` : ''}
-        ${projects.length > 0 ? `
-          <div class="resume-section-title">Projects</div>
-          <div class="resume-content">
-            ${projects.map(proj => `
-              <div><strong>${escapeHtml(proj.name)}</strong></div>
-              <div>${escapeHtml(proj.description)}</div>
-              <div><em>${escapeHtml(proj.technologies)}</em></div>
-            `).join('<br>')}
-          </div>
-        ` : ''}
-        ${awards.length > 0 ? `
-          <div class="resume-section-title">Awards</div>
-          <div class="resume-content">
-            ${awards.map(award => `
-              <div><strong>${escapeHtml(award.title)}</strong> - ${escapeHtml(award.organization)} (${escapeHtml(award.year)})</div>
-            `).join('<br>')}
-          </div>
-        ` : ''}
-      `;
-    } else {
-      // Classic and Minimal templates
-      preview.innerHTML = `
-        <div class="resume-name">${escapeHtml(name)}</div>
-        <div class="resume-title">${escapeHtml(jobTitle)}</div>
-        <div class="resume-contact">${escapeHtml(location)} | ${escapeHtml(phone)} | ${escapeHtml(email)}</div>
-        ${summary ? `
-          <div class="resume-section-title">Professional Summary</div>
-          <div class="resume-content">${escapeHtml(summary)}</div>
-        ` : ''}
-        ${experiences.length > 0 ? `
-          <div class="resume-section-title">Professional Experience</div>
-          <div class="resume-content">
-            ${experiences.map(exp => `
-              <div class="job-header">
-                <span class="job-title">${escapeHtml(exp.title)}</span>
-                <span class="job-duration">${escapeHtml(exp.duration)}</span>
-              </div>
-              <ul>
-                ${exp.responsibilities.map(resp => `<li>${escapeHtml(resp)}</li>`).join('')}
-              </ul>
-            `).join('')}
-          </div>
-        ` : ''}
-        ${degree ? `
-          <div class="resume-section-title">Education</div>
-          <div class="resume-content">
-            <div><strong>${escapeHtml(degree)}</strong></div>
-            <div>${escapeHtml(institution)}</div>
-            <div>${escapeHtml(eduYear)}</div>
-          </div>
-        ` : ''}
-        ${skills.length > 0 ? `
-          <div class="resume-section-title">Skills</div>
-          <div class="resume-content">
-            ${skills.map(skill => `<span class="skill-tag">${escapeHtml(skill)}</span>`).join(' ')}
-          </div>
-        ` : ''}
-        ${certifications.length > 0 ? `
-          <div class="resume-section-title">Certifications</div>
-          <div class="resume-content">
-            ${certifications.map(cert => `
-              <div><strong>${escapeHtml(cert.name)}</strong></div>
-              <div>${escapeHtml(cert.issuer)} - ${escapeHtml(cert.year)}</div>
-            `).join('<br>')}
-          </div>
-        ` : ''}
-        ${projects.length > 0 ? `
-          <div class="resume-section-title">Projects</div>
-          <div class="resume-content">
-            ${projects.map(proj => `
-              <div><strong>${escapeHtml(proj.name)}</strong></div>
-              <div>${escapeHtml(proj.description)}</div>
-              <div><em>${escapeHtml(proj.technologies)}</em></div>
-            `).join('<br>')}
-          </div>
-        ` : ''}
-        ${awards.length > 0 ? `
-          <div class="resume-section-title">Awards</div>
-          <div class="resume-content">
-            ${awards.map(award => `
-              <div><strong>${escapeHtml(award.title)}</strong> - ${escapeHtml(award.organization)} (${escapeHtml(award.year)})</div>
-            `).join('<br>')}
-          </div>
-        ` : ''}
-      `;
-    }
-  };
-
-  const downloadPDF = async () => {
     const element = document.getElementById('resumePreview');
     if (!element) return;
 
-    // Using html2pdf library (needs to be loaded via CDN)
-    const html2pdf = (window as any).html2pdf;
-    if (html2pdf) {
-      const opt = {
-        margin: 0.5,
-        filename: 'resume.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-      html2pdf().set(opt).from(element).save();
-    } else {
-      console.error('PDF library not loaded. Please ensure html2pdf.js is included.');
-    }
-  };
-
-  const downloadDocx = async () => {
-    const doc = new Document({
-      sections: [{
-        properties: {},
-        children: [
-          new Paragraph({
-            text: name,
-            heading: HeadingLevel.HEADING_1,
-            alignment: AlignmentType.CENTER,
-          }),
-          new Paragraph({
-            text: jobTitle,
-            alignment: AlignmentType.CENTER,
-          }),
-          new Paragraph({
-            text: `${location} | ${phone} | ${email}`,
-            alignment: AlignmentType.CENTER,
-          }),
-          new Paragraph({ text: '' }),
-          ...(summary ? [
-            new Paragraph({
-              text: 'Professional Summary',
-              heading: HeadingLevel.HEADING_2,
-            }),
-            new Paragraph({ text: summary }),
-            new Paragraph({ text: '' }),
-          ] : []),
-          ...(experiences.length > 0 ? [
-            new Paragraph({
-              text: 'Professional Experience',
-              heading: HeadingLevel.HEADING_2,
-            }),
-            ...experiences.flatMap(exp => [
-              new Paragraph({
-                children: [
-                  new TextRun({ text: exp.title, bold: true }),
-                  new TextRun({ text: ` (${exp.duration})` }),
-                ],
-              }),
-              ...exp.responsibilities.map(resp => new Paragraph({
-                text: `• ${resp}`,
-                bullet: { level: 0 },
-              })),
-              new Paragraph({ text: '' }),
-            ]),
-          ] : []),
-          ...(degree ? [
-            new Paragraph({
-              text: 'Education',
-              heading: HeadingLevel.HEADING_2,
-            }),
-            new Paragraph({
-              children: [new TextRun({ text: degree, bold: true })],
-            }),
-            new Paragraph({ text: institution }),
-            new Paragraph({ text: eduYear }),
-            new Paragraph({ text: '' }),
-          ] : []),
-          ...(skills.length > 0 ? [
-            new Paragraph({
-              text: 'Skills',
-              heading: HeadingLevel.HEADING_2,
-            }),
-            new Paragraph({ text: skills.join(', ') }),
-            new Paragraph({ text: '' }),
-          ] : []),
-          ...(certifications.length > 0 ? [
-            new Paragraph({
-              text: 'Certifications',
-              heading: HeadingLevel.HEADING_2,
-            }),
-            ...certifications.flatMap(cert => [
-              new Paragraph({
-                children: [new TextRun({ text: cert.name, bold: true })],
-              }),
-              new Paragraph({ text: `${cert.issuer} - ${cert.year}` }),
-            ]),
-            new Paragraph({ text: '' }),
-          ] : []),
-          ...(projects.length > 0 ? [
-            new Paragraph({
-              text: 'Projects',
-              heading: HeadingLevel.HEADING_2,
-            }),
-            ...projects.flatMap(proj => [
-              new Paragraph({
-                children: [new TextRun({ text: proj.name, bold: true })],
-              }),
-              new Paragraph({ text: proj.description }),
-              new Paragraph({ text: proj.technologies, italics: true }),
-              new Paragraph({ text: '' }),
-            ]),
-          ] : []),
-          ...(awards.length > 0 ? [
-            new Paragraph({
-              text: 'Awards',
-              heading: HeadingLevel.HEADING_2,
-            }),
-            ...awards.map(award => new Paragraph({
-              text: `${award.title} - ${award.organization} (${award.year})`,
-            })),
-          ] : []),
-        ],
-      }],
-    });
-
-    const blob = await Packer.toBlob(doc);
-    saveAs(blob, 'resume.docx');
-  };
+    element.className = `resume-preview ${currentTemplate}-template`;
+    const root = createRoot(element);
+    root.render(<ResumePreview resume={resume} template={currentTemplate} />);
+  }, [resume, currentTemplate]);
 
   return (
     <>
@@ -976,8 +639,8 @@ export default function ResumeBuilder() {
           </div>
           
           <div className="controls">
-            <button className="btn btn-primary" onClick={downloadPDF}>📄 Download PDF</button>
-            <button className="btn btn-secondary" onClick={downloadDocx}>📥 Download DOCX</button>
+            <button className="btn btn-primary" onClick={() => downloadPDF('resumePreview')}>📄 Download PDF</button>
+            <button className="btn btn-secondary" onClick={() => downloadDocx(resume)}>📥 Download DOCX</button>
           </div>
 
           <div className="editor">
@@ -986,7 +649,7 @@ export default function ResumeBuilder() {
               <div className="section-title">Choose Template</div>
               <div className="template-carousel">
                 <div className="carousel-container">
-                  <div className="template-card active" onClick={() => selectTemplate('classic')}>
+                  <div className="template-card active" onClick={(e) => selectTemplate('classic', e)}>
                     <div className="template-name">Classic</div>
                     <div className="template-preview">
                       <div style={{fontWeight: 'bold', textAlign: 'center', fontSize: '11px'}}>JOHN DOE</div>
@@ -995,7 +658,7 @@ export default function ResumeBuilder() {
                       <div style={{fontSize: '7px'}}>Professional summary text...</div>
                     </div>
                   </div>
-                  <div className="template-card" onClick={() => selectTemplate('modern')}>
+                  <div className="template-card" onClick={(e) => selectTemplate('modern', e)}>
                     <div className="template-name">Modern</div>
                     <div className="template-preview">
                       <div style={{display: 'grid', gridTemplateColumns: '40% 60%', gap: '3px'}}>
@@ -1010,7 +673,7 @@ export default function ResumeBuilder() {
                       </div>
                     </div>
                   </div>
-                  <div className="template-card" onClick={() => selectTemplate('minimal')}>
+                  <div className="template-card" onClick={(e) => selectTemplate('minimal', e)}>
                     <div className="template-name">Minimal</div>
                     <div className="template-preview">
                       <div style={{fontWeight: 300, fontSize: '11px'}}>John Doe</div>
@@ -1018,7 +681,7 @@ export default function ResumeBuilder() {
                       <div style={{fontSize: '7px'}}>Clean and simple design with focus on content</div>
                     </div>
                   </div>
-                  <div className="template-card" onClick={() => selectTemplate('creative')}>
+                  <div className="template-card" onClick={(e) => selectTemplate('creative', e)}>
                     <div className="template-name">Creative</div>
                     <div className="template-preview">
                       <div style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', padding: '5px', margin: '-5px -5px 5px -5px'}}>
@@ -1035,17 +698,18 @@ export default function ResumeBuilder() {
             {/* Personal Info */}
             <div className="section">
               <div className="section-title">Personal Information</div>
-              <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} />
-              <input type="text" placeholder="Job Title" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
-              <input type="text" placeholder="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
-              <input type="tel" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-              <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input type="text" placeholder="Full Name" value={resume.personalInformation.name} onChange={(e) => updatePersonalInfo('name', e.target.value)} />
+              <input type="email" placeholder="Email" value={resume.personalInformation.email} onChange={(e) => updatePersonalInfo('email', e.target.value)} />
+              <input type="tel" placeholder="Phone" value={resume.personalInformation.phone} onChange={(e) => updatePersonalInfo('phone', e.target.value)} />
+              <input type="text" placeholder="Address" value={resume.personalInformation.address} onChange={(e) => updatePersonalInfo('address', e.target.value)} />
+              <input type="text" placeholder="LinkedIn" value={resume.personalInformation.linkedin} onChange={(e) => updatePersonalInfo('linkedin', e.target.value)} />
+              <input type="text" placeholder="Website" value={resume.personalInformation.website} onChange={(e) => updatePersonalInfo('website', e.target.value)} />
             </div>
 
             {/* Professional Summary */}
             <div className="section">
               <div className="section-title">Professional Summary</div>
-              <textarea value={summary} onChange={(e) => setSummary(e.target.value)} />
+              <textarea value={resume.summary} onChange={(e) => updateResume('summary', e.target.value)} />
             </div>
 
             {/* Skills */}
@@ -1054,15 +718,22 @@ export default function ResumeBuilder() {
               <div className="skill-input-group">
                 <input 
                   type="text" 
-                  placeholder="Add a skill" 
-                  value={newSkill}
-                  onChange={(e) => setNewSkill(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && addSkill()}
+                  placeholder="Add a skill (separated by •)" 
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      addSkill((e.target as HTMLInputElement).value);
+                      (e.target as HTMLInputElement).value = '';
+                    }
+                  }}
                 />
-                <button className="add-btn" style={{width: 'auto', marginTop: 0}} onClick={addSkill}>+ Add</button>
+                <button className="add-btn" style={{width: 'auto', marginTop: 0}} onClick={(e) => {
+                  const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                  addSkill(input.value);
+                  input.value = '';
+                }}>+ Add</button>
               </div>
               <div>
-                {skills.map((skill, index) => (
+                {resume.skills.split(" • ").filter(s => s.trim()).map((skill, index) => (
                   <span key={index} className="skill-tag">
                     {skill}
                     <button onClick={() => removeSkill(index)}>×</button>
@@ -1074,19 +745,37 @@ export default function ResumeBuilder() {
             {/* Experience */}
             <div className="section">
               <div className="section-title">Professional Experience</div>
-              {experiences.map((exp, index) => (
+              {resume.professionalExperience.map((exp, index) => (
                 <div key={index} className="item">
                   <input 
                     type="text" 
-                    placeholder="Job Title | Company, Location" 
-                    value={exp.title}
-                    onChange={(e) => updateExperience(index, 'title', e.target.value)}
+                    placeholder="Role" 
+                    value={exp.role}
+                    onChange={(e) => updateExperience(index, 'role', e.target.value)}
                   />
                   <input 
                     type="text" 
-                    placeholder="Duration" 
-                    value={exp.duration}
-                    onChange={(e) => updateExperience(index, 'duration', e.target.value)}
+                    placeholder="Organization" 
+                    value={exp.organization}
+                    onChange={(e) => updateExperience(index, 'organization', e.target.value)}
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="Location" 
+                    value={exp.location}
+                    onChange={(e) => updateExperience(index, 'location', e.target.value)}
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="Start Date (e.g., Jun 2020)" 
+                    value={exp.startDate}
+                    onChange={(e) => updateExperience(index, 'startDate', e.target.value)}
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="End Date (e.g., Present)" 
+                    value={exp.endDate}
+                    onChange={(e) => updateExperience(index, 'endDate', e.target.value)}
                   />
                   {exp.responsibilities.map((resp, respIndex) => (
                     <input 
@@ -1101,101 +790,310 @@ export default function ResumeBuilder() {
                   <button className="remove-btn" onClick={() => removeExperience(index)}>Remove</button>
                 </div>
               ))}
-              <button className="add-btn" onClick={addExperience}>+ Add Experience</button>
+              
+              {/* Form for new experience */}
+              <div className="item" style={{background: '#e8f4f8'}}>
+                <label>Add New Experience</label>
+                <input 
+                  type="text" 
+                  placeholder="Role" 
+                  value={newExperience.role}
+                  onChange={(e) => setNewExperience({...newExperience, role: e.target.value})}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Organization" 
+                  value={newExperience.organization}
+                  onChange={(e) => setNewExperience({...newExperience, organization: e.target.value})}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Location" 
+                  value={newExperience.location}
+                  onChange={(e) => setNewExperience({...newExperience, location: e.target.value})}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Start Date (e.g., Jun 2020)" 
+                  value={newExperience.startDate}
+                  onChange={(e) => setNewExperience({...newExperience, startDate: e.target.value})}
+                />
+                <input 
+                  type="text" 
+                  placeholder="End Date (e.g., Present)" 
+                  value={newExperience.endDate}
+                  onChange={(e) => setNewExperience({...newExperience, endDate: e.target.value})}
+                />
+                {newExperience.responsibilities.map((resp, respIndex) => (
+                  <input 
+                    key={respIndex}
+                    type="text" 
+                    placeholder={`Responsibility ${respIndex + 1}`}
+                    value={resp}
+                    onChange={(e) => {
+                      const updated = [...newExperience.responsibilities];
+                      updated[respIndex] = e.target.value;
+                      setNewExperience({...newExperience, responsibilities: updated});
+                    }}
+                  />
+                ))}
+                <button className="add-btn" onClick={() => setNewExperience({...newExperience, responsibilities: [...newExperience.responsibilities, '']})}>+ Add Responsibility</button>
+                <button className="add-btn" onClick={addExperienceItem}>Add Experience</button>
+              </div>
             </div>
 
             {/* Education */}
             <div className="section">
               <div className="section-title">Education</div>
-              <input type="text" placeholder="Degree" value={degree} onChange={(e) => setDegree(e.target.value)} />
-              <input type="text" placeholder="Institution" value={institution} onChange={(e) => setInstitution(e.target.value)} />
-              <input type="text" placeholder="Year" value={eduYear} onChange={(e) => setEduYear(e.target.value)} />
+              {resume.education.map((edu, index) => (
+                <div key={index} className="item">
+                  <input 
+                    type="text" 
+                    placeholder="Degree" 
+                    value={edu.degree}
+                    onChange={(e) => updateEducationItem(index, 'degree', e.target.value)}
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="Institution" 
+                    value={edu.institution}
+                    onChange={(e) => updateEducationItem(index, 'institution', e.target.value)}
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="Field of Study" 
+                    value={edu.field}
+                    onChange={(e) => updateEducationItem(index, 'field', e.target.value)}
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="Start Date (e.g., 2011)" 
+                    value={edu.startDate}
+                    onChange={(e) => updateEducationItem(index, 'startDate', e.target.value)}
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="End Date (e.g., 2015)" 
+                    value={edu.endDate}
+                    onChange={(e) => updateEducationItem(index, 'endDate', e.target.value)}
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="GPA (optional)" 
+                    value={edu.gpa}
+                    onChange={(e) => updateEducationItem(index, 'gpa', e.target.value)}
+                  />
+                  <button className="remove-btn" onClick={() => removeEducation(index)}>Remove</button>
+                </div>
+              ))}
+              
+              {/* Form for new education */}
+              <div className="item" style={{background: '#e8f4f8'}}>
+                <label>Add New Education</label>
+                <input 
+                  type="text" 
+                  placeholder="Degree" 
+                  value={newEducation.degree}
+                  onChange={(e) => setNewEducation({...newEducation, degree: e.target.value})}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Institution" 
+                  value={newEducation.institution}
+                  onChange={(e) => setNewEducation({...newEducation, institution: e.target.value})}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Field of Study" 
+                  value={newEducation.field}
+                  onChange={(e) => setNewEducation({...newEducation, field: e.target.value})}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Start Date (e.g., 2011)" 
+                  value={newEducation.startDate}
+                  onChange={(e) => setNewEducation({...newEducation, startDate: e.target.value})}
+                />
+                <input 
+                  type="text" 
+                  placeholder="End Date (e.g., 2015)" 
+                  value={newEducation.endDate}
+                  onChange={(e) => setNewEducation({...newEducation, endDate: e.target.value})}
+                />
+                <input 
+                  type="text" 
+                  placeholder="GPA (optional)" 
+                  value={newEducation.gpa}
+                  onChange={(e) => setNewEducation({...newEducation, gpa: e.target.value})}
+                />
+                <button className="add-btn" onClick={addEducationItem}>Add Education</button>
+              </div>
             </div>
 
             {/* Certifications */}
             <div className="section">
               <div className="section-title">Certifications</div>
-              {certifications.map((cert, index) => (
+              {resume.certifications.map((cert, index) => (
                 <div key={index} className="item">
                   <input 
                     type="text" 
                     placeholder="Certification Name" 
                     value={cert.name}
-                    onChange={(e) => updateCertification(index, 'name', e.target.value)}
+                    onChange={(e) => updateCertificationItem(index, 'name', e.target.value)}
                   />
                   <input 
                     type="text" 
                     placeholder="Issuing Organization" 
                     value={cert.issuer}
-                    onChange={(e) => updateCertification(index, 'issuer', e.target.value)}
+                    onChange={(e) => updateCertificationItem(index, 'issuer', e.target.value)}
                   />
                   <input 
                     type="text" 
                     placeholder="Year" 
                     value={cert.year}
-                    onChange={(e) => updateCertification(index, 'year', e.target.value)}
+                    onChange={(e) => updateCertificationItem(index, 'year', e.target.value)}
                   />
                   <button className="remove-btn" onClick={() => removeCertification(index)}>Remove</button>
                 </div>
               ))}
-              <button className="add-btn" onClick={addCertification}>+ Add Certification</button>
+              
+              {/* Form for new certification */}
+              <div className="item" style={{background: '#e8f4f8'}}>
+                <label>Add New Certification</label>
+                <input 
+                  type="text" 
+                  placeholder="Certification Name" 
+                  value={newCertification.name}
+                  onChange={(e) => setNewCertification({...newCertification, name: e.target.value})}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Issuing Organization" 
+                  value={newCertification.issuer}
+                  onChange={(e) => setNewCertification({...newCertification, issuer: e.target.value})}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Year" 
+                  value={newCertification.year}
+                  onChange={(e) => setNewCertification({...newCertification, year: e.target.value})}
+                />
+                <button className="add-btn" onClick={addCertificationItem}>Add Certification</button>
+              </div>
             </div>
 
             {/* Projects */}
             <div className="section">
               <div className="section-title">Projects</div>
-              {projects.map((proj, index) => (
+              {resume.projects.map((proj, index) => (
                 <div key={index} className="item">
                   <input 
                     type="text" 
                     placeholder="Project Name" 
                     value={proj.name}
-                    onChange={(e) => updateProject(index, 'name', e.target.value)}
+                    onChange={(e) => updateProjectItem(index, 'name', e.target.value)}
                   />
                   <textarea 
                     placeholder="Project Description" 
                     value={proj.description}
-                    onChange={(e) => updateProject(index, 'description', e.target.value)}
+                    onChange={(e) => updateProjectItem(index, 'description', e.target.value)}
                   />
                   <input 
                     type="text" 
                     placeholder="Technologies Used" 
                     value={proj.technologies}
-                    onChange={(e) => updateProject(index, 'technologies', e.target.value)}
+                    onChange={(e) => updateProjectItem(index, 'technologies', e.target.value)}
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="Project Link (optional)" 
+                    value={proj.link}
+                    onChange={(e) => updateProjectItem(index, 'link', e.target.value)}
                   />
                   <button className="remove-btn" onClick={() => removeProject(index)}>Remove</button>
                 </div>
               ))}
-              <button className="add-btn" onClick={addProject}>+ Add Project</button>
+              
+              {/* Form for new project */}
+              <div className="item" style={{background: '#e8f4f8'}}>
+                <label>Add New Project</label>
+                <input 
+                  type="text" 
+                  placeholder="Project Name" 
+                  value={newProject.name}
+                  onChange={(e) => setNewProject({...newProject, name: e.target.value})}
+                />
+                <textarea 
+                  placeholder="Project Description" 
+                  value={newProject.description}
+                  onChange={(e) => setNewProject({...newProject, description: e.target.value})}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Technologies Used" 
+                  value={newProject.technologies}
+                  onChange={(e) => setNewProject({...newProject, technologies: e.target.value})}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Project Link (optional)" 
+                  value={newProject.link}
+                  onChange={(e) => setNewProject({...newProject, link: e.target.value})}
+                />
+                <button className="add-btn" onClick={addProjectItem}>Add Project</button>
+              </div>
             </div>
 
             {/* Awards */}
             <div className="section">
               <div className="section-title">Awards</div>
-              {awards.map((award, index) => (
+              {resume.awards.map((award, index) => (
                 <div key={index} className="item">
                   <input 
                     type="text" 
                     placeholder="Award Title" 
                     value={award.title}
-                    onChange={(e) => updateAward(index, 'title', e.target.value)}
+                    onChange={(e) => updateAwardItem(index, 'title', e.target.value)}
                   />
                   <input 
                     type="text" 
                     placeholder="Issuing Organization" 
                     value={award.organization}
-                    onChange={(e) => updateAward(index, 'organization', e.target.value)}
+                    onChange={(e) => updateAwardItem(index, 'organization', e.target.value)}
                   />
                   <input 
                     type="text" 
                     placeholder="Year" 
                     value={award.year}
-                    onChange={(e) => updateAward(index, 'year', e.target.value)}
+                    onChange={(e) => updateAwardItem(index, 'year', e.target.value)}
                   />
                   <button className="remove-btn" onClick={() => removeAward(index)}>Remove</button>
                 </div>
               ))}
-              <button className="add-btn" onClick={addAward}>+ Add Award</button>
+              
+              {/* Form for new award */}
+              <div className="item" style={{background: '#e8f4f8'}}>
+                <label>Add New Award</label>
+                <input 
+                  type="text" 
+                  placeholder="Award Title" 
+                  value={newAward.title}
+                  onChange={(e) => setNewAward({...newAward, title: e.target.value})}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Issuing Organization" 
+                  value={newAward.organization}
+                  onChange={(e) => setNewAward({...newAward, organization: e.target.value})}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Year" 
+                  value={newAward.year}
+                  onChange={(e) => setNewAward({...newAward, year: e.target.value})}
+                />
+                <button className="add-btn" onClick={addAwardItem}>Add Award</button>
+              </div>
             </div>
           </div>
         </div>
