@@ -1,14 +1,15 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation } from '@/types/resume';
 import { getEditableResume } from '@/utils/resumeUtils';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
 import { ResumePreview } from '@/components/ResumePreview';
-import { createRoot } from 'react-dom/client';
+import { createRoot, Root } from 'react-dom/client';
 
 export default function ResumeBuilder() {
   const location = useLocation();
   const passedResume = location.state?.resume;
+  const rootRef = useRef<Root | null>(null);
   
   const [currentTemplate, setCurrentTemplate] = useState<Template>('classic');
   const [resume, setResume] = useState<ResumeData>(() => getEditableResume(passedResume));
@@ -216,8 +217,13 @@ export default function ResumeBuilder() {
     if (!element) return;
 
     element.className = `resume-preview ${currentTemplate}-template`;
-    const root = createRoot(element);
-    root.render(<ResumePreview resume={resume} template={currentTemplate} />);
+    
+    // Create root only once
+    if (!rootRef.current) {
+      rootRef.current = createRoot(element);
+    }
+    
+    rootRef.current.render(<ResumePreview resume={resume} template={currentTemplate} />);
   }, [resume, currentTemplate]);
 
   return (
