@@ -10,6 +10,7 @@ import TailorResumePage from "@/pages/TailorResumePage";
 import LandingPage from "@/pages/LandingPage";
 
 import ResumeGeneratePage from "@/pages/ResumeGeneratePage";
+import ResumeBuilder from "@/pages/ResumeBuilder";
 
 const routes = createBrowserRouter(
   createRoutesFromElements(
@@ -24,6 +25,7 @@ const routes = createBrowserRouter(
       }/>
       <Route path="tailor-resume" element={<TailorResumePage />} />
       <Route path="generate-resume" element={<ResumeGeneratePage />} />
+      <Route path="resume-builder" element={<ResumeBuilder />} />
       <Route path="dashboard" element={<AdminDashboard />} />
 
     </Route>
