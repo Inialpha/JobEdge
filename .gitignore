@@ -5,5 +5,7 @@ venv/
 .env
 api/.env
 __pycache__/
+*.pyc
 frontend/node_modules/
 node_modules/
+package-lock.json
