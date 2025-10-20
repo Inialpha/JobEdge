@@ -5,10 +5,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { generatePDF, Preview } from "@/components/pdfGenerator"
+import { generatePDF } from "@/components/pdfGenerator"
 import { PreviewModal } from "@/components/preview-modal"
-import { useLocation } from 'react-router-dom'
 import { Pencil, Save, X } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ContactInfo = {
   name: string
@@ -68,7 +68,7 @@ export const getEditableResume = (resume: any) => {
       content: resume.summary || "",
     },
     experience: {
-      title: "Work Experience",
+      title: "Professional Experience",
       content: resume.professional_experiences || [],
     },
     education: {
@@ -87,10 +87,9 @@ export const getEditableResume = (resume: any) => {
 }
 
 
-export default function AccordionResume() {
-  const location = useLocation()
-  const generatedResume = location.state.resume;
+export default function ResumeEditor({ generatedResume }: { generatedResume: any }) {
   console.log("resume", generatedResume)
+  const [selectedTemplate, setSelectedTemplate] = useState('modern');
   const [resume, setResume] = useState<Record<string, ResumeSection>>({
     contact: {
       title: "Contact",
@@ -109,7 +108,7 @@ export default function AccordionResume() {
       content: generatedResume.summary || "",
     },
     experience: {
-      title: "Work Experience",
+      title: "Professional Experience",
       content: generatedResume.professional_experiences || [],
     },
     education: {
@@ -666,11 +665,7 @@ export default function AccordionResume() {
   )
 
   return (
-   <div className="p-6">
-    <div className="flex mb-4 justify-end">
-      <Preview resume={resume}/>
-    </div>
-    <Card className="w-full max-w-3xl mx-auto">
+    <Card className="">
       <CardHeader>
         <CardTitle>Resume</CardTitle>
       </CardHeader>
@@ -714,12 +709,25 @@ export default function AccordionResume() {
         </Accordion>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button onClick={() => setIsPreviewOpen(true)}>Preview</Button>
-        <Button onClick={() => generatePDF(resume)}>Download as PDF</Button>
+        {/* Template Selector */}
+        <div className="space-y-2">
+          <Label htmlFor="template">Resume Template</Label>
+          <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+            <SelectTrigger id="template" className="w-full">
+              <SelectValue placeholder="Select a template" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="modern">Modern</SelectItem>
+              <SelectItem value="classic">Classic</SelectItem>
+              <SelectItem value="minimalist">Minimalist</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+          <Button onClick={() => setIsPreviewOpen(true)}>Preview</Button>
+          <Button onClick={() => generatePDF(resume)}>Download as PDF</Button>
       </CardFooter>
       <PreviewModal isOpen={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} resume={resume} />
     </Card>
-   </div>
   )
 }
 

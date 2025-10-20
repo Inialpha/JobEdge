@@ -3,7 +3,7 @@ import textract
 import pymupdf
 
 def use_pymupdf(filename):
-    doc = pymupdf.open(filename)
+    doc = pymupdf.open(stream=filename.read())
     text = ""
     for page in doc:
         text += page.get_text()
