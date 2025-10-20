@@ -11,13 +11,13 @@ export const CreativeTemplate = ({ resume }: CreativeTemplateProps) => {
     return div.innerHTML
   }
 
-  const skills = resume.skills.split(" • ").filter(s => s.trim())
+  const skills = resume.skills.filter(s => s.trim())
 
   return (
     <>
       <div className="resume-header">
         <div className="resume-name">{escapeHtml(resume.personalInformation.name)}</div>
-        <div className="resume-title">{escapeHtml(resume.summary.substring(0, 50) || "Professional")}</div>
+        <div className="resume-title">{escapeHtml(resume.personalInformation.profession)}</div>
         <div className="resume-contact">
           {resume.personalInformation.address && `${escapeHtml(resume.personalInformation.address)} | `}
           {resume.personalInformation.phone && `${escapeHtml(resume.personalInformation.phone)} | `}
@@ -75,7 +75,7 @@ export const CreativeTemplate = ({ resume }: CreativeTemplateProps) => {
           <div className="resume-section-title">Skills</div>
           <div className="resume-content">
             {skills.map((skill, index) => (
-              <span key={index} className="skill-tag">{escapeHtml(skill)}</span>
+              <span key={index} className="skill-tag">{escapeHtml(skill)} {index < skills.length - 1 && (" • ")}</span>
             ))}
           </div>
         </>

@@ -19,6 +19,7 @@ class ResumeSerializer(serializers.Serializer):
         help_text="Keywords from the resume relevant for job searching"
     )
     name = serializers.CharField(max_length=255)
+    profession = serializers.CharField(max_length=255)
     summary = serializers.CharField()
     address = serializers.CharField(allow_null=True, required=False)
     email = serializers.EmailField()

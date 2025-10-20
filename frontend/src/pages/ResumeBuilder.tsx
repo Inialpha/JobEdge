@@ -9,11 +9,13 @@ import { createRoot, Root } from 'react-dom/client';
 export default function ResumeBuilder() {
   const location = useLocation();
   const passedResume = location.state?.resume;
+console.log("passedResume", passedResume)
   const rootRef = useRef<Root | null>(null);
   
   const [currentTemplate, setCurrentTemplate] = useState<Template>('classic');
   const [resume, setResume] = useState<ResumeData>(() => getEditableResume(passedResume));
-  
+  console.log("buildee", resume)
+
   // Separate states for adding new items
   const [newExperience, setNewExperience] = useState<ProfessionalExperience>({
     organization: '',
@@ -431,12 +433,16 @@ export default function ResumeBuilder() {
         }
         .skill-tag {
           display: inline-block;
-          background: #e9ecef;
-          padding: 5px 10px;
+         
           border-radius: 15px;
           margin: 3px;
           font-size: 12px;
           position: relative;
+        }
+        .skill-tag-edit {
+          background: #e9ecef;
+          border-radius: 15px;
+          padding: 5px 10px;
         }
         .skill-tag button {
           background: none;
@@ -724,7 +730,7 @@ export default function ResumeBuilder() {
               <div className="skill-input-group">
                 <input 
                   type="text" 
-                  placeholder="Add a skill (separated by •)" 
+                  placeholder="Add a skill (separated by ,)" 
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       addSkill((e.target as HTMLInputElement).value);
@@ -739,8 +745,8 @@ export default function ResumeBuilder() {
                 }}>+ Add</button>
               </div>
               <div>
-                {resume.skills.split(" • ").filter(s => s.trim()).map((skill, index) => (
-                  <span key={index} className="skill-tag">
+                {resume.skills.filter(s => s.trim()).map((skill, index) => (
+                  <span key={index} className="skill-tag skill-tag-edit">
                     {skill}
                     <button onClick={() => removeSkill(index)}>×</button>
                   </span>

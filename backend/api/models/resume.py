@@ -9,6 +9,7 @@ class Resume(BaseModel):
     is_master = models.BooleanField(default=False, help_text="Indicates if this is the master resume")
     keywords = models.JSONField(default=list, help_text="Keywords from the resume relevant for job searching")
     name = models.CharField(max_length=255, help_text="Name of the user")
+    profession = models.CharField(max_length=255, help_text="Users profession")
     summary = models.TextField(help_text="Summary of the resume")
     address = models.TextField(blank=True, null=True, help_text="User's address")
     email = models.EmailField(max_length=255, blank=True, null=True, help_text="User's email address")

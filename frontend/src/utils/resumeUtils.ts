@@ -30,6 +30,7 @@ export const getEditableResume = (resume: any): ResumeData => {
   return {
     personalInformation: {
       name: resume.name || "",
+      profession: resume.profession || "",
       email: resume.email || "",
       linkedin: resume.linkedin || "",
       twitter: resume.twitter || "",
@@ -50,7 +51,7 @@ export const getEditableResume = (resume: any): ResumeData => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     education: (resume.educations || resume.education || []).map((edu: any) => ({
       institution: edu.institution || "",
-      degree: edu.degree || "",
+      degree: edu.degree || edu.certificate || "",
       field: edu.field || "",
       startDate: edu.startDate || edu.start_date || "",
       endDate: edu.endDate || edu.end_date || edu.graduationDate || "",
@@ -63,7 +64,7 @@ export const getEditableResume = (resume: any): ResumeData => {
       technologies: proj.technologies || "",
       link: proj.link || "",
     })),
-    skills: Array.isArray(resume.skills) ? resume.skills.join(" • ") : (resume.skills || ""),
+    skills: resume.skills || [],
     certifications: resume.certifications || [],
     awards: resume.awards || [],
   }

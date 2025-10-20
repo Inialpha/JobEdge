@@ -145,30 +145,34 @@ Extract the resume information using this JSON schema and descriptions:
 {{
   "keywords": List[str] — Keywords or phrases that summarize the candidate's expertise and are useful for job search.
   "name": str — Full name of the candidate as written on the resume.
-  "summary": str — A concise summary describing the candidate’s professional profile and strengths.
+  "profession": str — The profession of the candidate.
+  "summary": str — A concise summary describing the candidate’s professional profile and strengths. Tailored to match the job without adding anything that is not in the master resume.
   "address": str — Candidate’s residential or contact address.
   "email": str — Professional email address for communication.
   "linkedin": str — Link to the candidate’s LinkedIn profile.
   "phone_number": str or null — Candidate’s phone number (include country code if present).
   "website": str or null — Personal or portfolio website link.
-  "professional_experiences": List[Object] — A list of previous work experiences, each with:
+  "professional_experiences": List[Object] — A list of previous work experiences that matches this job, each with:
       {{
         "organization": str — The name of the company or organization.
         "role": str — The job title or position held.
-        "time": str — The period spent at the organization (e.g., 'Jan 2021 – Dec 2023').
+        "start_date": str — The start date for this role (e.g., 'Jan 2021').
+        "location": str – The location of this organization.
+        "end_date": str — The end date for this role (e.g., 'Dec 2023 or Present').
         "responsibilities": List[str] — Key tasks, achievements, or responsibilities handled in this role.
       }}
-  "skills": List[str] — List of technical and soft skills mentioned in the resume.
-  "projects": List[Object] — List of notable projects completed, each with:
+  "skills": List[str] — List of technical and soft skills mentioned in the resume that matches this job.
+  "projects": List[Object] — List of notable projects completed that relates to this job, each with:
       {{
         "name": str — The name or title of the project, including relevant tags or technologies.
         "description": str or List[str] — Description of the project or bullet points summarizing it.
       }}
-  "educations": List[Object] — List of educational qualifications, each with:
+  "educations": List[Object] — List of educational qualifications that matches this job, each with:
       {{
-        "school_name": str — The institution's name.
+        "institution": str — The institution's name.
         "certificate": str — The degree, diploma, or qualification received.
-        "time": str — The duration or time period of study.
+        "start_date": str — The start date (e.g, 2020 or May 2015).
+        "end_date": str — The end date (e.g, 2020 or May 2015).
       }}
   "languages": List[str] — List of languages the candidate can read, write, or speak.
 }}

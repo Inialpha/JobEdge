@@ -11,7 +11,7 @@ export const ModernTemplate = ({ resume }: ModernTemplateProps) => {
     return div.innerHTML
   }
 
-  const skills = resume.skills.split(" • ").filter(s => s.trim())
+  const skills = resume.skills.filter(s => s.trim())
 
   return (
     <>
@@ -28,7 +28,7 @@ export const ModernTemplate = ({ resume }: ModernTemplateProps) => {
             <div className="resume-section-title">Skills</div>
             <div className="resume-content">
               {skills.map((skill, index) => (
-                <div key={index} className="skill-tag">{escapeHtml(skill)}</div>
+                <div key={index} className="skill-tag">{escapeHtml(skill)} {index < skills.length - 1 && (" • ")}</div>
               ))}
             </div>
           </>
