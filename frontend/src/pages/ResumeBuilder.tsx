@@ -18,6 +18,7 @@ console.log("passedResume", passedResume)
   const [resume, setResume] = useState<ResumeData>(() => getEditableResume(passedResume));
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  const saveTimeoutRef = useRef<number | null>(null);
   console.log("buildee", resume)
 
   // Separate states for adding new items
@@ -206,6 +207,11 @@ console.log("passedResume", passedResume)
   }, [resume.awards, updateResume]);
 
   const saveAsMasterResume = useCallback(async () => {
+    // Clear any existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
     setIsSaving(true);
     setSaveMessage(null);
     try {
@@ -235,7 +241,7 @@ console.log("passedResume", passedResume)
     } finally {
       setIsSaving(false);
       // Clear message after 5 seconds
-      setTimeout(() => setSaveMessage(null), 5000);
+      saveTimeoutRef.current = window.setTimeout(() => setSaveMessage(null), 5000);
     }
   }, [resume, navigate]);
 
@@ -265,6 +271,15 @@ console.log("passedResume", passedResume)
     
     rootRef.current.render(<ResumePreview resume={resume} template={currentTemplate} />);
   }, [resume, currentTemplate]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <>

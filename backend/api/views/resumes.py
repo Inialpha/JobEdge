@@ -379,7 +379,7 @@ class ResumeFromObjectAPIView(APIView):
                     url_validator(url_value)
                 except ValidationError:
                     resume_data[url_field] = None
-            elif url_value == "":
+            else:
                 resume_data[url_field] = None
         
         # Validate email only if it has a value
@@ -389,7 +389,7 @@ class ResumeFromObjectAPIView(APIView):
                 validate_email(email_value)
             except ValidationError:
                 resume_data['email'] = None
-        elif email_value == "":
+        else:
             resume_data['email'] = None
         
         serializer = ResumeSerializer(data=resume_data)
