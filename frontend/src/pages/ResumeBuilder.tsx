@@ -1,19 +1,24 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation } from '@/types/resume';
 import { getEditableResume } from '@/utils/resumeUtils';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
 import { ResumePreview } from '@/components/ResumePreview';
 import { createRoot, Root } from 'react-dom/client';
+import { postRequest } from '@/utils/apis';
 
 export default function ResumeBuilder() {
   const location = useLocation();
+  const navigate = useNavigate();
   const passedResume = location.state?.resume;
 console.log("passedResume", passedResume)
   const rootRef = useRef<Root | null>(null);
   
   const [currentTemplate, setCurrentTemplate] = useState<Template>('classic');
   const [resume, setResume] = useState<ResumeData>(() => getEditableResume(passedResume));
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   console.log("buildee", resume)
 
   // Separate states for adding new items
@@ -201,6 +206,45 @@ console.log("passedResume", passedResume)
     updateResume('awards', resume.awards.filter((_, i) => i !== index));
   }, [resume.awards, updateResume]);
 
+  const saveAsMasterResume = useCallback(async () => {
+    // Clear any existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    setIsSaving(true);
+    setSaveMessage(null);
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/resume/from-object/`;
+      const resumeData = {
+        ...resume,
+        is_master: true
+      };
+      
+      const response = await postRequest(url, resumeData);
+      
+      if (response.ok) {
+        await response.json();
+        setSaveMessage({type: 'success', text: 'Resume saved as master resume successfully!'});
+        // Navigate back to dashboard after a short delay
+        setTimeout(() => {
+          navigate('/dashboard', { state: { component: 'resumes' } });
+        }, 1500);
+      } else {
+        const error = await response.json();
+        console.error('Error saving resume:', error);
+        setSaveMessage({type: 'error', text: 'Failed to save resume. Please try again.'});
+      }
+    } catch (error) {
+      console.error('Error saving resume:', error);
+      setSaveMessage({type: 'error', text: 'Failed to save resume. Please try again.'});
+    } finally {
+      setIsSaving(false);
+      // Clear message after 5 seconds
+      saveTimeoutRef.current = setTimeout(() => setSaveMessage(null), 5000);
+    }
+  }, [resume, navigate]);
+
   const updateResponsibility = useCallback((expIndex: number, respIndex: number, value: string) => {
     const updated = [...resume.professionalExperience];
     updated[expIndex].responsibilities[respIndex] = value;
@@ -227,6 +271,15 @@ console.log("passedResume", passedResume)
     
     rootRef.current.render(<ResumePreview resume={resume} template={currentTemplate} />);
   }, [resume, currentTemplate]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <>
@@ -651,8 +704,32 @@ console.log("passedResume", passedResume)
           </div>
           
           <div className="controls">
+            {saveMessage && (
+              <div style={{
+                padding: '10px 15px',
+                borderRadius: '6px',
+                backgroundColor: saveMessage.type === 'success' ? '#d4edda' : '#f8d7da',
+                color: saveMessage.type === 'success' ? '#155724' : '#721c24',
+                border: `1px solid ${saveMessage.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                marginBottom: '10px',
+                width: '100%',
+                textAlign: 'center',
+                fontSize: '13px',
+                fontWeight: '600'
+              }}>
+                {saveMessage.text}
+              </div>
+            )}
             <button className="btn btn-primary" onClick={() => downloadPDF('resumePreview')}>📄 Download PDF</button>
             <button className="btn btn-secondary" onClick={() => downloadDocx(resume)}>📥 Download DOCX</button>
+            <button 
+              className="btn" 
+              style={{background: '#17a2b8', color: 'white'}}
+              onClick={saveAsMasterResume}
+              disabled={isSaving}
+            >
+              {isSaving ? '💾 Saving...' : '💾 Save as Master Resume'}
+            </button>
           </div>
 
           <div className="editor">
@@ -711,6 +788,7 @@ console.log("passedResume", passedResume)
             <div className="section">
               <div className="section-title">Personal Information</div>
               <input type="text" placeholder="Full Name" value={resume.personalInformation.name} onChange={(e) => updatePersonalInfo('name', e.target.value)} />
+              <input type="text" placeholder="Profession" value={resume.personalInformation.profession || ''} onChange={(e) => updatePersonalInfo('profession', e.target.value)} />
               <input type="email" placeholder="Email" value={resume.personalInformation.email} onChange={(e) => updatePersonalInfo('email', e.target.value)} />
               <input type="tel" placeholder="Phone" value={resume.personalInformation.phone} onChange={(e) => updatePersonalInfo('phone', e.target.value)} />
               <input type="text" placeholder="Address" value={resume.personalInformation.address} onChange={(e) => updatePersonalInfo('address', e.target.value)} />
