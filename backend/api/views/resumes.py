@@ -297,3 +297,114 @@ def generate_resume_text(instance):
         text_parts.append(", ".join(languages))
 
     return "\n".join(text_parts)
+
+
+class ResumeFromObjectAPIView(APIView):
+    """
+    API View for creating a resume from a resume object.
+    """
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """
+        Create a resume from a resume object with optional is_master flag.
+        """
+        resume_data = request.data.copy()
+        user_id = request.user.id
+        
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"details": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Set user in resume data
+        resume_data['user'] = user_id
+        
+        # Check if this should be a master resume
+        is_master = resume_data.get('is_master', False)
+        
+        # Convert frontend resume format to backend format
+        if 'personalInformation' in resume_data:
+            personal_info = resume_data['personalInformation']
+            resume_data['name'] = personal_info.get('name', '')
+            resume_data['profession'] = personal_info.get('profession', '')
+            resume_data['email'] = personal_info.get('email', '')
+            resume_data['phone_number'] = personal_info.get('phone', '')
+            resume_data['address'] = personal_info.get('address', '')
+            resume_data['linkedin'] = personal_info.get('linkedin', '')
+            resume_data['website'] = personal_info.get('website', '')
+            resume_data['twitter'] = personal_info.get('twitter', '')
+        
+        # Convert professionalExperience to professional_experiences
+        if 'professionalExperience' in resume_data:
+            resume_data['professional_experiences'] = [
+                {
+                    'organization': exp.get('organization', ''),
+                    'role': exp.get('role', ''),
+                    'start_date': exp.get('startDate', ''),
+                    'end_date': exp.get('endDate', ''),
+                    'location': exp.get('location', ''),
+                    'responsibilities': exp.get('responsibilities', [])
+                }
+                for exp in resume_data['professionalExperience']
+            ]
+            del resume_data['professionalExperience']
+        
+        # Convert education to educations
+        if 'education' in resume_data:
+            resume_data['educations'] = [
+                {
+                    'institution': edu.get('institution', ''),
+                    'degree': edu.get('degree', ''),
+                    'field': edu.get('field', ''),
+                    'start_date': edu.get('startDate', ''),
+                    'end_date': edu.get('endDate', ''),
+                    'gpa': edu.get('gpa', '')
+                }
+                for edu in resume_data['education']
+            ]
+            del resume_data['education']
+        
+        # Generate text representation
+        resume_data['text'] = generate_resume_text(resume_data)
+        
+        # Validate URL fields
+        url_fields = ["linkedin", "website"]
+        url_validator = URLValidator()
+        for url_field in url_fields:
+            try:
+                url_validator(resume_data.get(url_field, ""))
+            except ValidationError:
+                resume_data[url_field] = None
+        
+        # Validate email
+        try:
+            validate_email(resume_data.get("email", ""))
+        except ValidationError:
+            resume_data['email'] = None
+        
+        serializer = ResumeSerializer(data=resume_data)
+        
+        try:
+            if serializer.is_valid():
+                # If this is a master resume, remove any previous master resume
+                if is_master:
+                    try:
+                        master_resume = Resume.objects.get(user=user, is_master=True)
+                        if master_resume:
+                            master_resume.delete()
+                    except Resume.DoesNotExist:
+                        pass
+                    
+                    user.has_master_resume = True
+                    user.save()
+                
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                print("Serializer errors:", serializer.errors)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print("Error creating resume:", e)
+            return Response({"error": "An error occurred"}, status=status.HTTP_400_BAD_REQUEST)

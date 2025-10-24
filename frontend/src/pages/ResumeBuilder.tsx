@@ -1,19 +1,22 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation } from '@/types/resume';
 import { getEditableResume } from '@/utils/resumeUtils';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
 import { ResumePreview } from '@/components/ResumePreview';
 import { createRoot, Root } from 'react-dom/client';
+import { postRequest } from '@/utils/apis';
 
 export default function ResumeBuilder() {
   const location = useLocation();
+  const navigate = useNavigate();
   const passedResume = location.state?.resume;
 console.log("passedResume", passedResume)
   const rootRef = useRef<Root | null>(null);
   
   const [currentTemplate, setCurrentTemplate] = useState<Template>('classic');
   const [resume, setResume] = useState<ResumeData>(() => getEditableResume(passedResume));
+  const [isSaving, setIsSaving] = useState(false);
   console.log("buildee", resume)
 
   // Separate states for adding new items
@@ -200,6 +203,35 @@ console.log("passedResume", passedResume)
   const removeAward = useCallback((index: number) => {
     updateResume('awards', resume.awards.filter((_, i) => i !== index));
   }, [resume.awards, updateResume]);
+
+  const saveAsMasterResume = useCallback(async () => {
+    setIsSaving(true);
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/resume/from-object/`;
+      const resumeData = {
+        ...resume,
+        is_master: true
+      };
+      
+      const response = await postRequest(url, resumeData);
+      
+      if (response.ok) {
+        await response.json();
+        alert('Resume saved as master resume successfully!');
+        // Navigate back to dashboard
+        navigate('/dashboard', { state: { component: 'resumes' } });
+      } else {
+        const error = await response.json();
+        console.error('Error saving resume:', error);
+        alert('Failed to save resume. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error saving resume:', error);
+      alert('Failed to save resume. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [resume, navigate]);
 
   const updateResponsibility = useCallback((expIndex: number, respIndex: number, value: string) => {
     const updated = [...resume.professionalExperience];
@@ -653,6 +685,14 @@ console.log("passedResume", passedResume)
           <div className="controls">
             <button className="btn btn-primary" onClick={() => downloadPDF('resumePreview')}>📄 Download PDF</button>
             <button className="btn btn-secondary" onClick={() => downloadDocx(resume)}>📥 Download DOCX</button>
+            <button 
+              className="btn" 
+              style={{background: '#17a2b8', color: 'white'}}
+              onClick={saveAsMasterResume}
+              disabled={isSaving}
+            >
+              {isSaving ? '💾 Saving...' : '💾 Save as Master Resume'}
+            </button>
           </div>
 
           <div className="editor">
@@ -711,6 +751,7 @@ console.log("passedResume", passedResume)
             <div className="section">
               <div className="section-title">Personal Information</div>
               <input type="text" placeholder="Full Name" value={resume.personalInformation.name} onChange={(e) => updatePersonalInfo('name', e.target.value)} />
+              <input type="text" placeholder="Profession" value={resume.personalInformation.profession || ''} onChange={(e) => updatePersonalInfo('profession', e.target.value)} />
               <input type="email" placeholder="Email" value={resume.personalInformation.email} onChange={(e) => updatePersonalInfo('email', e.target.value)} />
               <input type="tel" placeholder="Phone" value={resume.personalInformation.phone} onChange={(e) => updatePersonalInfo('phone', e.target.value)} />
               <input type="text" placeholder="Address" value={resume.personalInformation.address} onChange={(e) => updatePersonalInfo('address', e.target.value)} />
