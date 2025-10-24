@@ -51,7 +51,7 @@ type ResumeSection = {
 
 export const getEditableResume = (resume: any) => {
   // Parse personal_information if it exists (new format)
-  let contactInfo = {
+  const contactInfo = {
     name: resume.name || "",
     email: resume.email || "",
     linkedin: resume.linkedin || "",

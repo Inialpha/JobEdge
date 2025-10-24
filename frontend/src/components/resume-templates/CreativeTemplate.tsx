@@ -17,7 +17,9 @@ export const CreativeTemplate = ({ resume }: CreativeTemplateProps) => {
     <>
       <div className="resume-header">
         <div className="resume-name">{escapeHtml(resume.personalInformation.name)}</div>
-        <div className="resume-title">{escapeHtml(resume.personalInformation.profession)}</div>
+        {resume.personalInformation.profession && (
+          <div className="resume-title">{escapeHtml(resume.personalInformation.profession)}</div>
+        )}
         <div className="resume-contact">
           {resume.personalInformation.address && `${escapeHtml(resume.personalInformation.address)} | `}
           {resume.personalInformation.phone && `${escapeHtml(resume.personalInformation.phone)} | `}

@@ -28,7 +28,7 @@ export const getEditableResume = (resume: any): ResumeData => {
   }
 
   // Parse personal_information if it exists (new format)
-  let personalInfo = {
+  const personalInfo = {
     name: resume.name || "",
     profession: resume.profession || "",
     email: resume.email || "",
