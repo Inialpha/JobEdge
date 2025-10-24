@@ -4,8 +4,16 @@ import { Button } from "@/components/ui/button";
 import { getRequest } from "@/utils/apis";
 import { FileText, Download, Edit } from "lucide-react";
 
+interface Resume {
+  id: string;
+  name: string;
+  profession?: string;
+  is_master: boolean;
+  updated_at: string;
+}
+
 export default function ResumesComponent() {
-  const [resumes, setResumes] = useState<any[]>([]);
+  const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -29,11 +37,11 @@ export default function ResumesComponent() {
     }
   };
 
-  const handleEdit = (resume: any) => {
+  const handleEdit = (resume: Resume) => {
     navigate("/resume-builder", { state: { resume } });
   };
 
-  const handleDownload = (resume: any) => {
+  const handleDownload = (resume: Resume) => {
     // Navigate to resume builder with download option
     navigate("/resume-builder", { state: { resume, autoDownload: true } });
   };
