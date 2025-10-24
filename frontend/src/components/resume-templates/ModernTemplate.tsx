@@ -11,7 +11,7 @@ export const ModernTemplate = ({ resume }: ModernTemplateProps) => {
     return div.innerHTML
   }
 
-  const skills = resume.skills.filter(s => s.trim())
+  const skills = resume.skills.split(" • ").filter(s => s.trim())
 
   return (
     <>

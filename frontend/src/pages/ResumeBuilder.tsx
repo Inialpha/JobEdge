@@ -823,7 +823,7 @@ console.log("passedResume", passedResume)
                 }}>+ Add</button>
               </div>
               <div>
-                {resume.skills.filter(s => s.trim()).map((skill, index) => (
+                {resume.skills.split(" • ").filter(s => s.trim()).map((skill, index) => (
                   <span key={index} className="skill-tag skill-tag-edit">
                     {skill}
                     <button onClick={() => removeSkill(index)}>×</button>

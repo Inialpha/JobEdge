@@ -9,7 +9,7 @@ export default function SettingsComponent() {
   const [formData, setFormData] = useState({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
-    email: user?.email || "",
+    email: "",
     phone: "",
   });
 
@@ -103,7 +103,7 @@ export default function SettingsComponent() {
               onClick={() => setFormData({
                 firstName: user?.firstName || "",
                 lastName: user?.lastName || "",
-                email: user?.email || "",
+                email: "",
                 phone: "",
               })}
             >
