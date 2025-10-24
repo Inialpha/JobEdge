@@ -9,7 +9,6 @@ export default function SettingsComponent() {
   const [formData, setFormData] = useState({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
-    email: "",
     phone: "",
   });
 
@@ -63,20 +62,6 @@ export default function SettingsComponent() {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <Input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full"
-            />
-          </div>
-
-          <div>
             <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
               Phone Number
             </label>
@@ -103,7 +88,6 @@ export default function SettingsComponent() {
               onClick={() => setFormData({
                 firstName: user?.firstName || "",
                 lastName: user?.lastName || "",
-                email: "",
                 phone: "",
               })}
             >
