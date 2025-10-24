@@ -18,7 +18,7 @@ console.log("passedResume", passedResume)
   const [resume, setResume] = useState<ResumeData>(() => getEditableResume(passedResume));
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
-  const saveTimeoutRef = useRef<number | null>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   console.log("buildee", resume)
 
   // Separate states for adding new items
@@ -241,7 +241,7 @@ console.log("passedResume", passedResume)
     } finally {
       setIsSaving(false);
       // Clear message after 5 seconds
-      saveTimeoutRef.current = window.setTimeout(() => setSaveMessage(null), 5000);
+      saveTimeoutRef.current = setTimeout(() => setSaveMessage(null), 5000);
     }
   }, [resume, navigate]);
 
