@@ -11,6 +11,7 @@ class Resume(BaseModel):
     name = models.CharField(max_length=255, help_text="Name of the user")
     profession = models.CharField(max_length=255, help_text="Users profession")
     summary = models.TextField(help_text="Summary of the resume")
+    personal_information = models.JSONField(default=list, help_text="List of personal information strings (name, email, phone, address, linkedin, website)")
     address = models.TextField(blank=True, null=True, help_text="User's address")
     email = models.EmailField(max_length=255, blank=True, null=True, help_text="User's email address")
     linkedin = models.URLField(max_length=500, blank=True, null=True, help_text="User's LinkedIn profile URL")
