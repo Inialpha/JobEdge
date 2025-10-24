@@ -50,18 +50,52 @@ type ResumeSection = {
 }
 
 export const getEditableResume = (resume: any) => {
+  // Parse personal_information if it exists (new format)
+  let contactInfo = {
+    name: resume.name || "",
+    email: resume.email || "",
+    linkedin: resume.linkedin || "",
+    twitter: resume.twitter || "",
+    phone: resume.phone_number || "",
+    website: resume.website || "",
+    address: resume.address || "",
+  }
+
+  // If personal_information array exists, parse it
+  if (resume.personal_information && Array.isArray(resume.personal_information)) {
+    resume.personal_information.forEach((item: string) => {
+      const lowerItem = item.toLowerCase()
+      // Check for email
+      if (item.includes('@') && !contactInfo.email) {
+        contactInfo.email = item
+      }
+      // Check for phone (starts with + or contains digits with dashes/parentheses)
+      else if ((item.startsWith('+') || /\d{3}[-.)]\d/.test(item)) && !contactInfo.phone) {
+        contactInfo.phone = item
+      }
+      // Check for LinkedIn
+      else if (lowerItem.includes('linkedin.com') && !contactInfo.linkedin) {
+        contactInfo.linkedin = item
+      }
+      // Check for website (http/https but not linkedin)
+      else if ((item.startsWith('http://') || item.startsWith('https://')) && !lowerItem.includes('linkedin') && !contactInfo.website) {
+        contactInfo.website = item
+      }
+      // Check if it looks like an address (contains comma and street indicators)
+      else if ((item.includes(',') || lowerItem.includes('street') || lowerItem.includes('st,') || lowerItem.includes('ave') || lowerItem.includes('road')) && !contactInfo.address) {
+        contactInfo.address = item
+      }
+      // Otherwise, if name is empty, assume it's the name
+      else if (!contactInfo.name) {
+        contactInfo.name = item
+      }
+    })
+  }
+
   return {
     contact: {
       title: "Contact",
-      content: {
-        name: resume.name || "",
-        email: resume.email || "",
-        linkedin: resume.linkedin || "",
-        twitter: resume.twitter || "",
-        phone: resume.phone_number || "",
-        website: resume.website || "",
-        address: resume.address || "",
-      },
+      content: contactInfo,
     },
     summary: {
       title: "Professional Summary",

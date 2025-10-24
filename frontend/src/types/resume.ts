@@ -2,6 +2,7 @@
 
 export type PersonalInformation = {
   name: string
+  profession?: string
   email: string
   linkedin: string
   twitter: string
