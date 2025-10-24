@@ -17,6 +17,7 @@ console.log("passedResume", passedResume)
   const [currentTemplate, setCurrentTemplate] = useState<Template>('classic');
   const [resume, setResume] = useState<ResumeData>(() => getEditableResume(passedResume));
   const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   console.log("buildee", resume)
 
   // Separate states for adding new items
@@ -206,6 +207,7 @@ console.log("passedResume", passedResume)
 
   const saveAsMasterResume = useCallback(async () => {
     setIsSaving(true);
+    setSaveMessage(null);
     try {
       const url = `${import.meta.env.VITE_API_URL}/resume/from-object/`;
       const resumeData = {
@@ -217,19 +219,23 @@ console.log("passedResume", passedResume)
       
       if (response.ok) {
         await response.json();
-        alert('Resume saved as master resume successfully!');
-        // Navigate back to dashboard
-        navigate('/dashboard', { state: { component: 'resumes' } });
+        setSaveMessage({type: 'success', text: 'Resume saved as master resume successfully!'});
+        // Navigate back to dashboard after a short delay
+        setTimeout(() => {
+          navigate('/dashboard', { state: { component: 'resumes' } });
+        }, 1500);
       } else {
         const error = await response.json();
         console.error('Error saving resume:', error);
-        alert('Failed to save resume. Please try again.');
+        setSaveMessage({type: 'error', text: 'Failed to save resume. Please try again.'});
       }
     } catch (error) {
       console.error('Error saving resume:', error);
-      alert('Failed to save resume. Please try again.');
+      setSaveMessage({type: 'error', text: 'Failed to save resume. Please try again.'});
     } finally {
       setIsSaving(false);
+      // Clear message after 5 seconds
+      setTimeout(() => setSaveMessage(null), 5000);
     }
   }, [resume, navigate]);
 
@@ -683,6 +689,22 @@ console.log("passedResume", passedResume)
           </div>
           
           <div className="controls">
+            {saveMessage && (
+              <div style={{
+                padding: '10px 15px',
+                borderRadius: '6px',
+                backgroundColor: saveMessage.type === 'success' ? '#d4edda' : '#f8d7da',
+                color: saveMessage.type === 'success' ? '#155724' : '#721c24',
+                border: `1px solid ${saveMessage.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                marginBottom: '10px',
+                width: '100%',
+                textAlign: 'center',
+                fontSize: '13px',
+                fontWeight: '600'
+              }}>
+                {saveMessage.text}
+              </div>
+            )}
             <button className="btn btn-primary" onClick={() => downloadPDF('resumePreview')}>📄 Download PDF</button>
             <button className="btn btn-secondary" onClick={() => downloadDocx(resume)}>📥 Download DOCX</button>
             <button 

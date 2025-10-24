@@ -369,19 +369,27 @@ class ResumeFromObjectAPIView(APIView):
         # Generate text representation
         resume_data['text'] = generate_resume_text(resume_data)
         
-        # Validate URL fields
+        # Validate URL fields only if they have values
         url_fields = ["linkedin", "website"]
         url_validator = URLValidator()
         for url_field in url_fields:
-            try:
-                url_validator(resume_data.get(url_field, ""))
-            except ValidationError:
+            url_value = resume_data.get(url_field, "")
+            if url_value:  # Only validate non-empty URLs
+                try:
+                    url_validator(url_value)
+                except ValidationError:
+                    resume_data[url_field] = None
+            elif url_value == "":
                 resume_data[url_field] = None
         
-        # Validate email
-        try:
-            validate_email(resume_data.get("email", ""))
-        except ValidationError:
+        # Validate email only if it has a value
+        email_value = resume_data.get("email", "")
+        if email_value:  # Only validate non-empty email
+            try:
+                validate_email(email_value)
+            except ValidationError:
+                resume_data['email'] = None
+        elif email_value == "":
             resume_data['email'] = None
         
         serializer = ResumeSerializer(data=resume_data)
@@ -392,8 +400,7 @@ class ResumeFromObjectAPIView(APIView):
                 if is_master:
                     try:
                         master_resume = Resume.objects.get(user=user, is_master=True)
-                        if master_resume:
-                            master_resume.delete()
+                        master_resume.delete()
                     except Resume.DoesNotExist:
                         pass
                     
