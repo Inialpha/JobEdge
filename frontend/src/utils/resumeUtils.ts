@@ -41,47 +41,73 @@ export const getEditableResume = (resume: any): ResumeData => {
 
   // If personal_information array exists, parse it
   if (resume.personal_information && Array.isArray(resume.personal_information)) {
-    resume.personal_information.forEach((item: string) => {
-      const lowerItem = item.toLowerCase()
-      // Check for email
-      if (item.includes('@') && !personalInfo.email) {
-        personalInfo.email = item
-      }
-      // Check for phone (starts with + or contains digits with dashes/parentheses)
-      else if ((item.startsWith('+') || /\d{3}[-.)]\d/.test(item)) && !personalInfo.phone) {
-        personalInfo.phone = item
-      }
-      // Check for LinkedIn
-      else if (!personalInfo.linkedin) {
-        try {
-          const url = new URL(item)
-          if (url.hostname === 'linkedin.com' || url.hostname === 'www.linkedin.com' || url.hostname.endsWith('.linkedin.com')) {
-            personalInfo.linkedin = item
-          }
-        } catch {
-          // Not a valid URL, skip
+    // Check if it's the new format (array of dictionaries with 'field' and 'value')
+    if (resume.personal_information.length > 0 && 
+        typeof resume.personal_information[0] === 'object' && 
+        'field' in resume.personal_information[0]) {
+      // New format: array of {field, value} dictionaries
+      resume.personal_information.forEach((item: {field: string, value: string}) => {
+        const field = item.field.toLowerCase()
+        const value = item.value || ""
+        
+        if (field === 'name' && !personalInfo.name) {
+          personalInfo.name = value
+        } else if (field === 'email' && !personalInfo.email) {
+          personalInfo.email = value
+        } else if (field === 'phone' && !personalInfo.phone) {
+          personalInfo.phone = value
+        } else if (field === 'address' && !personalInfo.address) {
+          personalInfo.address = value
+        } else if (field === 'linkedin' && !personalInfo.linkedin) {
+          personalInfo.linkedin = value
+        } else if (field === 'website' && !personalInfo.website) {
+          personalInfo.website = value
         }
-      }
-      // Check for website (http/https but not linkedin)
-      else if (!personalInfo.website && (item.startsWith('http://') || item.startsWith('https://'))) {
-        try {
-          const url = new URL(item)
-          if (url.hostname !== 'linkedin.com' && url.hostname !== 'www.linkedin.com' && !url.hostname.endsWith('.linkedin.com')) {
-            personalInfo.website = item
-          }
-        } catch {
-          // Not a valid URL, skip
+      })
+    } else {
+      // Old format: array of strings, parse them
+      resume.personal_information.forEach((item: string) => {
+        const lowerItem = item.toLowerCase()
+        // Check for email
+        if (item.includes('@') && !personalInfo.email) {
+          personalInfo.email = item
         }
-      }
-      // Check if it looks like an address (contains comma and street indicators)
-      else if ((item.includes(',') || lowerItem.includes('street') || lowerItem.includes('st,') || lowerItem.includes('ave') || lowerItem.includes('road')) && !personalInfo.address) {
-        personalInfo.address = item
-      }
-      // Otherwise, if name is empty, assume it's the name
-      else if (!personalInfo.name) {
-        personalInfo.name = item
-      }
-    })
+        // Check for phone (starts with + or contains digits with dashes/parentheses)
+        else if ((item.startsWith('+') || /\d{3}[-.)]\d/.test(item)) && !personalInfo.phone) {
+          personalInfo.phone = item
+        }
+        // Check for LinkedIn
+        else if (!personalInfo.linkedin) {
+          try {
+            const url = new URL(item)
+            if (url.hostname === 'linkedin.com' || url.hostname === 'www.linkedin.com' || url.hostname.endsWith('.linkedin.com')) {
+              personalInfo.linkedin = item
+            }
+          } catch {
+            // Not a valid URL, skip
+          }
+        }
+        // Check for website (http/https but not linkedin)
+        else if (!personalInfo.website && (item.startsWith('http://') || item.startsWith('https://'))) {
+          try {
+            const url = new URL(item)
+            if (url.hostname !== 'linkedin.com' && url.hostname !== 'www.linkedin.com' && !url.hostname.endsWith('.linkedin.com')) {
+              personalInfo.website = item
+            }
+          } catch {
+            // Not a valid URL, skip
+          }
+        }
+        // Check if it looks like an address (contains comma and street indicators)
+        else if ((item.includes(',') || lowerItem.includes('street') || lowerItem.includes('st,') || lowerItem.includes('ave') || lowerItem.includes('road')) && !personalInfo.address) {
+          personalInfo.address = item
+        }
+        // Otherwise, if name is empty, assume it's the name
+        else if (!personalInfo.name) {
+          personalInfo.name = item
+        }
+      })
+    }
   }
 
   return {
