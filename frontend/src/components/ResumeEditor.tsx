@@ -74,12 +74,26 @@ export const getEditableResume = (resume: any) => {
         contactInfo.phone = item
       }
       // Check for LinkedIn
-      else if (lowerItem.includes('linkedin.com') && !contactInfo.linkedin) {
-        contactInfo.linkedin = item
+      else if (!contactInfo.linkedin) {
+        try {
+          const url = new URL(item)
+          if (url.hostname === 'linkedin.com' || url.hostname === 'www.linkedin.com' || url.hostname.endsWith('.linkedin.com')) {
+            contactInfo.linkedin = item
+          }
+        } catch {
+          // Not a valid URL, skip
+        }
       }
       // Check for website (http/https but not linkedin)
-      else if ((item.startsWith('http://') || item.startsWith('https://')) && !lowerItem.includes('linkedin') && !contactInfo.website) {
-        contactInfo.website = item
+      else if (!contactInfo.website && (item.startsWith('http://') || item.startsWith('https://'))) {
+        try {
+          const url = new URL(item)
+          if (url.hostname !== 'linkedin.com' && url.hostname !== 'www.linkedin.com' && !url.hostname.endsWith('.linkedin.com')) {
+            contactInfo.website = item
+          }
+        } catch {
+          // Not a valid URL, skip
+        }
       }
       // Check if it looks like an address (contains comma and street indicators)
       else if ((item.includes(',') || lowerItem.includes('street') || lowerItem.includes('st,') || lowerItem.includes('ave') || lowerItem.includes('road')) && !contactInfo.address) {
