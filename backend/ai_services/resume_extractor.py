@@ -28,7 +28,7 @@ class Resume(BaseModel):
     keywords: List[str] = Field(description="Keywords from the resume relevant for searching for a job")
     name: str = Field(description="Name of the user")
     summary: str = Field(description="Summary of the resume")
-    personal_information: List[str] = Field(description="List of personal information strings: full name, email, phone number with country code, address, LinkedIn URL, website URL - each as a separate string")
+    personal_information: List[dict] = Field(description="List of personal information dictionaries with 'field' and 'value' keys. Example: [{'field': 'name', 'value': 'John Doe'}, {'field': 'email', 'value': 'john@email.com'}, {'field': 'phone', 'value': '+1-555-123-4567'}, {'field': 'address', 'value': '123 Main St, City, State'}, {'field': 'linkedin', 'value': 'https://linkedin.com/in/johndoe'}, {'field': 'website', 'value': 'https://johndoe.com'}]")
     address: str = Field(description="User's address")
     email: str = Field(description="User's email")
     linkedin: str = Field(description="User's LinkedIn link")
@@ -63,7 +63,7 @@ Extract the resume information using this JSON schema and descriptions:
   "keywords": List[str] — Keywords or phrases that summarize the candidate's expertise and are useful for job search.
   "name": str — Full name of the candidate as written on the resume.
   "summary": str — A concise summary describing the candidate’s professional profile and strengths.
-  "personal_information": List[str] — A list of personal information items, each as a separate string. Include: full name, email address, phone number (with country code if present), residential/contact address, LinkedIn profile URL, and personal/portfolio website URL. Example: ["John Doe", "john.doe@email.com", "+1-555-123-4567", "123 Main St, City, State ZIP", "https://linkedin.com/in/johndoe", "https://johndoe.com"]
+  "personal_information": List[Object] — A list of personal information dictionaries, each with 'field' and 'value' keys. Example: [{{"field": "name", "value": "John Doe"}}, {{"field": "email", "value": "john.doe@email.com"}}, {{"field": "phone", "value": "+1-555-123-4567"}}, {{"field": "address", "value": "123 Main St, City, State ZIP"}}, {{"field": "linkedin", "value": "https://linkedin.com/in/johndoe"}}, {{"field": "website", "value": "https://johndoe.com"}}]
   "address": str — Candidate’s residential or contact address.
   "email": str — Professional email address for communication.
   "linkedin": str — Link to the candidate’s LinkedIn profile.
@@ -149,7 +149,7 @@ Extract the resume information using this JSON schema and descriptions:
   "name": str — Full name of the candidate as written on the resume.
   "profession": str — The profession of the candidate.
   "summary": str — A concise summary describing the candidate’s professional profile and strengths. Tailored to match the job without adding anything that is not in the master resume.
-  "personal_information": List[str] — A list of personal information items, each as a separate string. Include: full name, email address, phone number (with country code if present), residential/contact address, LinkedIn profile URL, and personal/portfolio website URL. Example: ["John Doe", "john.doe@email.com", "+1-555-123-4567", "123 Main St, City, State ZIP", "https://linkedin.com/in/johndoe", "https://johndoe.com"]
+  "personal_information": List[Object] — A list of personal information dictionaries, each with 'field' and 'value' keys. Example: [{{"field": "name", "value": "John Doe"}}, {{"field": "email", "value": "john.doe@email.com"}}, {{"field": "phone", "value": "+1-555-123-4567"}}, {{"field": "address", "value": "123 Main St, City, State ZIP"}}, {{"field": "linkedin", "value": "https://linkedin.com/in/johndoe"}}, {{"field": "website", "value": "https://johndoe.com"}}]
   "address": str — Candidate’s residential or contact address.
   "email": str — Professional email address for communication.
   "linkedin": str — Link to the candidate’s LinkedIn profile.

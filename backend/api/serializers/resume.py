@@ -22,9 +22,9 @@ class ResumeSerializer(serializers.Serializer):
     profession = serializers.CharField(max_length=255)
     summary = serializers.CharField()
     personal_information = serializers.ListField(
-        child=serializers.CharField(),
+        child=serializers.DictField(),
         default=[],
-        help_text="List of personal information strings (name, email, phone, address, linkedin, website)"
+        help_text="List of personal information dictionaries with 'field' and 'value' keys"
     )
     address = serializers.CharField(allow_null=True, required=False)
     email = serializers.EmailField()
