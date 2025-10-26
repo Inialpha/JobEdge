@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'anymail',
 ]
 
 MIDDLEWARE = [
@@ -151,7 +152,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
+DEFAULT_FROM_EMAIL = 'inimfonebong001@gmail.com'
+ANYMAIL = {
+    "BREVO_API_KEY": os.getenv("BREVO_API_KEY"),
+}
+
 EMAIL_FROM = 'inimfonebong001@gmail.com'
 EMAIL_BCC = 'inimfonebong001@gmail.com'
 EMAIL_HOST_USER = 'inimfonebong001@gmail.com'

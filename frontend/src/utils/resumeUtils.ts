@@ -21,7 +21,7 @@ export const getEditableResume = (resume: any): ResumeData => {
       professionalExperience: [],
       education: [],
       projects: [],
-      skills: "",
+      skills: [],
       certifications: [],
       awards: [],
     }
