@@ -1,4 +1,5 @@
 import { ResumeData } from "@/types/resume"
+import { parseSkillsArray } from "@/utils/resumeUtils"
 
 interface CreativeTemplateProps {
   resume: ResumeData
@@ -11,7 +12,7 @@ export const CreativeTemplate = ({ resume }: CreativeTemplateProps) => {
     return div.innerHTML
   }
 
-  const skills = resume.skills.filter(s => s.trim())
+  const skills = parseSkillsArray(resume.skills)
 
   return (
     <>

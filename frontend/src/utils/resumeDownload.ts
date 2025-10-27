@@ -1,6 +1,7 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx'
 import { saveAs } from 'file-saver'
-import { ResumeData } from '@/types/resume'
+import { ResumeData, Template } from '@/types/resume'
+import { parseSkillsArray } from './resumeUtils'
 
 export const downloadPDF = async (elementId: string) => {
   const element = document.getElementById(elementId)
@@ -22,10 +23,34 @@ export const downloadPDF = async (elementId: string) => {
   }
 }
 
-export const downloadDocx = async (resume: ResumeData) => {
-  const skills = resume.skills.filter(s => s.trim())
+export const downloadDocx = async (resume: ResumeData, template: Template = 'classic') => {
+  // Parse skills using shared utility
+  const skills = parseSkillsArray(resume.skills)
 
-  const doc = new Document({
+  let doc: Document;
+
+  // Template-specific document generation
+  switch (template) {
+    case 'modern':
+      doc = generateModernDocx(resume, skills);
+      break;
+    case 'minimal':
+      doc = generateMinimalDocx(resume, skills);
+      break;
+    case 'creative':
+      doc = generateCreativeDocx(resume, skills);
+      break;
+    default:
+      doc = generateClassicDocx(resume, skills);
+  }
+
+  const blob = await Packer.toBlob(doc)
+  saveAs(blob, `resume-${template}.docx`)
+}
+
+// Classic template - centered header with traditional layout
+const generateClassicDocx = (resume: ResumeData, skills: string[]) => {
+  return new Document({
     sections: [{
       properties: {},
       children: [
@@ -34,10 +59,12 @@ export const downloadDocx = async (resume: ResumeData) => {
           heading: HeadingLevel.HEADING_1,
           alignment: AlignmentType.CENTER,
         }),
-        new Paragraph({
-          text: resume.summary.substring(0, 50) || 'Professional',
-          alignment: AlignmentType.CENTER,
-        }),
+        ...(resume.personalInformation.profession ? [
+          new Paragraph({
+            text: resume.personalInformation.profession,
+            alignment: AlignmentType.CENTER,
+          }),
+        ] : []),
         new Paragraph({
           text: [
             resume.personalInformation.address,
@@ -49,7 +76,7 @@ export const downloadDocx = async (resume: ResumeData) => {
         new Paragraph({ text: '' }),
         ...(resume.summary ? [
           new Paragraph({
-            text: 'Professional Summary',
+            text: 'PROFESSIONAL SUMMARY',
             heading: HeadingLevel.HEADING_2,
           }),
           new Paragraph({ text: resume.summary }),
@@ -57,7 +84,7 @@ export const downloadDocx = async (resume: ResumeData) => {
         ] : []),
         ...(resume.professionalExperience.length > 0 ? [
           new Paragraph({
-            text: 'Professional Experience',
+            text: 'PROFESSIONAL EXPERIENCE',
             heading: HeadingLevel.HEADING_2,
           }),
           ...resume.professionalExperience.flatMap(exp => [
@@ -67,10 +94,12 @@ export const downloadDocx = async (resume: ResumeData) => {
                   text: `${exp.role} | ${exp.organization}${exp.location ? `, ${exp.location}` : ''}`, 
                   bold: true 
                 }),
-                new TextRun({ text: ` (${exp.startDate} - ${exp.endDate})` }),
               ],
             }),
-            ...exp.responsibilities.map(resp => new Paragraph({
+            new Paragraph({
+              text: `${exp.startDate} - ${exp.endDate}`,
+            }),
+            ...exp.responsibilities.filter(r => r.trim()).map(resp => new Paragraph({
               text: `• ${resp}`,
               bullet: { level: 0 },
             })),
@@ -79,7 +108,7 @@ export const downloadDocx = async (resume: ResumeData) => {
         ] : []),
         ...(resume.education.length > 0 ? [
           new Paragraph({
-            text: 'Education',
+            text: 'EDUCATION',
             heading: HeadingLevel.HEADING_2,
           }),
           ...resume.education.flatMap(edu => [
@@ -94,15 +123,15 @@ export const downloadDocx = async (resume: ResumeData) => {
         ] : []),
         ...(skills.length > 0 ? [
           new Paragraph({
-            text: 'Skills',
+            text: 'SKILLS',
             heading: HeadingLevel.HEADING_2,
           }),
-          new Paragraph({ text: skills.join(', ') }),
+          new Paragraph({ text: skills.join(' • ') }),
           new Paragraph({ text: '' }),
         ] : []),
         ...(resume.certifications.length > 0 ? [
           new Paragraph({
-            text: 'Certifications',
+            text: 'CERTIFICATIONS',
             heading: HeadingLevel.HEADING_2,
           }),
           ...resume.certifications.flatMap(cert => [
@@ -115,7 +144,7 @@ export const downloadDocx = async (resume: ResumeData) => {
         ] : []),
         ...(resume.projects.length > 0 ? [
           new Paragraph({
-            text: 'Projects',
+            text: 'PROJECTS',
             heading: HeadingLevel.HEADING_2,
           }),
           ...resume.projects.flatMap(proj => [
@@ -123,15 +152,17 @@ export const downloadDocx = async (resume: ResumeData) => {
               children: [new TextRun({ text: proj.name, bold: true })],
             }),
             new Paragraph({ text: proj.description }),
-            new Paragraph({ 
-              children: [new TextRun({ text: proj.technologies, italics: true })],
-            }),
+            ...(proj.technologies ? [
+              new Paragraph({ 
+                children: [new TextRun({ text: proj.technologies, italics: true })],
+              }),
+            ] : []),
             new Paragraph({ text: '' }),
           ]),
         ] : []),
         ...(resume.awards.length > 0 ? [
           new Paragraph({
-            text: 'Awards',
+            text: 'AWARDS',
             heading: HeadingLevel.HEADING_2,
           }),
           ...resume.awards.map(award => new Paragraph({
@@ -141,8 +172,371 @@ export const downloadDocx = async (resume: ResumeData) => {
       ],
     }],
   })
+}
 
-  const blob = await Packer.toBlob(doc)
-  saveAs(blob, 'resume.docx')
+// Modern template - left-aligned with bold section headers
+const generateModernDocx = (resume: ResumeData, skills: string[]) => {
+  return new Document({
+    sections: [{
+      properties: {},
+      children: [
+        new Paragraph({
+          text: resume.personalInformation.name,
+          heading: HeadingLevel.HEADING_1,
+          alignment: AlignmentType.LEFT,
+        }),
+        ...(resume.personalInformation.profession ? [
+          new Paragraph({
+            text: resume.personalInformation.profession,
+            alignment: AlignmentType.LEFT,
+          }),
+        ] : []),
+        new Paragraph({
+          text: [
+            resume.personalInformation.email,
+            resume.personalInformation.phone,
+            resume.personalInformation.address
+          ].filter(Boolean).join(' | '),
+          alignment: AlignmentType.LEFT,
+        }),
+        new Paragraph({ text: '' }),
+        ...(resume.summary ? [
+          new Paragraph({
+            text: 'PROFESSIONAL SUMMARY',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          new Paragraph({ text: resume.summary }),
+          new Paragraph({ text: '' }),
+        ] : []),
+        ...(skills.length > 0 ? [
+          new Paragraph({
+            text: 'SKILLS',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          new Paragraph({ text: skills.join(' • ') }),
+          new Paragraph({ text: '' }),
+        ] : []),
+        ...(resume.professionalExperience.length > 0 ? [
+          new Paragraph({
+            text: 'PROFESSIONAL EXPERIENCE',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          ...resume.professionalExperience.flatMap(exp => [
+            new Paragraph({
+              children: [
+                new TextRun({ 
+                  text: `${exp.role} | ${exp.organization}${exp.location ? `, ${exp.location}` : ''}`, 
+                  bold: true 
+                }),
+              ],
+            }),
+            new Paragraph({
+              text: `${exp.startDate} - ${exp.endDate}`,
+            }),
+            ...exp.responsibilities.filter(r => r.trim()).map(resp => new Paragraph({
+              text: `• ${resp}`,
+              bullet: { level: 0 },
+            })),
+            new Paragraph({ text: '' }),
+          ]),
+        ] : []),
+        ...(resume.education.length > 0 ? [
+          new Paragraph({
+            text: 'EDUCATION',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          ...resume.education.flatMap(edu => [
+            new Paragraph({
+              children: [new TextRun({ text: edu.degree, bold: true })],
+            }),
+            new Paragraph({ text: edu.institution }),
+            new Paragraph({ text: `${edu.startDate} - ${edu.endDate}` }),
+            ...(edu.gpa ? [new Paragraph({ text: `GPA: ${edu.gpa}` })] : []),
+            new Paragraph({ text: '' }),
+          ]),
+        ] : []),
+        ...(resume.certifications.length > 0 ? [
+          new Paragraph({
+            text: 'CERTIFICATIONS',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          ...resume.certifications.flatMap(cert => [
+            new Paragraph({
+              children: [new TextRun({ text: cert.name, bold: true })],
+            }),
+            new Paragraph({ text: `${cert.issuer} - ${cert.year}` }),
+          ]),
+          new Paragraph({ text: '' }),
+        ] : []),
+        ...(resume.projects.length > 0 ? [
+          new Paragraph({
+            text: 'PROJECTS',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          ...resume.projects.flatMap(proj => [
+            new Paragraph({
+              children: [new TextRun({ text: proj.name, bold: true })],
+            }),
+            new Paragraph({ text: proj.description }),
+            ...(proj.technologies ? [
+              new Paragraph({ 
+                children: [new TextRun({ text: proj.technologies, italics: true })],
+              }),
+            ] : []),
+            new Paragraph({ text: '' }),
+          ]),
+        ] : []),
+        ...(resume.awards.length > 0 ? [
+          new Paragraph({
+            text: 'AWARDS',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          ...resume.awards.map(award => new Paragraph({
+            text: `${award.title} - ${award.organization} (${award.year})`,
+          })),
+        ] : []),
+      ],
+    }],
+  })
+}
+
+// Minimal template - clean and simple with less formatting
+const generateMinimalDocx = (resume: ResumeData, skills: string[]) => {
+  return new Document({
+    sections: [{
+      properties: {},
+      children: [
+        new Paragraph({
+          text: resume.personalInformation.name,
+          heading: HeadingLevel.HEADING_1,
+          alignment: AlignmentType.LEFT,
+        }),
+        ...(resume.personalInformation.profession ? [
+          new Paragraph({
+            text: resume.personalInformation.profession,
+            alignment: AlignmentType.LEFT,
+          }),
+        ] : []),
+        new Paragraph({
+          text: [
+            resume.personalInformation.email,
+            resume.personalInformation.phone
+          ].filter(Boolean).join(' • '),
+          alignment: AlignmentType.LEFT,
+        }),
+        new Paragraph({ text: '' }),
+        ...(resume.summary ? [
+          new Paragraph({
+            text: 'PROFESSIONAL SUMMARY',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          new Paragraph({ text: resume.summary }),
+          new Paragraph({ text: '' }),
+        ] : []),
+        ...(resume.professionalExperience.length > 0 ? [
+          new Paragraph({
+            text: 'EXPERIENCE',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          ...resume.professionalExperience.flatMap(exp => [
+            new Paragraph({
+              children: [
+                new TextRun({ 
+                  text: `${exp.role}, ${exp.organization}`, 
+                  bold: true 
+                }),
+              ],
+            }),
+            new Paragraph({
+              text: `${exp.startDate} - ${exp.endDate}`,
+            }),
+            ...exp.responsibilities.filter(r => r.trim()).map(resp => new Paragraph({
+              text: `• ${resp}`,
+            })),
+            new Paragraph({ text: '' }),
+          ]),
+        ] : []),
+        ...(resume.education.length > 0 ? [
+          new Paragraph({
+            text: 'EDUCATION',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          ...resume.education.flatMap(edu => [
+            new Paragraph({
+              children: [new TextRun({ text: `${edu.degree}, ${edu.institution}`, bold: true })],
+            }),
+            new Paragraph({ text: `${edu.startDate} - ${edu.endDate}` }),
+            new Paragraph({ text: '' }),
+          ]),
+        ] : []),
+        ...(skills.length > 0 ? [
+          new Paragraph({
+            text: 'SKILLS',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          new Paragraph({ text: skills.join(' • ') }),
+          new Paragraph({ text: '' }),
+        ] : []),
+        ...(resume.projects.length > 0 ? [
+          new Paragraph({
+            text: 'PROJECTS',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          ...resume.projects.flatMap(proj => [
+            new Paragraph({
+              children: [new TextRun({ text: proj.name, bold: true })],
+            }),
+            new Paragraph({ text: proj.description }),
+            new Paragraph({ text: '' }),
+          ]),
+        ] : []),
+        ...(resume.certifications.length > 0 ? [
+          new Paragraph({
+            text: 'CERTIFICATIONS',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          ...resume.certifications.map(cert => new Paragraph({
+            text: `${cert.name} - ${cert.issuer} (${cert.year})`,
+          })),
+          new Paragraph({ text: '' }),
+        ] : []),
+        ...(resume.awards.length > 0 ? [
+          new Paragraph({
+            text: 'AWARDS',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          ...resume.awards.map(award => new Paragraph({
+            text: `${award.title} - ${award.organization} (${award.year})`,
+          })),
+        ] : []),
+      ],
+    }],
+  })
+}
+
+// Creative template - similar to classic but with different emphasis
+const generateCreativeDocx = (resume: ResumeData, skills: string[]) => {
+  return new Document({
+    sections: [{
+      properties: {},
+      children: [
+        new Paragraph({
+          text: resume.personalInformation.name,
+          heading: HeadingLevel.HEADING_1,
+          alignment: AlignmentType.CENTER,
+        }),
+        ...(resume.personalInformation.profession ? [
+          new Paragraph({
+            text: resume.personalInformation.profession,
+            alignment: AlignmentType.CENTER,
+          }),
+        ] : []),
+        new Paragraph({
+          text: [
+            resume.personalInformation.email,
+            resume.personalInformation.phone,
+            resume.personalInformation.address
+          ].filter(Boolean).join(' | '),
+          alignment: AlignmentType.CENTER,
+        }),
+        new Paragraph({ text: '' }),
+        ...(resume.summary ? [
+          new Paragraph({
+            text: 'PROFESSIONAL SUMMARY',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          new Paragraph({ text: resume.summary }),
+          new Paragraph({ text: '' }),
+        ] : []),
+        ...(resume.professionalExperience.length > 0 ? [
+          new Paragraph({
+            text: 'PROFESSIONAL EXPERIENCE',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          ...resume.professionalExperience.flatMap(exp => [
+            new Paragraph({
+              children: [
+                new TextRun({ 
+                  text: `${exp.role} | ${exp.organization}${exp.location ? `, ${exp.location}` : ''}`, 
+                  bold: true 
+                }),
+              ],
+            }),
+            new Paragraph({
+              text: `${exp.startDate} - ${exp.endDate}`,
+            }),
+            ...exp.responsibilities.filter(r => r.trim()).map(resp => new Paragraph({
+              text: `• ${resp}`,
+              bullet: { level: 0 },
+            })),
+            new Paragraph({ text: '' }),
+          ]),
+        ] : []),
+        ...(resume.education.length > 0 ? [
+          new Paragraph({
+            text: 'EDUCATION',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          ...resume.education.flatMap(edu => [
+            new Paragraph({
+              children: [new TextRun({ text: edu.degree, bold: true })],
+            }),
+            new Paragraph({ text: edu.institution }),
+            new Paragraph({ text: `${edu.startDate} - ${edu.endDate}` }),
+            ...(edu.gpa ? [new Paragraph({ text: `GPA: ${edu.gpa}` })] : []),
+            new Paragraph({ text: '' }),
+          ]),
+        ] : []),
+        ...(skills.length > 0 ? [
+          new Paragraph({
+            text: 'SKILLS',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          new Paragraph({ text: skills.join(' • ') }),
+          new Paragraph({ text: '' }),
+        ] : []),
+        ...(resume.certifications.length > 0 ? [
+          new Paragraph({
+            text: 'CERTIFICATIONS',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          ...resume.certifications.flatMap(cert => [
+            new Paragraph({
+              children: [new TextRun({ text: cert.name, bold: true })],
+            }),
+            new Paragraph({ text: `${cert.issuer} - ${cert.year}` }),
+          ]),
+          new Paragraph({ text: '' }),
+        ] : []),
+        ...(resume.projects.length > 0 ? [
+          new Paragraph({
+            text: 'PROJECTS',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          ...resume.projects.flatMap(proj => [
+            new Paragraph({
+              children: [new TextRun({ text: proj.name, bold: true })],
+            }),
+            new Paragraph({ text: proj.description }),
+            ...(proj.technologies ? [
+              new Paragraph({ 
+                children: [new TextRun({ text: proj.technologies, italics: true })],
+              }),
+            ] : []),
+            new Paragraph({ text: '' }),
+          ]),
+        ] : []),
+        ...(resume.awards.length > 0 ? [
+          new Paragraph({
+            text: 'AWARDS',
+            heading: HeadingLevel.HEADING_2,
+          }),
+          ...resume.awards.map(award => new Paragraph({
+            text: `${award.title} - ${award.organization} (${award.year})`,
+          })),
+        ] : []),
+      ],
+    }],
+  })
 }
 

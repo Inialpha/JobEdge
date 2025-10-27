@@ -1,6 +1,21 @@
 import { ResumeData } from "@/types/resume"
 
 /**
+ * Parses skills from string or array format into a string array
+ * @param skills - Skills in string format (separated by ' • ') or array format
+ * @returns Array of skill strings
+ */
+export const parseSkillsArray = (skills: string | unknown): string[] => {
+  if (typeof skills === 'string') {
+    return skills.split(' • ').filter((s: string) => s.trim())
+  }
+  if (Array.isArray(skills)) {
+    return skills.filter((s: string) => s && typeof s === 'string' && s.trim())
+  }
+  return []
+}
+
+/**
  * Converts a resume object from location state to ResumeData format
  * If resume is null/undefined, returns empty resume data
  */
@@ -21,7 +36,7 @@ export const getEditableResume = (resume: any): ResumeData => {
       professionalExperience: [],
       education: [],
       projects: [],
-      skills: [],
+      skills: "",
       certifications: [],
       awards: [],
     }
@@ -138,7 +153,7 @@ export const getEditableResume = (resume: any): ResumeData => {
       technologies: proj.technologies || "",
       link: proj.link || "",
     })),
-    skills: resume.skills || [],
+    skills: Array.isArray(resume.skills) ? resume.skills.join(' • ') : (resume.skills || ""),
     certifications: resume.certifications || [],
     awards: resume.awards || [],
   }
