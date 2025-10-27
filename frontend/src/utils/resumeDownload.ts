@@ -23,7 +23,7 @@ export const downloadPDF = async (elementId: string) => {
 }
 
 export const downloadDocx = async (resume: ResumeData) => {
-  const skills = resume.skills.split(" • ").filter(s => s.trim())
+  const skills = resume.skills.filter(s => s.trim())
 
   const doc = new Document({
     sections: [{
@@ -145,3 +145,4 @@ export const downloadDocx = async (resume: ResumeData) => {
   const blob = await Packer.toBlob(doc)
   saveAs(blob, 'resume.docx')
 }
+

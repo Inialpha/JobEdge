@@ -8,8 +8,6 @@ from .user import UserSerializer
 
 class ResumeSerializer(serializers.Serializer):
     id = serializers.CharField(max_length=255, read_only=True)
-    file_url = serializers.URLField(max_length=500, required=False, read_only=True)
-    file = serializers.FileField(required=False, write_only=True)
     text = serializers.CharField()
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     is_master = serializers.BooleanField(default=False)

@@ -52,7 +52,6 @@ class ResumeAPIView(APIView):
 
         file = File(file_name)
         resume_data = ai(file.text)
-        print(resume_data)
         resume_data['file'] = file_name
         resume_data["text"] = file.text
         resume_data['user'] = user_id
@@ -69,28 +68,12 @@ class ResumeAPIView(APIView):
             except ValidationError as e:
                 resume_data[url_field] = None
 
-
-        serializer = ResumeSerializer(data=resume_data)
         try:
-            if serializer.is_valid():
-                # remove any previous master resume to avoid two master resumes
-                try:
-                    master_resume = Resume.objects.get(user=user, is_master=True)
-                    if master_resume:
-                        print(master_resume)
-                        master_resume.delete()
-                except Resume.DoesNotExist:
-                    pass
-
-                serializer.save()
-                user.has_master_resume = True
-                user.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                print(serializer.errors)
-
-            print("status=status.HTTP_400_BAD_REQUEST)")
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer = ResumeSerializer(data=resume_data)
+            if not serializer.is_valid():
+                pass
+            print(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
             print(e)
             return Response({"error": "An error occured"}, status=status.HTTP_400_BAD_REQUEST)
@@ -111,6 +94,11 @@ class ResumeAPIView(APIView):
         Delete a resume.
         """
         resume = get_object_or_404(Resume, pk=pk)
+        user = request.user
+        print(user)
+        if resume.is_master:
+            user.has_master_resume = False
+            user.save()
         resume.delete()
         return Response({"message": "Resume deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 

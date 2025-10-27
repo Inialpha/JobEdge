@@ -60,7 +60,6 @@ console.log("passedResume", passedResume)
     year: ''
   });
 
-  // Handler callbacks using useCallback
   const updateResume = useCallback((field: keyof ResumeData, value: string | ProfessionalExperience[] | Education[] | Project[] | Certification[] | Award[] | PersonalInformation) => {
     setResume(prev => ({ ...prev, [field]: value }));
   }, []);
@@ -256,7 +255,7 @@ console.log("passedResume", passedResume)
       if (!proj.name.trim()) {
         errors[`projects.${index}.name`] = 'Project name is required';
       }
-      if (!proj.description.trim()) {
+      if (!proj?.description?.trim()) {
         errors[`projects.${index}.description`] = 'Project description is required';
       }
     });
@@ -293,7 +292,6 @@ console.log("passedResume", passedResume)
       if (response.ok) {
         await response.json();
         setSaveMessage({type: 'success', text: 'Resume saved as master resume successfully!'});
-        // Navigate back to dashboard after a short delay
         setTimeout(() => {
           navigate('/dashboard', { state: { component: 'resumes' } });
         }, 1500);
@@ -307,7 +305,6 @@ console.log("passedResume", passedResume)
       setSaveMessage({type: 'error', text: 'Failed to save resume. Please try again.'});
     } finally {
       setIsSaving(false);
-      // Clear message after 5 seconds
       saveTimeoutRef.current = setTimeout(() => setSaveMessage(null), 5000);
     }
   }, [resume, navigate]);
