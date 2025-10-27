@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { postRequest } from "@/utils/apis";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import ResumeEditor from "@/components/ResumeEditor"
 import { useNavigate } from "react-router-dom";
 

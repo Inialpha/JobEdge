@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getRequest, postFormData, deleteRequest } from "@/utils/apis";
 import { FileText, Download, Edit, UploadCloud, Trash2 } from "lucide-react";
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store/store';
 import {
   Dialog,
   DialogContent,
@@ -41,7 +39,6 @@ export default function ResumesComponent() {
   const [isUploading, setIsUploading] = useState(false);
   const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const navigate = useNavigate();
-  const user = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
     fetchResumes();
