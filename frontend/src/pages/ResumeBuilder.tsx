@@ -11,10 +11,11 @@ export default function ResumeBuilder() {
   const location = useLocation();
   const navigate = useNavigate();
   const passedResume = location.state?.resume;
+  const passedTemplate = location.state?.template || 'classic';
 console.log("passedResume", passedResume)
   const rootRef = useRef<Root | null>(null);
   
-  const [currentTemplate, setCurrentTemplate] = useState<Template>('classic');
+  const [currentTemplate, setCurrentTemplate] = useState<Template>(passedTemplate);
   const [resume, setResume] = useState<ResumeData>(() => getEditableResume(passedResume));
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
@@ -785,7 +786,7 @@ console.log("passedResume", passedResume)
               </div>
             )}
             <button className="btn btn-primary" onClick={() => downloadPDF('resumePreview')}>📄 Download PDF</button>
-            <button className="btn btn-secondary" onClick={() => downloadDocx(resume)}>📥 Download DOCX</button>
+            <button className="btn btn-secondary" onClick={() => downloadDocx(resume, currentTemplate)}>📥 Download DOCX</button>
             <button 
               className="btn" 
               style={{background: '#17a2b8', color: 'white'}}
@@ -909,7 +910,10 @@ console.log("passedResume", passedResume)
                 }}>+ Add</button>
               </div>
               <div>
-                {resume.skills.filter(s => s.trim()).map((skill, index) => (
+                {(typeof resume.skills === 'string' 
+                  ? resume.skills.split(' • ').filter((s: string) => s.trim())
+                  : (resume.skills as unknown as string[]).filter((s: string) => s.trim())
+                ).map((skill: string, index: number) => (
                   <span key={index} className="skill-tag skill-tag-edit">
                     {skill}
                     <button onClick={() => removeSkill(index)}>×</button>

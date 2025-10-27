@@ -21,7 +21,7 @@ export const getEditableResume = (resume: any): ResumeData => {
       professionalExperience: [],
       education: [],
       projects: [],
-      skills: [],
+      skills: "",
       certifications: [],
       awards: [],
     }
@@ -138,7 +138,7 @@ export const getEditableResume = (resume: any): ResumeData => {
       technologies: proj.technologies || "",
       link: proj.link || "",
     })),
-    skills: resume.skills || [],
+    skills: Array.isArray(resume.skills) ? resume.skills.join(' • ') : (resume.skills || ""),
     certifications: resume.certifications || [],
     awards: resume.awards || [],
   }

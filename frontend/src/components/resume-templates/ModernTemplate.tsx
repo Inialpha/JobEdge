@@ -11,7 +11,9 @@ export const ModernTemplate = ({ resume }: ModernTemplateProps) => {
     return div.innerHTML
   }
 
-  const skills = resume.skills.filter(s => s.trim())
+  const skills: string[] = typeof resume.skills === 'string' 
+    ? resume.skills.split(' • ').filter((s: string) => s.trim())
+    : (resume.skills as unknown as string[]).filter((s: string) => s.trim())
 
   return (
     <>
