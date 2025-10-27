@@ -138,7 +138,7 @@ export const getEditableResume = (resume: any): ResumeData => {
       technologies: proj.technologies || "",
       link: proj.link || "",
     })),
-    skills: Array.isArray(resume.skills) ? resume.skills.join(" • ") : (resume.skills || ""),
+    skills: resume.skills || [],
     certifications: resume.certifications || [],
     awards: resume.awards || [],
   }
