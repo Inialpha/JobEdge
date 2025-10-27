@@ -78,36 +78,57 @@ export default function Login() {
   }
   return (
     <>
-    <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      {feedback && <Feedback                        message={feedback.message}                  {...(feedback.variant && { variant: feedback.variant })}                              />}
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-700 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      {feedback && <div style={{
+        position: 'fixed',
+        top: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 1000,
+        padding: '12px 24px',
+        borderRadius: '8px',
+        backgroundColor: feedback.variant === 'error' ? '#fee2e2' : feedback.variant === 'warning' ? '#fef3c7' : '#d1fae5',
+        color: feedback.variant === 'error' ? '#991b1b' : feedback.variant === 'warning' ? '#92400e' : '#065f46',
+        border: `1px solid ${feedback.variant === 'error' ? '#fca5a5' : feedback.variant === 'warning' ? '#fde68a' : '#6ee7b7'}`,
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        fontWeight: '600',
+        fontSize: '14px'
+      }}>
+        {feedback.message}
+      </div>}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Login</h2>
+        <h2 className="mt-6 text-center text-4xl font-extrabold text-white drop-shadow-lg">Login to JobEdge</h2>
+        <p className="mt-2 text-center text-sm text-white/90">
+          Access your dashboard and manage your resumes
+        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="bg-white py-8 px-4 shadow-2xl sm:rounded-lg sm:px-10 border border-white/20">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" method="POST">
 
             <div>
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="email" className="text-gray-700 font-semibold">Email address</Label>
               <Input {...register('email', {
                 required: "Please enter your email"})}
                 id="email" type="email" autoComplete="email" className="mt-1"
               />
-              {errors?.email?.message && <span className='text-red-500 text-xs'>{errors?.email?.message.toString()}</span>}
+              {errors?.email?.message && <span className='text-red-500 text-xs mt-1 block'>{errors?.email?.message.toString()}</span>}
             </div>
 
             <div>
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" autoComplete="new-password" className="mt-1"
+              <Label htmlFor="password" className="text-gray-700 font-semibold">Password</Label>
+              <Input id="password" type="password" autoComplete="current-password" className="mt-1"
                 {...register('password', {
                   required: "Please enter your password"})}
               />
-              {errors?.password?.message && <small style={{color: "red"}}>{errors.password.message.toString()}</small>}
+              {errors?.password?.message && <span className='text-red-500 text-xs mt-1 block'>{errors.password.message.toString()}</span>}
             </div>
 
             <div>
-              <Button type="submit" className="w-full">Login</Button>
+              <Button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-2 shadow-lg">
+                Login
+              </Button>
             </div>
           </form>
         
@@ -115,7 +136,7 @@ export default function Login() {
           <div className="mt-6">
             <p className="text-center text-sm text-gray-600">
               Don't have an account?{' '}
-              <Link to="/signup" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link to="/signup" className="font-medium text-purple-600 hover:text-purple-500">
                 Sign up
               </Link>
             </p>
