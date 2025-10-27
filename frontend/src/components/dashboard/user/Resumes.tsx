@@ -1,8 +1,26 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { getRequest } from "@/utils/apis";
-import { FileText, Download, Edit } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { getRequest, postFormData, deleteRequest } from "@/utils/apis";
+import { FileText, Download, Edit, UploadCloud, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Resume {
   id: string;
@@ -15,6 +33,11 @@ interface Resume {
 export default function ResumesComponent() {
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [resumeToDelete, setResumeToDelete] = useState<Resume | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,6 +69,84 @@ export default function ResumesComponent() {
     navigate("/resume-builder", { state: { resume, autoDownload: true } });
   };
 
+  const handleCreateFromScratch = () => {
+    setShowCreateDialog(false);
+    // Navigate to resume-builder without any resume data
+    navigate('/resume-builder');
+  };
+
+  const handleUploadFile = () => {
+    setShowCreateDialog(false);
+    // Trigger file input click
+    const fileInput = document.getElementById('resume-upload-dialog');
+    if (fileInput) {
+      fileInput.click();
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setIsUploading(true);
+      setFeedback(null);
+      try {
+        const url = `${import.meta.env.VITE_API_URL}/resumes/`;
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await postFormData(url, formData);
+        if (response.ok) {
+          const resume = await response.json();
+          setFeedback({type: 'success', message: "Resume uploaded successfully. Redirecting to editor..."});
+          
+          // Navigate to resume-builder with the parsed resume
+          setTimeout(() => {
+            navigate('/resume-builder', { state: { resume } });
+          }, 1000);
+        } else {
+          setFeedback({type: 'error', message: "There was an error uploading the file. Please try again."});
+        }
+      } catch (error) {
+        console.error(error);
+        setFeedback({type: 'error', message: "There was an error uploading the file. Please try again."});
+      } finally {
+        setIsUploading(false);
+        setTimeout(() => {
+          setFeedback(null);
+        }, 5000);
+      }
+    }
+  };
+
+  const handleDeleteClick = (resume: Resume) => {
+    setResumeToDelete(resume);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!resumeToDelete) return;
+    
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/resumes/${resumeToDelete.id}/`;
+      const response = await deleteRequest(url);
+      
+      if (response.ok) {
+        setResumes(resumes.filter((r) => r.id !== resumeToDelete.id));
+        setFeedback({type: 'success', message: "Resume deleted successfully"});
+      } else {
+        setFeedback({type: 'error', message: "Failed to delete resume. Please try again."});
+      }
+    } catch (error) {
+      console.error(error);
+      setFeedback({type: 'error', message: "Failed to delete resume. Please try again."});
+    } finally {
+      setShowDeleteDialog(false);
+      setResumeToDelete(null);
+      setTimeout(() => {
+        setFeedback(null);
+      }, 5000);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -56,16 +157,93 @@ export default function ResumesComponent() {
 
   return (
     <div className="p-6">
+      {/* Create Master Resume Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Master Resume</DialogTitle>
+            <DialogDescription>
+              Choose how you want to create your master resume
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Button 
+              onClick={handleUploadFile}
+              className="w-full h-24 flex flex-col items-center justify-center gap-2"
+              variant="outline"
+              disabled={isUploading}
+            >
+              <UploadCloud className="h-8 w-8" />
+              <span className="text-sm font-medium">Upload Resume File</span>
+              <span className="text-xs text-muted-foreground">Upload PDF, DOCX, or TXT</span>
+            </Button>
+            <Button 
+              onClick={handleCreateFromScratch}
+              className="w-full h-24 flex flex-col items-center justify-center gap-2"
+              variant="outline"
+            >
+              <FileText className="h-8 w-8" />
+              <span className="text-sm font-medium">Build from Scratch</span>
+              <span className="text-xs text-muted-foreground">Start with an empty form</span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Hidden file input for dialog upload */}
+      <Input
+        id="resume-upload-dialog"
+        type="file"
+        className="hidden"
+        onChange={handleFileUpload}
+        accept=".pdf,.docx,.txt"
+        disabled={isUploading}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the resume "{resumeToDelete?.name || 'Untitled Resume'}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowDeleteDialog(false);
+              setResumeToDelete(null);
+            }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">My Resumes</h1>
         <Button 
-          onClick={() => navigate("/resume-builder")}
+          onClick={() => setShowCreateDialog(true)}
           className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
         >
           <FileText className="h-4 w-4 mr-2" />
-          Create New Resume
+          Create Master Resume
         </Button>
       </div>
+
+      {/* Feedback Message */}
+      {feedback && (
+        <div 
+          className={`mb-4 p-4 rounded-lg ${
+            feedback.type === 'success' 
+              ? 'bg-green-50 text-green-800 border border-green-200' 
+              : 'bg-red-50 text-red-800 border border-red-200'
+          }`}
+        >
+          {feedback.message}
+        </div>
+      )}
 
       {resumes.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">
@@ -125,6 +303,14 @@ export default function ResumesComponent() {
                 >
                   <Download className="h-4 w-4 mr-1" />
                   Download
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDeleteClick(resume)}
+                  className="hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                >
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </div>
