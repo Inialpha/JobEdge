@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation } from '@/types/resume';
-import { getEditableResume } from '@/utils/resumeUtils';
+import { getEditableResume, parseSkillsArray } from '@/utils/resumeUtils';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
 import { ResumePreview } from '@/components/ResumePreview';
 import { createRoot, Root } from 'react-dom/client';
@@ -910,10 +910,7 @@ console.log("passedResume", passedResume)
                 }}>+ Add</button>
               </div>
               <div>
-                {(typeof resume.skills === 'string' 
-                  ? resume.skills.split(' • ').filter((s: string) => s.trim())
-                  : (resume.skills as unknown as string[]).filter((s: string) => s.trim())
-                ).map((skill: string, index: number) => (
+                {parseSkillsArray(resume.skills).map((skill: string, index: number) => (
                   <span key={index} className="skill-tag skill-tag-edit">
                     {skill}
                     <button onClick={() => removeSkill(index)}>×</button>

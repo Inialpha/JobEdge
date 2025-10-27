@@ -1,6 +1,7 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx'
 import { saveAs } from 'file-saver'
 import { ResumeData, Template } from '@/types/resume'
+import { parseSkillsArray } from './resumeUtils'
 
 export const downloadPDF = async (elementId: string) => {
   const element = document.getElementById(elementId)
@@ -23,10 +24,8 @@ export const downloadPDF = async (elementId: string) => {
 }
 
 export const downloadDocx = async (resume: ResumeData, template: Template = 'classic') => {
-  // Parse skills - handle both string and array formats
-  const skills: string[] = typeof resume.skills === 'string' 
-    ? resume.skills.split(' • ').filter((s: string) => s.trim())
-    : (resume.skills as unknown as string[]).filter((s: string) => s.trim())
+  // Parse skills using shared utility
+  const skills = parseSkillsArray(resume.skills)
 
   let doc: Document;
 

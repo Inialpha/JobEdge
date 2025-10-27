@@ -1,4 +1,5 @@
 import { ResumeData } from "@/types/resume"
+import { parseSkillsArray } from "@/utils/resumeUtils"
 
 interface ClassicTemplateProps {
   resume: ResumeData
@@ -11,9 +12,7 @@ export const ClassicTemplate = ({ resume }: ClassicTemplateProps) => {
     return div.innerHTML
   }
 
-  const skills: string[] = typeof resume.skills === 'string' 
-    ? resume.skills.split(' • ').filter((s: string) => s.trim())
-    : (resume.skills as unknown as string[]).filter((s: string) => s.trim())
+  const skills = parseSkillsArray(resume.skills)
 
   return (
     <>

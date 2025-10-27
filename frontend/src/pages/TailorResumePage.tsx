@@ -311,7 +311,7 @@ export default function TailorResumePage() {
               >
                 <option value="classic">Classic</option>
                 <option value="modern">Modern</option>
-                <option value="minimal">Minimalist</option>
+                <option value="minimal">Minimal</option>
                 <option value="creative">Creative</option>
               </select>
             </div>
