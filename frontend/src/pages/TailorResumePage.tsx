@@ -1,13 +1,6 @@
 import { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { postRequest } from "@/utils/apis";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import ResumeEditor from "@/components/ResumeEditor"
 import { useNavigate } from "react-router-dom";
 
 interface ContactInfo {
@@ -98,8 +91,8 @@ export default function TailorResumePage() {
         const result = await response.json();
         setGeneratedResume(result);
         navigate("/resume-builder", {
-          state: {resume: result}
-        }),
+          state: {resume: result, template: selectedTemplate}
+        });
         setError('');
       } else {
         const errorData = await response.json();
@@ -122,59 +115,162 @@ export default function TailorResumePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            Tailor Your Resume
-          </h1>
-          <p className="text-gray-600">
-            Generate a tailored resume based on your job description using your master resume
-          </p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Job Description & Template</CardTitle>
-            <CardDescription>
-              Paste the job description and select a template to generate a tailored resume
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Job Description Textarea */}
-            <div className="space-y-2">
-              <Label htmlFor="jobDescription">Job Description</Label>
-              <Textarea
-                id="jobDescription"
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
-                placeholder="Paste the job description here... e.g., 'We're looking for a backend developer skilled in Django and REST APIs...'"
-                rows={12}
-                className="w-full resize-y"
-              />
-              <div className="text-sm text-gray-500">
-                {jobDescription.length} characters
-              </div>
-            </div>
-
-            {/* Template Selector */}
-            <div className="space-y-2">
-              <Label htmlFor="template">Resume Template</Label>
-              <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-                <SelectTrigger id="template" className="w-full">
-                  <SelectValue placeholder="Select a template" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="modern">Modern</SelectItem>
-                  <SelectItem value="classic">Classic</SelectItem>
-                  <SelectItem value="minimalist">Minimalist</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
+    <>
+      <style>{`
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          min-height: 100vh;
+        }
+        .tailor-container {
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+        .tailor-card {
+          background: white;
+          border-radius: 10px;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+          overflow: hidden;
+        }
+        .tailor-header {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 30px;
+          text-align: center;
+        }
+        .tailor-header h1 {
+          font-size: 28px;
+          margin-bottom: 8px;
+          font-weight: 600;
+        }
+        .tailor-header p {
+          font-size: 14px;
+          opacity: 0.95;
+        }
+        .tailor-content {
+          padding: 30px;
+        }
+        .form-group {
+          margin-bottom: 24px;
+        }
+        .form-label {
+          display: block;
+          font-size: 13px;
+          font-weight: 600;
+          color: #333;
+          margin-bottom: 8px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .form-textarea {
+          width: 100%;
+          padding: 12px;
+          border: 2px solid #e0e0e0;
+          border-radius: 6px;
+          font-family: inherit;
+          font-size: 14px;
+          resize: vertical;
+          transition: border-color 0.3s;
+        }
+        .form-textarea:focus {
+          outline: none;
+          border-color: #667eea;
+        }
+        .form-select {
+          width: 100%;
+          padding: 12px;
+          border: 2px solid #e0e0e0;
+          border-radius: 6px;
+          font-family: inherit;
+          font-size: 14px;
+          background-color: white;
+          cursor: pointer;
+          transition: border-color 0.3s;
+        }
+        .form-select:focus {
+          outline: none;
+          border-color: #667eea;
+        }
+        .char-count {
+          font-size: 12px;
+          color: #666;
+          margin-top: 4px;
+        }
+        .message {
+          padding: 12px 16px;
+          border-radius: 6px;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 14px;
+          font-weight: 500;
+        }
+        .message-error {
+          background-color: #fee;
+          color: #c33;
+          border: 1px solid #fcc;
+        }
+        .message-success {
+          background-color: #efe;
+          color: #3c3;
+          border: 1px solid #cfc;
+        }
+        .button-group {
+          display: flex;
+          gap: 12px;
+          margin-top: 24px;
+        }
+        .btn {
+          padding: 12px 24px;
+          border: none;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s;
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        }
+        .btn-primary {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+        }
+        .btn-secondary {
+          background: white;
+          color: #667eea;
+          border: 2px solid #667eea;
+        }
+        .btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      `}</style>
+      
+      <div className="tailor-container">
+        <div className="tailor-card">
+          <div className="tailor-header">
+            <h1>Tailor Your Resume</h1>
+            <p>Generate a tailored resume based on your job description using your master resume</p>
+          </div>
+          
+          <div className="tailor-content">
             {/* Error Message */}
             {error && (
-              <div className="flex items-center gap-2 p-4 rounded-lg bg-red-50 text-red-800">
+              <div className="message message-error">
                 <AlertCircle className="w-5 h-5" />
                 <span>{error}</span>
               </div>
@@ -182,42 +278,71 @@ export default function TailorResumePage() {
 
             {/* Success Message */}
             {generatedResume && !error && (
-              <div className="flex items-center gap-2 p-4 rounded-lg bg-green-50 text-green-800">
+              <div className="message message-success">
                 <CheckCircle className="w-5 h-5" />
-                <span>Resume generated successfully!</span>
+                <span>Resume generated successfully! Redirecting...</span>
               </div>
             )}
-          </CardContent>
-          <CardFooter className="flex gap-3">
-            <Button
-              onClick={handleGenerateResume}
-              disabled={loading}
-              className="flex-1"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                'Generate Resume'
-              )}
-            </Button>
-            <Button
-              onClick={handleClear}
-              variant="outline"
-              disabled={loading}
-            >
-              Clear
-            </Button>
-          </CardFooter>
-        </Card>
 
-        {/* Display Generated Resume */}
-        {generatedResume && (
-          <ResumeEditor generatedResume={generatedResume} />
-        )}
+            {/* Job Description */}
+            <div className="form-group">
+              <label htmlFor="jobDescription" className="form-label">Job Description</label>
+              <textarea
+                id="jobDescription"
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
+                placeholder="Paste the job description here... e.g., 'We're looking for a backend developer skilled in Django and REST APIs...'"
+                rows={12}
+                className="form-textarea"
+              />
+              <div className="char-count">
+                {jobDescription.length} characters
+              </div>
+            </div>
+
+            {/* Template Selector */}
+            <div className="form-group">
+              <label htmlFor="template" className="form-label">Resume Template</label>
+              <select 
+                id="template" 
+                value={selectedTemplate} 
+                onChange={(e) => setSelectedTemplate(e.target.value)}
+                className="form-select"
+              >
+                <option value="classic">Classic</option>
+                <option value="modern">Modern</option>
+                <option value="minimal">Minimal</option>
+                <option value="creative">Creative</option>
+              </select>
+            </div>
+
+            {/* Buttons */}
+            <div className="button-group">
+              <button
+                onClick={handleGenerateResume}
+                disabled={loading}
+                className="btn btn-primary"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  'Generate Resume'
+                )}
+              </button>
+              <button
+                onClick={handleClear}
+                disabled={loading}
+                className="btn btn-secondary"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

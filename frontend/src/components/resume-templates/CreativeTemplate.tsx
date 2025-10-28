@@ -1,4 +1,5 @@
 import { ResumeData } from "@/types/resume"
+import { parseSkillsArray } from "@/utils/resumeUtils"
 
 interface CreativeTemplateProps {
   resume: ResumeData
@@ -11,13 +12,15 @@ export const CreativeTemplate = ({ resume }: CreativeTemplateProps) => {
     return div.innerHTML
   }
 
-  const skills = resume.skills.filter(s => s.trim())
+  const skills = parseSkillsArray(resume.skills)
 
   return (
     <>
       <div className="resume-header">
         <div className="resume-name">{escapeHtml(resume.personalInformation.name)}</div>
-        <div className="resume-title">{escapeHtml(resume.personalInformation.profession)}</div>
+        {resume.personalInformation.profession && (
+          <div className="resume-title">{escapeHtml(resume.personalInformation.profession)}</div>
+        )}
         <div className="resume-contact">
           {resume.personalInformation.address && `${escapeHtml(resume.personalInformation.address)} | `}
           {resume.personalInformation.phone && `${escapeHtml(resume.personalInformation.phone)} | `}

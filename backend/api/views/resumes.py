@@ -52,14 +52,11 @@ class ResumeAPIView(APIView):
 
         file = File(file_name)
         resume_data = ai(file.text)
-        print(resume_data)
-        resume_data['file'] = file_name
         resume_data["text"] = file.text
         resume_data['user'] = user_id
         resume_data["is_master"] = True
         
         # validate url fields
-
         url_fields = ["linkedin", "website"]
         url_validator = URLValidator()
         for url_field in url_fields:
@@ -69,28 +66,13 @@ class ResumeAPIView(APIView):
             except ValidationError as e:
                 resume_data[url_field] = None
 
-
-        serializer = ResumeSerializer(data=resume_data)
         try:
-            if serializer.is_valid():
-                # remove any previous master resume to avoid two master resumes
-                try:
-                    master_resume = Resume.objects.get(user=user, is_master=True)
-                    if master_resume:
-                        print(master_resume)
-                        master_resume.delete()
-                except Resume.DoesNotExist:
-                    pass
-
-                serializer.save()
-                user.has_master_resume = True
-                user.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                print(serializer.errors)
-
-            print("status=status.HTTP_400_BAD_REQUEST)")
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer = ResumeSerializer(data=resume_data)
+            if not serializer.is_valid():
+                pass
+            print(resume_data, "\n\n\n\n")
+            print(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
             print(e)
             return Response({"error": "An error occured"}, status=status.HTTP_400_BAD_REQUEST)
@@ -111,8 +93,14 @@ class ResumeAPIView(APIView):
         Delete a resume.
         """
         resume = get_object_or_404(Resume, pk=pk)
+        user = request.user
+        print(user)
+        if resume.is_master:
+            user.has_master_resume = False
+            user.save()
         resume.delete()
         return Response({"message": "Resume deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
 
 class GenerateResume(APIView):
     def get(self, request, resume_id):
@@ -132,7 +120,6 @@ class GenerateResume(APIView):
         job_serializer = JobSerializer(job)
         tailored_resume = generate_resume(job_serializer.data["job_description"],
                 resume_serializer.data["text"])
-        tailored_resume["text"] = generate_resume_text(tailored_resume)
         tailored_resume["user"] = user_id
 
         url_fields = ["linkedin", "website"]
@@ -147,7 +134,6 @@ class GenerateResume(APIView):
         new_resume = ResumeSerializer(data=tailored_resume)
         if new_resume.is_valid():
             try:
-                new_resume.save()
                 return Response(new_resume.data, status=status.HTTP_200_OK)
             except Exception as e:
                 print("error", e)
@@ -187,15 +173,17 @@ class GenerateResumeFromJobDescription(APIView):
             return Response({"details": "No master resume found for user"}, status=status.HTTP_400_BAD_REQUEST)
         
         resume_serializer = ResumeSerializer(resume)
+        data = resume_serializer.data
+        data.pop("id", None)
+        data.pop("user", None)
+        data.pop("text", None)
         
         # Generate tailored resume using AI
-        tailored_resume = generate_resume(job_description, resume_serializer.data["text"])
-        print(tailored_resume)
+        tailored_resume = generate_resume(job_description, data)
         
         if not tailored_resume:
             return Response({"details": "Failed to generate resume"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        tailored_resume["text"] = generate_resume_text(tailored_resume)
         tailored_resume["user"] = user_id
 
         # Validate URL fields - preserve AI-generated values if valid
@@ -214,7 +202,6 @@ class GenerateResumeFromJobDescription(APIView):
         new_resume = ResumeSerializer(data=tailored_resume)
         if new_resume.is_valid():
             try:
-                new_resume.save()
                 return Response(new_resume.data, status=status.HTTP_200_OK)
             except Exception as e:
                 print("error", e)
@@ -224,76 +211,106 @@ class GenerateResumeFromJobDescription(APIView):
             return Response(new_resume.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def generate_resume_text(instance):
+class ResumeFromObjectAPIView(APIView):
     """
-    Generates a formatted resume-like text from the given instance.
-    
-    :param instance: A dictionary containing the instance data.
-    :return: A formatted text string.
+    API View for creating a resume from a resume object.
     """
-    text_parts = []
-    
-    # Name
-    text_parts.append(instance.get("name", "N/A"))
-    
-    # Summary
-    text_parts.append("\nSUMMARY")
-    text_parts.append(instance.get("summary", "N/A"))
-    
-    # Professional Experience
-    experiences = instance.get("professional_experiences", [])
-    if experiences:
-        text_parts.append("\nPROFESSIONAL EXPERIENCE")
-        for exp in experiences:
-            text_parts.append(f"{exp.get('company', 'N/A')}, {exp.get('location', 'N/A')}\n— {exp.get('title', 'N/A')}\n{exp.get('start_date', 'N/A')} - {exp.get('end_date', 'Present')}")
-            for duty in exp.get("responsibilities", []):
-                text_parts.append(f"●\n{duty}")
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
-    # Education
-    educations = instance.get("educations", [])
-    if educations:
-        text_parts.append("\nEDUCATION")
-        for edu in educations:
-            text_parts.append(f"{edu.get('institution', 'N/A')}, {edu.get('location', 'N/A')}\n— {edu.get('degree', 'N/A')}\n{edu.get('start_year', 'N/A')} - {edu.get('end_year', 'N/A')}")
-
-    # Projects
-    projects = instance.get("projects", [])
-    if projects:
-        text_parts.append("\nPROJECTS")
-        for project in projects:
-            text_parts.append(f"{project.get('name', 'N/A')} — {project.get('description', 'N/A')}")
-            for detail in project.get("details", []):
-                text_parts.append(detail)
-            if "link" in project:
-                text_parts.append(f"Link: {project['link']}")
-
-    # Contact Information
-    contact_info = []
-    if instance.get("address"):
-        contact_info.append(f"Address: {instance['address']}")
-    if instance.get("linkedin"):
-        contact_info.append(f"LinkedIn: {instance['linkedin']}")
-    if instance.get("phone_number"):
-        contact_info.append(f"Phone: {instance['phone_number']}")
-    if instance.get("website"):
-        contact_info.append(f"Website: {instance['website']}")
-    if instance.get("email"):
-        contact_info.append(instance["email"])
-    
-    if contact_info:
-        text_parts.append("\n" + "\n".join(contact_info))
-
-    # Skills
-    skills = instance.get("skills", [])
-    if skills:
-        text_parts.append("\nSKILL")
-        for skill in skills:
-            text_parts.append(f"●\n{skill}")
-
-    # Languages
-    languages = instance.get("languages", [])
-    if languages:
-        text_parts.append("\nLANGUAGES")
-        text_parts.append(", ".join(languages))
-
-    return "\n".join(text_parts)
+    def post(self, request):
+        """
+        Create a resume from a resume object with optional is_master flag.
+        """
+        resume_data = request.data.copy()
+        user_id = request.user.id
+        
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"details": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Set user in resume data
+        resume_data['user'] = user_id
+        
+        # Check if this should be a master resume
+        is_master = resume_data.get('is_master', False)
+        
+        if 'personalInformation' in resume_data:
+            resume_data['personal_information'] = resume_data['personalInformation']
+        # Convert professionalExperience to professional_experiences
+        if 'professionalExperience' in resume_data:
+            resume_data['professional_experiences'] = [
+                {
+                    'organization': exp.get('organization', ''),
+                    'role': exp.get('role', ''),
+                    'start_date': exp.get('startDate', ''),
+                    'end_date': exp.get('endDate', ''),
+                    'location': exp.get('location', ''),
+                    'responsibilities': exp.get('responsibilities', [])
+                }
+                for exp in resume_data['professionalExperience']
+            ]
+            del resume_data['professionalExperience']
+        
+        # Convert education to educations
+        if 'education' in resume_data:
+            resume_data['educations'] = [
+                {
+                    'institution': edu.get('institution', ''),
+                    'degree': edu.get('degree', ''),
+                    'field': edu.get('field', ''),
+                    'start_date': edu.get('startDate', ''),
+                    'end_date': edu.get('endDate', ''),
+                    'gpa': edu.get('gpa', '')
+                }
+                for edu in resume_data['education']
+            ]
+            del resume_data['education']
+        
+        # Validate URL fields only if they have values
+        url_fields = ["linkedin", "website"]
+        url_validator = URLValidator()
+        for url_field in url_fields:
+            url_value = resume_data.get(url_field, "")
+            if url_value:  # Only validate non-empty URLs
+                try:
+                    url_validator(url_value)
+                except ValidationError:
+                    resume_data[url_field] = None
+            else:
+                resume_data[url_field] = None
+        
+        # Validate email only if it has a value
+        email_value = resume_data.get("email", "")
+        if email_value:  # Only validate non-empty email
+            try:
+                validate_email(email_value)
+            except ValidationError:
+                resume_data['email'] = None
+        else:
+            resume_data['email'] = None
+        
+        serializer = ResumeSerializer(data=resume_data)
+        
+        try:
+            if serializer.is_valid():
+                # If this is a master resume, remove any previous master resume
+                if is_master:
+                    try:
+                        master_resume = Resume.objects.get(user=user, is_master=True)
+                        master_resume.delete()
+                    except Resume.DoesNotExist:
+                        pass
+                    
+                    user.has_master_resume = True
+                    user.save()
+                
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                print("Serializer errors:", serializer.errors)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print("Error creating resume:", e)
+            return Response({"error": "An error occurred"}, status=status.HTTP_400_BAD_REQUEST)

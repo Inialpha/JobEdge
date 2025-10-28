@@ -2,6 +2,7 @@
 
 export type PersonalInformation = {
   name: string
+  profession?: string
   email: string
   linkedin: string
   twitter: string
@@ -53,7 +54,7 @@ export type ResumeData = {
   professionalExperience: ProfessionalExperience[]
   education: Education[]
   projects: Project[]
-  skills: string
+  skills: string[]
   certifications: Certification[]
   awards: Award[]
 }

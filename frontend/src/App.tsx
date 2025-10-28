@@ -8,8 +8,10 @@ import Login from "@/pages/Login";
 import AdminDashboard from "@/pages/admin/Dashboard"
 import TailorResumePage from "@/pages/TailorResumePage";
 import LandingPage from "@/pages/LandingPage";
-
 import ResumeBuilder from "@/pages/ResumeBuilder";
+import UserDashboardLayout from "@/pages/UserDashboard";
+import ResumesComponent from "@/components/dashboard/user/Resumes";
+import SettingsComponent from "@/components/dashboard/user/Settings";
 
 const routes = createBrowserRouter(
   createRoutesFromElements(
@@ -24,8 +26,14 @@ const routes = createBrowserRouter(
       }/>
       <Route path="tailor-resume" element={<TailorResumePage />} />
       <Route path="resume-builder" element={<ResumeBuilder />} />
-      <Route path="dashboard" element={<AdminDashboard />} />
-
+      <Route path="admin/dashboard" element={<AdminDashboard />} />
+      
+      {/* User Dashboard with nested routes */}
+      <Route path="dashboard" element={<UserDashboardLayout />}>
+        <Route index element={<ResumesComponent />} />
+        <Route path="resumes" element={<ResumesComponent />} />
+        <Route path="settings" element={<SettingsComponent />} />
+      </Route>
     </Route>
   )
 )

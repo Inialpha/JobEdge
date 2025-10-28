@@ -28,6 +28,7 @@ class Resume(BaseModel):
     keywords: List[str] = Field(description="Keywords from the resume relevant for searching for a job")
     name: str = Field(description="Name of the user")
     summary: str = Field(description="Summary of the resume")
+    personal_information: List[dict] = Field(description="List of personal information dictionaries with 'field' and 'value' keys. Example: [{'field': 'name', 'value': 'John Doe'}, {'field': 'email', 'value': 'john@email.com'}, {'field': 'phone', 'value': '+1-555-123-4567'}, {'field': 'address', 'value': '123 Main St, City, State'}, {'field': 'linkedin', 'value': 'https://linkedin.com/in/johndoe'}, {'field': 'website', 'value': 'https://johndoe.com'}]")
     address: str = Field(description="User's address")
     email: str = Field(description="User's email")
     linkedin: str = Field(description="User's LinkedIn link")
@@ -60,31 +61,35 @@ Extract the resume information using this JSON schema and descriptions:
 
 {{
   "keywords": List[str] — Keywords or phrases that summarize the candidate's expertise and are useful for job search.
-  "name": str — Full name of the candidate as written on the resume.
+
+
   "summary": str — A concise summary describing the candidate’s professional profile and strengths.
-  "address": str — Candidate’s residential or contact address.
-  "email": str — Professional email address for communication.
-  "linkedin": str — Link to the candidate’s LinkedIn profile.
-  "phone_number": str or null — Candidate’s phone number (include country code if present).
-  "website": str or null — Personal or portfolio website link.
-  "professional_experiences": List[Object] — A list of previous work experiences, each with:
+
+  "personal_information": Dict — A dictionary of personal information dictionaries, each with 'field' and 'value' keys. Example: {{
+   "name": "John Doe", "email": "john.doe@email.com", "phone": "+1-555-123-4567", "address": "123 Main St, City, State ZIP", "linkedin": "https://linkedin.com/in/johndoe", "website": "https://johndoe.com"
+  }}
+
+  "professional_experiences": List[Object] — A list of previous work experiences mentioned in the resume, each with:
       {{
         "organization": str — The name of the company or organization.
         "role": str — The job title or position held.
-        "time": str — The period spent at the organization (e.g., 'Jan 2021 – Dec 2023').
+        "start_date": str — The start date for this role (e.g., 'Jan 2021').
+        "location": str – The location of this organization.
+        "end_date": str — The end date for this role (e.g., 'Dec 2023 or Present')
         "responsibilities": List[str] — Key tasks, achievements, or responsibilities handled in this role.
       }}
   "skills": List[str] — List of technical and soft skills mentioned in the resume.
   "projects": List[Object] — List of notable projects completed, each with:
       {{
         "name": str — The name or title of the project, including relevant tags or technologies.
-        "description": str or List[str] — Description of the project or bullet points summarizing it.
+        "description": str — A string description of the project including the tools used and the impact of the project if they exist.
       }}
   "educations": List[Object] — List of educational qualifications, each with:
       {{
-        "school_name": str — The institution's name.
+        "institution": str — The institution's name.
         "certificate": str — The degree, diploma, or qualification received.
-        "time": str — The duration or time period of study.
+        "start_date": str — The start date (e.g, 2020 or May 2015).
+        "end_date": str — The end date (e.g, 2020 or May 2015).
       }}
   "languages": List[str] — List of languages the candidate can read, write, or speak.
 }}
@@ -123,11 +128,26 @@ Return the extracted information as a JSON object following this structure.
 
 def generate_resume(job: str, resume: dict):
     """Generate a tailored resume based on a job description and a master resume."""
+    print("\n\n\n\n")
+    print(resume)
     try:
         system_message = (
             "You are a human resource expert specializing in tailoring resumes to fit specific job descriptions. "
             "Your task is to create a tailored resume that aligns with the job description. "
             "Constraints: Do not add new information or modify facts. "
+
+            "Optimize the existing summary to consicely and more professionally describe the candidate’s professional profile, experience and strengths. Tailored to match the job without fabricating information that is not in the master resume."
+
+            "The summary should be a concise summary describing the candidate’s professional experience, projects and strengths relevant to the given job. It must be tailored to match the job without adding anything that is not in the master resume."
+
+            "Only select and return professional experiences that are relevant to the job without modyfication. All selected professional experiences should be returned as they are in the master resumer"
+
+            "Only select and return educations that are relevant to the job without modyfication."
+
+            "Only select and return projects that are relevant to the job without modyfication."
+
+            "Only select and return certifications that are relevant to the job without modyfication."
+
             "Only include skills and projects relevant to the job. "
             "The summary must capture the candidate's value and fit for the job. "
             "Ensure the output is clear, well-structured, and formatted as valid JSON."
@@ -144,14 +164,16 @@ Extract the resume information using this JSON schema and descriptions:
 
 {{
   "keywords": List[str] — Keywords or phrases that summarize the candidate's expertise and are useful for job search.
-  "name": str — Full name of the candidate as written on the resume.
-  "profession": str — The profession of the candidate.
-  "summary": str — A concise summary describing the candidate’s professional profile and strengths. Tailored to match the job without adding anything that is not in the master resume.
-  "address": str — Candidate’s residential or contact address.
-  "email": str — Professional email address for communication.
-  "linkedin": str — Link to the candidate’s LinkedIn profile.
-  "phone_number": str or null — Candidate’s phone number (include country code if present).
-  "website": str or null — Personal or portfolio website link.
+  "name": str — Candidate's full name
+  "email": str — Candidate's email address
+  "profession": str — Candidate's profession (e.g "Software Engeneer")
+
+  "summary": str — Optimize the existing summary to consicely and more professionally describe the candidate’s professional profile, experience and strengths. Tailored to match the job without fabricating information that is not in the master resume.
+
+  "personal_information": Dict — A dictionary of personal information dictionaries, each with 'field' and 'value' keys. Example: {{
+  "name": "John Doe", "email": "john.doe@email.com", "phone": "+1-555-123-4567", "address": "123 Main St, City, State ZIP", "linkedin": "https://linkedin.com/in/johndoe", "website": "https://johndoe.com", "profession": "Software Engeneer"
+  }}
+
   "professional_experiences": List[Object] — A list of previous work experiences that matches this job, each with:
       {{
         "organization": str — The name of the company or organization.
@@ -165,7 +187,7 @@ Extract the resume information using this JSON schema and descriptions:
   "projects": List[Object] — List of notable projects completed that relates to this job, each with:
       {{
         "name": str — The name or title of the project, including relevant tags or technologies.
-        "description": str or List[str] — Description of the project or bullet points summarizing it.
+        "description": str — A string description of the project including the tools used and the impact of the project if they exist.
       }}
   "educations": List[Object] — List of educational qualifications that matches this job, each with:
       {{

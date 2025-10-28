@@ -13,6 +13,13 @@ import { useNavigate } from 'react-router-dom';
 import { generatePDF } from "@/components/pdfGenerator"
 import { getEditableResume } from "@/pages/ResumeForm"
 import Feedback, { FeedbackState }from '@/components/Alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 // Mock data for resumes
 const mockResumes = [
@@ -24,6 +31,8 @@ const mockResumes = [
 export default function ResumeComponent() {
   const [resumes, setResumes] = useState(mockResumes);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.user);
 
@@ -49,6 +58,7 @@ export default function ResumeComponent() {
     const file = event.target.files?.[0]
     if (file) {
       console.log(file)
+      setIsUploading(true);
       try {
         const url = `${import.meta.env.VITE_API_URL}/resumes/`
         const formData = new FormData()
@@ -57,11 +67,12 @@ export default function ResumeComponent() {
         const response = await postFormData(url, formData)
         if (response.ok) {
           const resume = await response.json()
-          setFeedback({message: "Your Master Resume was successfully uploaded"})
-          setResumes([
-            ...resumes, resume
-          ])
-          console.log(resume)
+          setFeedback({message: "Resume uploaded successfully. Redirecting to editor..."})
+          
+          // Navigate to resume-builder with the parsed resume
+          setTimeout(() => {
+            navigate('/resume-builder', { state: { resume } });
+          }, 1000);
         } else {
           setFeedback({message: "There was an error please try again", variant: 'error'
           })
@@ -72,6 +83,7 @@ export default function ResumeComponent() {
         setFeedback({message: "There was an error please try again", variant: 'error'
         })
       } finally {
+        setIsUploading(false);
         setTimeout(() => {
           console.log(feedback)
           setFeedback(null)
@@ -118,14 +130,73 @@ export default function ResumeComponent() {
     doc.save(resume.name);
   }
 
+  const handleCreateFromScratch = () => {
+    setShowCreateDialog(false);
+    // Navigate to resume-builder without any resume data
+    navigate('/resume-builder');
+  }
+
+  const handleUploadFile = () => {
+    setShowCreateDialog(false);
+    // Trigger file input click
+    const fileInput = document.getElementById('resume-upload-dialog');
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
   return (
     <div className="flex-1 space-y-4 md:p-8 pt-6">
       {feedback && <Feedback                        message={feedback.message}                  {...(feedback.variant && { variant: feedback.variant })}                              />}
+      
+      {/* Create Master Resume Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Master Resume</DialogTitle>
+            <DialogDescription>
+              Choose how you want to create your master resume
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Button 
+              onClick={handleUploadFile}
+              className="w-full h-24 flex flex-col items-center justify-center gap-2"
+              variant="outline"
+              disabled={isUploading}
+            >
+              <UploadCloud className="h-8 w-8" />
+              <span className="text-sm font-medium">Upload Resume File</span>
+              <span className="text-xs text-muted-foreground">Upload PDF, DOCX, or TXT</span>
+            </Button>
+            <Button 
+              onClick={handleCreateFromScratch}
+              className="w-full h-24 flex flex-col items-center justify-center gap-2"
+              variant="outline"
+            >
+              <FileText className="h-8 w-8" />
+              <span className="text-sm font-medium">Build from Scratch</span>
+              <span className="text-xs text-muted-foreground">Start with an empty form</span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Hidden file input for dialog upload */}
+      <Input
+        id="resume-upload-dialog"
+        type="file"
+        className="hidden"
+        onChange={handleFileUpload}
+        accept=".pdf,.docx,.txt"
+        disabled={isUploading}
+      />
+
       <h2 className="text-3xl font-bold tracking-tight">Resume</h2>
       <div className="flex items-center justify-end space-y-2 space-x-4 ">
         <div className="flex items-center space-x-2">
-          <Button >
-            <Plus className="mr-2 h-4 w-4" /> Create New Resume
+          <Button onClick={() => setShowCreateDialog(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Create Master Resume
           </Button>
         </div>
       </div>

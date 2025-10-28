@@ -1,19 +1,26 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation } from '@/types/resume';
 import { getEditableResume } from '@/utils/resumeUtils';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
 import { ResumePreview } from '@/components/ResumePreview';
 import { createRoot, Root } from 'react-dom/client';
+import { postRequest } from '@/utils/apis';
 
 export default function ResumeBuilder() {
   const location = useLocation();
+  const navigate = useNavigate();
   const passedResume = location.state?.resume;
+  const passedTemplate = location.state?.template || 'classic';
 console.log("passedResume", passedResume)
   const rootRef = useRef<Root | null>(null);
   
-  const [currentTemplate, setCurrentTemplate] = useState<Template>('classic');
+  const [currentTemplate, setCurrentTemplate] = useState<Template>(passedTemplate);
   const [resume, setResume] = useState<ResumeData>(() => getEditableResume(passedResume));
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   console.log("buildee", resume)
 
   // Separate states for adding new items
@@ -54,7 +61,6 @@ console.log("passedResume", passedResume)
     year: ''
   });
 
-  // Handler callbacks using useCallback
   const updateResume = useCallback((field: keyof ResumeData, value: string | ProfessionalExperience[] | Education[] | Project[] | Certification[] | Award[] | PersonalInformation) => {
     setResume(prev => ({ ...prev, [field]: value }));
   }, []);
@@ -78,15 +84,15 @@ console.log("passedResume", passedResume)
 
   const addSkill = useCallback((skill: string) => {
     if (skill.trim()) {
-      const currentSkills = resume.skills.split(" • ").filter(s => s.trim());
-      updateResume('skills', [...currentSkills, skill.trim()].join(" • "));
+      const currentSkills = Array.isArray(resume.skills) ? resume.skills : [];
+      updateResume('skills', [...currentSkills, skill.trim()]);
     }
   }, [resume.skills, updateResume]);
 
   const removeSkill = useCallback((index: number) => {
-    const currentSkills = resume.skills.split(" • ").filter(s => s.trim());
+    const currentSkills = Array.isArray(resume.skills) ? resume.skills : [];
     const updated = currentSkills.filter((_, i) => i !== index);
-    updateResume('skills', updated.join(" • "));
+    updateResume('skills', updated);
   }, [resume.skills, updateResume]);
 
   const addExperienceItem = useCallback(() => {
@@ -201,6 +207,109 @@ console.log("passedResume", passedResume)
     updateResume('awards', resume.awards.filter((_, i) => i !== index));
   }, [resume.awards, updateResume]);
 
+  const saveAsMasterResume = useCallback(async () => {
+    // Validate required fields
+    const errors: {[key: string]: string} = {};
+    
+    // Validate personal information
+    if (!resume.personalInformation.name.trim()) {
+      errors['personalInformation.name'] = 'Name is required';
+    }
+    if (!resume.personalInformation.profession?.trim()) {
+      errors['personalInformation.profession'] = 'Profession is required';
+    }
+    
+    // Validate education
+    resume.education.forEach((edu, index) => {
+      if (!edu.institution.trim()) {
+        errors[`education.${index}.institution`] = 'Institution is required';
+      }
+      if (!edu.degree.trim()) {
+        errors[`education.${index}.certificate`] = 'Certificate/Degree is required';
+      }
+      if (!edu.startDate.trim()) {
+        errors[`education.${index}.startDate`] = 'Start date is required';
+      }
+      if (!edu.endDate.trim()) {
+        errors[`education.${index}.endDate`] = 'End date is required';
+      }
+    });
+    
+    // Validate professional experience
+    resume.professionalExperience.forEach((exp, index) => {
+      if (!exp.role.trim()) {
+        errors[`professionalExperience.${index}.role`] = 'Role is required';
+      }
+      if (!exp.organization.trim()) {
+        errors[`professionalExperience.${index}.organization`] = 'Organization is required';
+      }
+      if (!exp.startDate.trim()) {
+        errors[`professionalExperience.${index}.startDate`] = 'Start date is required';
+      }
+      if (!exp.endDate.trim()) {
+        errors[`professionalExperience.${index}.endDate`] = 'End date is required';
+      }
+    });
+    
+    // Validate projects
+    resume.projects.forEach((proj, index) => {
+      if (!proj.name.trim()) {
+        errors[`projects.${index}.name`] = 'Project name is required';
+      }
+      if (!proj?.description?.trim()) {
+        errors[`projects.${index}.description`] = 'Project description is required';
+      }
+    });
+    
+    // If there are validation errors, show them and don't proceed
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setSaveMessage({type: 'error', text: 'Please fill in all required fields before saving.'});
+      setTimeout(() => {
+        setSaveMessage(null);
+      }, 5000);
+      return;
+    }
+    
+    // Clear validation errors if all is good
+    setValidationErrors({});
+    
+    // Clear any existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    setIsSaving(true);
+    setSaveMessage(null);
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/resume/from-object/`;
+      const resumeData = {
+        ...resume,
+        is_master: true
+      };
+      
+      const response = await postRequest(url, resumeData);
+      
+      if (response.ok) {
+        await response.json();
+        setSaveMessage({type: 'success', text: 'Resume saved as master resume successfully!'});
+        setTimeout(() => {
+          navigate('/dashboard', { state: { component: 'resumes' } });
+        }, 1500);
+      } else {
+        const error = await response.json();
+        console.error('Error saving resume:', error);
+        setSaveMessage({type: 'error', text: 'Failed to save resume. Please try again.'});
+      }
+    } catch (error) {
+      console.error('Error saving resume:', error);
+      setSaveMessage({type: 'error', text: 'Failed to save resume. Please try again.'});
+    } finally {
+      setIsSaving(false);
+      saveTimeoutRef.current = setTimeout(() => setSaveMessage(null), 5000);
+    }
+  }, [resume, navigate]);
+
   const updateResponsibility = useCallback((expIndex: number, respIndex: number, value: string) => {
     const updated = [...resume.professionalExperience];
     updated[expIndex].responsibilities[respIndex] = value;
@@ -227,6 +336,15 @@ console.log("passedResume", passedResume)
     
     rootRef.current.render(<ResumePreview resume={resume} template={currentTemplate} />);
   }, [resume, currentTemplate]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <>
@@ -651,8 +769,32 @@ console.log("passedResume", passedResume)
           </div>
           
           <div className="controls">
+            {saveMessage && (
+              <div style={{
+                padding: '10px 15px',
+                borderRadius: '6px',
+                backgroundColor: saveMessage.type === 'success' ? '#d4edda' : '#f8d7da',
+                color: saveMessage.type === 'success' ? '#155724' : '#721c24',
+                border: `1px solid ${saveMessage.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                marginBottom: '10px',
+                width: '100%',
+                textAlign: 'center',
+                fontSize: '13px',
+                fontWeight: '600'
+              }}>
+                {saveMessage.text}
+              </div>
+            )}
             <button className="btn btn-primary" onClick={() => downloadPDF('resumePreview')}>📄 Download PDF</button>
-            <button className="btn btn-secondary" onClick={() => downloadDocx(resume)}>📥 Download DOCX</button>
+            <button className="btn btn-secondary" onClick={() => downloadDocx(resume, currentTemplate)}>📥 Download DOCX</button>
+            <button 
+              className="btn" 
+              style={{background: '#17a2b8', color: 'white'}}
+              onClick={saveAsMasterResume}
+              disabled={isSaving}
+            >
+              {isSaving ? '💾 Saving...' : '💾 Save as Master Resume'}
+            </button>
           </div>
 
           <div className="editor">
@@ -710,7 +852,30 @@ console.log("passedResume", passedResume)
             {/* Personal Info */}
             <div className="section">
               <div className="section-title">Personal Information</div>
-              <input type="text" placeholder="Full Name" value={resume.personalInformation.name} onChange={(e) => updatePersonalInfo('name', e.target.value)} />
+              <input 
+                type="text" 
+                placeholder="Full Name *" 
+                value={resume.personalInformation.name} 
+                onChange={(e) => updatePersonalInfo('name', e.target.value)} 
+                style={{borderColor: validationErrors['personalInformation.name'] ? '#dc3545' : undefined}}
+              />
+              {validationErrors['personalInformation.name'] && (
+                <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                  {validationErrors['personalInformation.name']}
+                </div>
+              )}
+              <input 
+                type="text" 
+                placeholder="Profession *" 
+                value={resume.personalInformation.profession || ''} 
+                onChange={(e) => updatePersonalInfo('profession', e.target.value)} 
+                style={{borderColor: validationErrors['personalInformation.profession'] ? '#dc3545' : undefined}}
+              />
+              {validationErrors['personalInformation.profession'] && (
+                <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                  {validationErrors['personalInformation.profession']}
+                </div>
+              )}
               <input type="email" placeholder="Email" value={resume.personalInformation.email} onChange={(e) => updatePersonalInfo('email', e.target.value)} />
               <input type="tel" placeholder="Phone" value={resume.personalInformation.phone} onChange={(e) => updatePersonalInfo('phone', e.target.value)} />
               <input type="text" placeholder="Address" value={resume.personalInformation.address} onChange={(e) => updatePersonalInfo('address', e.target.value)} />
@@ -745,7 +910,7 @@ console.log("passedResume", passedResume)
                 }}>+ Add</button>
               </div>
               <div>
-                {resume.skills.filter(s => s.trim()).map((skill, index) => (
+                {(Array.isArray(resume.skills) ? resume.skills : []).map((skill: string, index: number) => (
                   <span key={index} className="skill-tag skill-tag-edit">
                     {skill}
                     <button onClick={() => removeSkill(index)}>×</button>
@@ -761,16 +926,28 @@ console.log("passedResume", passedResume)
                 <div key={index} className="item">
                   <input 
                     type="text" 
-                    placeholder="Role" 
+                    placeholder="Role *" 
                     value={exp.role}
                     onChange={(e) => updateExperience(index, 'role', e.target.value)}
+                    style={{borderColor: validationErrors[`professionalExperience.${index}.role`] ? '#dc3545' : undefined}}
                   />
+                  {validationErrors[`professionalExperience.${index}.role`] && (
+                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                      {validationErrors[`professionalExperience.${index}.role`]}
+                    </div>
+                  )}
                   <input 
                     type="text" 
-                    placeholder="Organization" 
+                    placeholder="Organization *" 
                     value={exp.organization}
                     onChange={(e) => updateExperience(index, 'organization', e.target.value)}
+                    style={{borderColor: validationErrors[`professionalExperience.${index}.organization`] ? '#dc3545' : undefined}}
                   />
+                  {validationErrors[`professionalExperience.${index}.organization`] && (
+                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                      {validationErrors[`professionalExperience.${index}.organization`]}
+                    </div>
+                  )}
                   <input 
                     type="text" 
                     placeholder="Location" 
@@ -779,16 +956,28 @@ console.log("passedResume", passedResume)
                   />
                   <input 
                     type="text" 
-                    placeholder="Start Date (e.g., Jun 2020)" 
+                    placeholder="Start Date (e.g., Jun 2020) *" 
                     value={exp.startDate}
                     onChange={(e) => updateExperience(index, 'startDate', e.target.value)}
+                    style={{borderColor: validationErrors[`professionalExperience.${index}.startDate`] ? '#dc3545' : undefined}}
                   />
+                  {validationErrors[`professionalExperience.${index}.startDate`] && (
+                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                      {validationErrors[`professionalExperience.${index}.startDate`]}
+                    </div>
+                  )}
                   <input 
                     type="text" 
-                    placeholder="End Date (e.g., Present)" 
+                    placeholder="End Date (e.g., Present) *" 
                     value={exp.endDate}
                     onChange={(e) => updateExperience(index, 'endDate', e.target.value)}
+                    style={{borderColor: validationErrors[`professionalExperience.${index}.endDate`] ? '#dc3545' : undefined}}
                   />
+                  {validationErrors[`professionalExperience.${index}.endDate`] && (
+                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                      {validationErrors[`professionalExperience.${index}.endDate`]}
+                    </div>
+                  )}
                   {exp.responsibilities.map((resp, respIndex) => (
                     <input 
                       key={respIndex}
@@ -861,16 +1050,28 @@ console.log("passedResume", passedResume)
                 <div key={index} className="item">
                   <input 
                     type="text" 
-                    placeholder="Degree" 
+                    placeholder="Certificate/Degree (e.g., Bachelor of Science in Computer Science) *" 
                     value={edu.degree}
                     onChange={(e) => updateEducationItem(index, 'degree', e.target.value)}
+                    style={{borderColor: validationErrors[`education.${index}.certificate`] ? '#dc3545' : undefined}}
                   />
+                  {validationErrors[`education.${index}.certificate`] && (
+                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                      {validationErrors[`education.${index}.certificate`]}
+                    </div>
+                  )}
                   <input 
                     type="text" 
-                    placeholder="Institution" 
+                    placeholder="Institution *" 
                     value={edu.institution}
                     onChange={(e) => updateEducationItem(index, 'institution', e.target.value)}
+                    style={{borderColor: validationErrors[`education.${index}.institution`] ? '#dc3545' : undefined}}
                   />
+                  {validationErrors[`education.${index}.institution`] && (
+                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                      {validationErrors[`education.${index}.institution`]}
+                    </div>
+                  )}
                   <input 
                     type="text" 
                     placeholder="Field of Study" 
@@ -879,16 +1080,28 @@ console.log("passedResume", passedResume)
                   />
                   <input 
                     type="text" 
-                    placeholder="Start Date (e.g., 2011)" 
+                    placeholder="Start Date (e.g., 2011) *" 
                     value={edu.startDate}
                     onChange={(e) => updateEducationItem(index, 'startDate', e.target.value)}
+                    style={{borderColor: validationErrors[`education.${index}.startDate`] ? '#dc3545' : undefined}}
                   />
+                  {validationErrors[`education.${index}.startDate`] && (
+                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                      {validationErrors[`education.${index}.startDate`]}
+                    </div>
+                  )}
                   <input 
                     type="text" 
-                    placeholder="End Date (e.g., 2015)" 
+                    placeholder="End Date (e.g., 2015) *" 
                     value={edu.endDate}
                     onChange={(e) => updateEducationItem(index, 'endDate', e.target.value)}
+                    style={{borderColor: validationErrors[`education.${index}.endDate`] ? '#dc3545' : undefined}}
                   />
+                  {validationErrors[`education.${index}.endDate`] && (
+                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                      {validationErrors[`education.${index}.endDate`]}
+                    </div>
+                  )}
                   <input 
                     type="text" 
                     placeholder="GPA (optional)" 
@@ -1001,15 +1214,27 @@ console.log("passedResume", passedResume)
                 <div key={index} className="item">
                   <input 
                     type="text" 
-                    placeholder="Project Name" 
+                    placeholder="Project Name *" 
                     value={proj.name}
                     onChange={(e) => updateProjectItem(index, 'name', e.target.value)}
+                    style={{borderColor: validationErrors[`projects.${index}.name`] ? '#dc3545' : undefined}}
                   />
+                  {validationErrors[`projects.${index}.name`] && (
+                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                      {validationErrors[`projects.${index}.name`]}
+                    </div>
+                  )}
                   <textarea 
-                    placeholder="Project Description" 
+                    placeholder="Project Description *" 
                     value={proj.description}
                     onChange={(e) => updateProjectItem(index, 'description', e.target.value)}
+                    style={{borderColor: validationErrors[`projects.${index}.description`] ? '#dc3545' : undefined}}
                   />
+                  {validationErrors[`projects.${index}.description`] && (
+                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                      {validationErrors[`projects.${index}.description`]}
+                    </div>
+                  )}
                   <input 
                     type="text" 
                     placeholder="Technologies Used" 

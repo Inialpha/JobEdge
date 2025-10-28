@@ -8,9 +8,6 @@ from .user import UserSerializer
 
 class ResumeSerializer(serializers.Serializer):
     id = serializers.CharField(max_length=255, read_only=True)
-    file_url = serializers.URLField(max_length=500, required=False, read_only=True)
-    file = serializers.FileField(required=False, write_only=True)
-    text = serializers.CharField()
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     is_master = serializers.BooleanField(default=False)
     keywords = serializers.ListField(
@@ -18,14 +15,12 @@ class ResumeSerializer(serializers.Serializer):
         default=[],
         help_text="Keywords from the resume relevant for job searching"
     )
-    name = serializers.CharField(max_length=255)
-    profession = serializers.CharField(max_length=255)
     summary = serializers.CharField()
-    address = serializers.CharField(allow_null=True, required=False)
-    email = serializers.EmailField()
-    linkedin = serializers.URLField(max_length=500, allow_null=True, required=False)
-    phone_number = serializers.CharField(required=False, allow_blank=True, max_length=20)
-    website = serializers.URLField(required=False, allow_null=True, max_length=500)
+    personal_information = serializers.DictField(
+        child=serializers.CharField(),
+        default={},
+        help_text="List of personal information dictionaries with 'field' and 'value' keys"
+    )
     professional_experiences = serializers.ListField(
         child=serializers.DictField(),
         default=[],
@@ -45,6 +40,18 @@ class ResumeSerializer(serializers.Serializer):
         child=serializers.DictField(),
         default=[],
         help_text="List of user's education"
+    )
+    certifications = serializers.ListField(
+        child=serializers.DictField(),
+        default=[],
+        help_text="List of user's certificates",
+        required=False,
+    )
+    awards = serializers.ListField(
+        child=serializers.DictField(),
+        default=[],
+        help_text="List of user's awards",
+        required=False
     )
     languages = serializers.ListField(
         child=serializers.CharField(max_length=255),

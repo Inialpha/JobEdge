@@ -1,6 +1,23 @@
 import { ResumeData } from "@/types/resume"
 
 /**
+ * Parses skills from string or array format into a string array
+ * This function provides backward compatibility for old data that may have skills as a string
+ * @param skills - Skills in array format or legacy string format (separated by ' • ')
+ * @returns Array of skill strings
+ */
+export const parseSkillsArray = (skills: string | string[] | unknown): string[] => {
+  if (typeof skills === 'string') {
+    // Legacy format: parse string separated by ' • '
+    return skills.split(' • ').filter((s: string) => s.trim())
+  }
+  if (Array.isArray(skills)) {
+    return skills.filter((s: string) => s && typeof s === 'string' && s.trim())
+  }
+  return []
+}
+
+/**
  * Converts a resume object from location state to ResumeData format
  * If resume is null/undefined, returns empty resume data
  */
@@ -21,26 +38,18 @@ export const getEditableResume = (resume: any): ResumeData => {
       professionalExperience: [],
       education: [],
       projects: [],
-      skills: "",
+      skills: [],
       certifications: [],
       awards: [],
     }
   }
 
+
   return {
-    personalInformation: {
-      name: resume.name || "",
-      profession: resume.profession || "",
-      email: resume.email || "",
-      linkedin: resume.linkedin || "",
-      twitter: resume.twitter || "",
-      phone: resume.phone_number || resume.phone || "",
-      website: resume.website || "",
-      address: resume.address || "",
-    },
+    personalInformation: resume.personal_information,
     summary: resume.summary || "",
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    professionalExperience: (resume.professional_experiences || resume.professionalExperience || []).map((exp: any) => ({
+    professionalExperience: (resume.professional_experiences || []).map((exp: any) => ({
       organization: exp.organization || "",
       role: exp.role || "",
       startDate: exp.startDate || exp.start_date || "",
@@ -64,7 +73,7 @@ export const getEditableResume = (resume: any): ResumeData => {
       technologies: proj.technologies || "",
       link: proj.link || "",
     })),
-    skills: resume.skills || [],
+    skills: resume.skills,
     certifications: resume.certifications || [],
     awards: resume.awards || [],
   }

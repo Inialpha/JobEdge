@@ -28,9 +28,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-7v_7-u*1*7()b-77k4v^6*v!qp18pf4(*$r@dsrer9!qiy@a!&'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["jobedge.onrender.com"]
 
 
 # Application definition
@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'anymail',
 ]
 
 MIDDLEWARE = [
@@ -97,8 +98,8 @@ DATABASES = {
         'NAME': os.getenv('DATABASE_NAME'),
         'USER': os.getenv('DATABASE_USER'),
         'PASSWORD': os.getenv('DATABASE_PASSWORD'),
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'HOST': os.getenv('DATABASE_HOST'),
+        'PORT': os.getenv('DATABASE_PORT'),
     }
 }
 
@@ -151,7 +152,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
+DEFAULT_FROM_EMAIL = 'inimfonebong001@gmail.com'
+ANYMAIL = {
+    "BREVO_API_KEY": os.getenv("BREVO_API_KEY"),
+}
+
 EMAIL_FROM = 'inimfonebong001@gmail.com'
 EMAIL_BCC = 'inimfonebong001@gmail.com'
 EMAIL_HOST_USER = 'inimfonebong001@gmail.com'
