@@ -91,7 +91,7 @@ export function PreviewModal({ isOpen, onClose, resume }: PreviewModalProps) {
 
             <section>
               <h3 className="text-xl font-semibold">Skills</h3>
-              <p>{resume.skills.content}</p>
+              <p>{Array.isArray(resume.skills.content) ? resume.skills.content.join(' • ') : resume.skills.content}</p>
             </section>
           </div>
         </ScrollArea>
