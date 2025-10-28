@@ -62,11 +62,12 @@ Extract the resume information using this JSON schema and descriptions:
 {{
   "keywords": List[str] — Keywords or phrases that summarize the candidate's expertise and are useful for job search.
 
-  "name": str — Full name of the candidate as written on the resume.
 
   "summary": str — A concise summary describing the candidate’s professional profile and strengths.
 
-  "personal_information": List[Object] — A list of personal information dictionaries, each with 'field' and 'value' keys. Example: [{{"field": "name", "value": "John Doe"}}, {{"field": "email", "value": "john.doe@email.com"}}, {{"field": "phone", "value": "+1-555-123-4567"}}, {{"field": "address", "value": "123 Main St, City, State ZIP"}}, {{"field": "linkedin", "value": "https://linkedin.com/in/johndoe"}}, {{"field": "website", "value": "https://johndoe.com"}}]
+  "personal_information": Dict — A dictionary of personal information dictionaries, each with 'field' and 'value' keys. Example: {{
+   "name": "John Doe", "email": "john.doe@email.com", "phone": "+1-555-123-4567", "address": "123 Main St, City, State ZIP", "linkedin": "https://linkedin.com/in/johndoe", "website": "https://johndoe.com"
+  }}
 
   "professional_experiences": List[Object] — A list of previous work experiences mentioned in the resume, each with:
       {{
@@ -127,11 +128,26 @@ Return the extracted information as a JSON object following this structure.
 
 def generate_resume(job: str, resume: dict):
     """Generate a tailored resume based on a job description and a master resume."""
+    print("\n\n\n\n")
+    print(resume)
     try:
         system_message = (
             "You are a human resource expert specializing in tailoring resumes to fit specific job descriptions. "
             "Your task is to create a tailored resume that aligns with the job description. "
             "Constraints: Do not add new information or modify facts. "
+
+            "Optimize the existing summary to consicely and more professionally describe the candidate’s professional profile, experience and strengths. Tailored to match the job without fabricating information that is not in the master resume."
+
+            "The summary should be a concise summary describing the candidate’s professional experience, projects and strengths relevant to the given job. It must be tailored to match the job without adding anything that is not in the master resume."
+
+            "Only select and return professional experiences that are relevant to the job without modyfication. All selected professional experiences should be returned as they are in the master resumer"
+
+            "Only select and return educations that are relevant to the job without modyfication."
+
+            "Only select and return projects that are relevant to the job without modyfication."
+
+            "Only select and return certifications that are relevant to the job without modyfication."
+
             "Only include skills and projects relevant to the job. "
             "The summary must capture the candidate's value and fit for the job. "
             "Ensure the output is clear, well-structured, and formatted as valid JSON."
@@ -148,10 +164,16 @@ Extract the resume information using this JSON schema and descriptions:
 
 {{
   "keywords": List[str] — Keywords or phrases that summarize the candidate's expertise and are useful for job search.
-  "name": str — Full name of the candidate as written on the resume.
-  "profession": str — The profession of the candidate.
-  "summary": str — A concise summary describing the candidate’s professional profile and strengths. Tailored to match the job without adding anything that is not in the master resume.
-  "personal_information": List[Object] — A list of personal information dictionaries, each with 'field' and 'value' keys. Example: [{{"field": "name", "value": "John Doe"}}, {{"field": "email", "value": "john.doe@email.com"}}, {{"field": "phone", "value": "+1-555-123-4567"}}, {{"field": "address", "value": "123 Main St, City, State ZIP"}}, {{"field": "linkedin", "value": "https://linkedin.com/in/johndoe"}}, {{"field": "website", "value": "https://johndoe.com"}}]
+  "name": str — Candidate's full name
+  "email": str — Candidate's email address
+  "profession": str — Candidate's profession (e.g "Software Engeneer")
+
+  "summary": str — Optimize the existing summary to consicely and more professionally describe the candidate’s professional profile, experience and strengths. Tailored to match the job without fabricating information that is not in the master resume.
+
+  "personal_information": Dict — A dictionary of personal information dictionaries, each with 'field' and 'value' keys. Example: {{
+  "name": "John Doe", "email": "john.doe@email.com", "phone": "+1-555-123-4567", "address": "123 Main St, City, State ZIP", "linkedin": "https://linkedin.com/in/johndoe", "website": "https://johndoe.com", "profession": "Software Engeneer"
+  }}
+
   "professional_experiences": List[Object] — A list of previous work experiences that matches this job, each with:
       {{
         "organization": str — The name of the company or organization.

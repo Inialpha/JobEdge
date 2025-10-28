@@ -8,7 +8,6 @@ from .user import UserSerializer
 
 class ResumeSerializer(serializers.Serializer):
     id = serializers.CharField(max_length=255, read_only=True)
-    text = serializers.CharField()
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     is_master = serializers.BooleanField(default=False)
     keywords = serializers.ListField(
@@ -16,19 +15,12 @@ class ResumeSerializer(serializers.Serializer):
         default=[],
         help_text="Keywords from the resume relevant for job searching"
     )
-    name = serializers.CharField(max_length=255)
-    profession = serializers.CharField(max_length=255)
     summary = serializers.CharField()
-    personal_information = serializers.ListField(
-        child=serializers.DictField(),
-        default=[],
+    personal_information = serializers.DictField(
+        child=serializers.CharField(),
+        default={},
         help_text="List of personal information dictionaries with 'field' and 'value' keys"
     )
-    address = serializers.CharField(allow_null=True, required=False)
-    email = serializers.EmailField()
-    linkedin = serializers.URLField(max_length=500, allow_null=True, required=False)
-    phone_number = serializers.CharField(required=False, allow_blank=True, max_length=20)
-    website = serializers.URLField(required=False, allow_null=True, max_length=500)
     professional_experiences = serializers.ListField(
         child=serializers.DictField(),
         default=[],
