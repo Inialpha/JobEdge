@@ -1,4 +1,4 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, UnderlineType, BorderStyle } from 'docx'
 import { saveAs } from 'file-saver'
 import { ResumeData, Template } from '@/types/resume'
 import { parseSkillsArray } from './resumeUtils'
@@ -24,8 +24,8 @@ export const downloadPDF = async (elementId: string) => {
 }
 
 export const downloadDocx = async (resume: ResumeData, template: Template = 'classic') => {
-  // Parse skills using shared utility
-  const skills = parseSkillsArray(resume.skills)
+  // Skills are already an array
+  const skills = Array.isArray(resume.skills) ? resume.skills : parseSkillsArray(resume.skills);
 
   let doc: Document;
 
@@ -58,11 +58,22 @@ const generateClassicDocx = (resume: ResumeData, skills: string[]) => {
           text: resume.personalInformation.name,
           heading: HeadingLevel.HEADING_1,
           alignment: AlignmentType.CENTER,
+          spacing: { after: 100 },
+          run: {
+            size: 64, // 32pt
+            bold: true,
+            color: "2c3e50", // Dark blue-gray matching the preview
+          }
         }),
         ...(resume.personalInformation.profession ? [
           new Paragraph({
             text: resume.personalInformation.profession,
             alignment: AlignmentType.CENTER,
+            spacing: { after: 100 },
+            run: {
+              size: 36, // 18pt
+              color: "7f8c8d", // Gray
+            }
           }),
         ] : []),
         new Paragraph({
@@ -72,101 +83,225 @@ const generateClassicDocx = (resume: ResumeData, skills: string[]) => {
             resume.personalInformation.email
           ].filter(Boolean).join(' | '),
           alignment: AlignmentType.CENTER,
+          spacing: { after: 200 },
+          run: {
+            size: 24, // 12pt
+            color: "555555",
+          }
         }),
-        new Paragraph({ text: '' }),
         ...(resume.summary ? [
           new Paragraph({
             text: 'PROFESSIONAL SUMMARY',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32, // 16pt
+              bold: true,
+              color: "2c3e50",
+            },
+            border: {
+              bottom: {
+                color: "2c3e50",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 12, // 2px
+              },
+            },
           }),
-          new Paragraph({ text: resume.summary }),
-          new Paragraph({ text: '' }),
+          new Paragraph({ 
+            text: resume.summary,
+            spacing: { after: 200 },
+            run: {
+              size: 24, // 12pt
+            }
+          }),
         ] : []),
         ...(resume.professionalExperience.length > 0 ? [
           new Paragraph({
             text: 'PROFESSIONAL EXPERIENCE',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32, // 16pt
+              bold: true,
+              color: "2c3e50",
+            },
+            border: {
+              bottom: {
+                color: "2c3e50",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 12,
+              },
+            },
           }),
           ...resume.professionalExperience.flatMap(exp => [
             new Paragraph({
               children: [
                 new TextRun({ 
                   text: `${exp.role} | ${exp.organization}${exp.location ? `, ${exp.location}` : ''}`, 
-                  bold: true 
+                  bold: true,
+                  size: 24,
                 }),
               ],
+              spacing: { before: 100, after: 50 },
             }),
             new Paragraph({
               text: `${exp.startDate} - ${exp.endDate}`,
+              spacing: { after: 50 },
+              run: {
+                size: 24,
+              }
             }),
             ...exp.responsibilities.filter(r => r.trim()).map(resp => new Paragraph({
               text: `• ${resp}`,
               bullet: { level: 0 },
+              spacing: { after: 50 },
+              run: {
+                size: 24,
+              }
             })),
-            new Paragraph({ text: '' }),
+            new Paragraph({ text: '', spacing: { after: 100 } }),
           ]),
         ] : []),
         ...(resume.education.length > 0 ? [
           new Paragraph({
             text: 'EDUCATION',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "2c3e50",
+            },
+            border: {
+              bottom: {
+                color: "2c3e50",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 12,
+              },
+            },
           }),
           ...resume.education.flatMap(edu => [
             new Paragraph({
-              children: [new TextRun({ text: edu.degree, bold: true })],
+              children: [new TextRun({ text: edu.degree, bold: true, size: 24 })],
+              spacing: { before: 100 },
             }),
-            new Paragraph({ text: edu.institution }),
-            new Paragraph({ text: `${edu.startDate} - ${edu.endDate}` }),
-            ...(edu.gpa ? [new Paragraph({ text: `GPA: ${edu.gpa}` })] : []),
-            new Paragraph({ text: '' }),
+            new Paragraph({ text: edu.institution, run: { size: 24 } }),
+            new Paragraph({ text: `${edu.startDate} - ${edu.endDate}`, run: { size: 24 } }),
+            ...(edu.gpa ? [new Paragraph({ text: `GPA: ${edu.gpa}`, run: { size: 24 } })] : []),
+            new Paragraph({ text: '', spacing: { after: 100 } }),
           ]),
         ] : []),
         ...(skills.length > 0 ? [
           new Paragraph({
             text: 'SKILLS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "2c3e50",
+            },
+            border: {
+              bottom: {
+                color: "2c3e50",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 12,
+              },
+            },
           }),
-          new Paragraph({ text: skills.join(' • ') }),
-          new Paragraph({ text: '' }),
+          new Paragraph({ 
+            text: skills.join(' • '),
+            spacing: { after: 200 },
+            run: {
+              size: 24,
+            }
+          }),
         ] : []),
         ...(resume.certifications.length > 0 ? [
           new Paragraph({
             text: 'CERTIFICATIONS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "2c3e50",
+            },
+            border: {
+              bottom: {
+                color: "2c3e50",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 12,
+              },
+            },
           }),
           ...resume.certifications.flatMap(cert => [
             new Paragraph({
-              children: [new TextRun({ text: cert.name, bold: true })],
+              children: [new TextRun({ text: cert.name, bold: true, size: 24 })],
             }),
-            new Paragraph({ text: `${cert.issuer} - ${cert.year}` }),
+            new Paragraph({ text: `${cert.issuer} - ${cert.year}`, run: { size: 24 } }),
           ]),
-          new Paragraph({ text: '' }),
+          new Paragraph({ text: '', spacing: { after: 100 } }),
         ] : []),
         ...(resume.projects.length > 0 ? [
           new Paragraph({
             text: 'PROJECTS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "2c3e50",
+            },
+            border: {
+              bottom: {
+                color: "2c3e50",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 12,
+              },
+            },
           }),
           ...resume.projects.flatMap(proj => [
             new Paragraph({
-              children: [new TextRun({ text: proj.name, bold: true })],
+              children: [new TextRun({ text: proj.name, bold: true, size: 24 })],
             }),
-            new Paragraph({ text: proj.description }),
+            new Paragraph({ text: proj.description, run: { size: 24 } }),
             ...(proj.technologies ? [
               new Paragraph({ 
-                children: [new TextRun({ text: proj.technologies, italics: true })],
+                children: [new TextRun({ text: proj.technologies, italics: true, size: 24 })],
               }),
             ] : []),
-            new Paragraph({ text: '' }),
+            new Paragraph({ text: '', spacing: { after: 100 } }),
           ]),
         ] : []),
         ...(resume.awards.length > 0 ? [
           new Paragraph({
             text: 'AWARDS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "2c3e50",
+            },
+            border: {
+              bottom: {
+                color: "2c3e50",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 12,
+              },
+            },
           }),
           ...resume.awards.map(award => new Paragraph({
             text: `${award.title} - ${award.organization} (${award.year})`,
+            run: { size: 24 }
           })),
         ] : []),
       ],
@@ -174,7 +309,7 @@ const generateClassicDocx = (resume: ResumeData, skills: string[]) => {
   })
 }
 
-// Modern template - left-aligned with bold section headers
+// Modern template - left-aligned with bold section headers and blue accents
 const generateModernDocx = (resume: ResumeData, skills: string[]) => {
   return new Document({
     sections: [{
@@ -184,11 +319,22 @@ const generateModernDocx = (resume: ResumeData, skills: string[]) => {
           text: resume.personalInformation.name,
           heading: HeadingLevel.HEADING_1,
           alignment: AlignmentType.LEFT,
+          spacing: { after: 100 },
+          run: {
+            size: 56, // 28pt
+            bold: true,
+            color: "2c3e50",
+          }
         }),
         ...(resume.personalInformation.profession ? [
           new Paragraph({
             text: resume.personalInformation.profession,
             alignment: AlignmentType.LEFT,
+            spacing: { after: 100 },
+            run: {
+              size: 28,
+              color: "7f8c8d",
+            }
           }),
         ] : []),
         new Paragraph({
@@ -198,101 +344,225 @@ const generateModernDocx = (resume: ResumeData, skills: string[]) => {
             resume.personalInformation.address
           ].filter(Boolean).join(' | '),
           alignment: AlignmentType.LEFT,
+          spacing: { after: 200 },
+          run: {
+            size: 24,
+            color: "555555",
+          }
         }),
-        new Paragraph({ text: '' }),
         ...(resume.summary ? [
           new Paragraph({
             text: 'PROFESSIONAL SUMMARY',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "2c3e50",
+            },
+            border: {
+              bottom: {
+                color: "3498db", // Blue accent
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 12,
+              },
+            },
           }),
-          new Paragraph({ text: resume.summary }),
-          new Paragraph({ text: '' }),
+          new Paragraph({ 
+            text: resume.summary,
+            spacing: { after: 200 },
+            run: {
+              size: 24,
+            }
+          }),
         ] : []),
         ...(skills.length > 0 ? [
           new Paragraph({
             text: 'SKILLS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "2c3e50",
+            },
+            border: {
+              bottom: {
+                color: "3498db",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 12,
+              },
+            },
           }),
-          new Paragraph({ text: skills.join(' • ') }),
-          new Paragraph({ text: '' }),
+          new Paragraph({ 
+            text: skills.join(' • '),
+            spacing: { after: 200 },
+            run: {
+              size: 24,
+            }
+          }),
         ] : []),
         ...(resume.professionalExperience.length > 0 ? [
           new Paragraph({
             text: 'PROFESSIONAL EXPERIENCE',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "2c3e50",
+            },
+            border: {
+              bottom: {
+                color: "3498db",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 12,
+              },
+            },
           }),
           ...resume.professionalExperience.flatMap(exp => [
             new Paragraph({
               children: [
                 new TextRun({ 
                   text: `${exp.role} | ${exp.organization}${exp.location ? `, ${exp.location}` : ''}`, 
-                  bold: true 
+                  bold: true,
+                  size: 24,
                 }),
               ],
+              spacing: { before: 100, after: 50 },
             }),
             new Paragraph({
               text: `${exp.startDate} - ${exp.endDate}`,
+              spacing: { after: 50 },
+              run: {
+                size: 24,
+              }
             }),
             ...exp.responsibilities.filter(r => r.trim()).map(resp => new Paragraph({
               text: `• ${resp}`,
               bullet: { level: 0 },
+              spacing: { after: 50 },
+              run: {
+                size: 24,
+              }
             })),
-            new Paragraph({ text: '' }),
+            new Paragraph({ text: '', spacing: { after: 100 } }),
           ]),
         ] : []),
         ...(resume.education.length > 0 ? [
           new Paragraph({
             text: 'EDUCATION',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "2c3e50",
+            },
+            border: {
+              bottom: {
+                color: "3498db",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 12,
+              },
+            },
           }),
           ...resume.education.flatMap(edu => [
             new Paragraph({
-              children: [new TextRun({ text: edu.degree, bold: true })],
+              children: [new TextRun({ text: edu.degree, bold: true, size: 24 })],
+              spacing: { before: 100 },
             }),
-            new Paragraph({ text: edu.institution }),
-            new Paragraph({ text: `${edu.startDate} - ${edu.endDate}` }),
-            ...(edu.gpa ? [new Paragraph({ text: `GPA: ${edu.gpa}` })] : []),
-            new Paragraph({ text: '' }),
+            new Paragraph({ text: edu.institution, run: { size: 24 } }),
+            new Paragraph({ text: `${edu.startDate} - ${edu.endDate}`, run: { size: 24 } }),
+            ...(edu.gpa ? [new Paragraph({ text: `GPA: ${edu.gpa}`, run: { size: 24 } })] : []),
+            new Paragraph({ text: '', spacing: { after: 100 } }),
           ]),
         ] : []),
         ...(resume.certifications.length > 0 ? [
           new Paragraph({
             text: 'CERTIFICATIONS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "2c3e50",
+            },
+            border: {
+              bottom: {
+                color: "3498db",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 12,
+              },
+            },
           }),
           ...resume.certifications.flatMap(cert => [
             new Paragraph({
-              children: [new TextRun({ text: cert.name, bold: true })],
+              children: [new TextRun({ text: cert.name, bold: true, size: 24 })],
             }),
-            new Paragraph({ text: `${cert.issuer} - ${cert.year}` }),
+            new Paragraph({ text: `${cert.issuer} - ${cert.year}`, run: { size: 24 } }),
           ]),
-          new Paragraph({ text: '' }),
+          new Paragraph({ text: '', spacing: { after: 100 } }),
         ] : []),
         ...(resume.projects.length > 0 ? [
           new Paragraph({
             text: 'PROJECTS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "2c3e50",
+            },
+            border: {
+              bottom: {
+                color: "3498db",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 12,
+              },
+            },
           }),
           ...resume.projects.flatMap(proj => [
             new Paragraph({
-              children: [new TextRun({ text: proj.name, bold: true })],
+              children: [new TextRun({ text: proj.name, bold: true, size: 24 })],
             }),
-            new Paragraph({ text: proj.description }),
+            new Paragraph({ text: proj.description, run: { size: 24 } }),
             ...(proj.technologies ? [
               new Paragraph({ 
-                children: [new TextRun({ text: proj.technologies, italics: true })],
+                children: [new TextRun({ text: proj.technologies, italics: true, size: 24 })],
               }),
             ] : []),
-            new Paragraph({ text: '' }),
+            new Paragraph({ text: '', spacing: { after: 100 } }),
           ]),
         ] : []),
         ...(resume.awards.length > 0 ? [
           new Paragraph({
             text: 'AWARDS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "2c3e50",
+            },
+            border: {
+              bottom: {
+                color: "3498db",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 12,
+              },
+            },
           }),
           ...resume.awards.map(award => new Paragraph({
             text: `${award.title} - ${award.organization} (${award.year})`,
+            run: { size: 24 }
           })),
         ] : []),
       ],
@@ -310,11 +580,23 @@ const generateMinimalDocx = (resume: ResumeData, skills: string[]) => {
           text: resume.personalInformation.name,
           heading: HeadingLevel.HEADING_1,
           alignment: AlignmentType.LEFT,
+          spacing: { after: 100 },
+          run: {
+            size: 72, // 36pt - larger for minimal
+            bold: false, // Light weight for minimal
+            color: "333333",
+          }
         }),
         ...(resume.personalInformation.profession ? [
           new Paragraph({
             text: resume.personalInformation.profession,
             alignment: AlignmentType.LEFT,
+            spacing: { after: 150 },
+            run: {
+              size: 32,
+              bold: false,
+              color: "666666",
+            }
           }),
         ] : []),
         new Paragraph({
@@ -323,90 +605,159 @@ const generateMinimalDocx = (resume: ResumeData, skills: string[]) => {
             resume.personalInformation.phone
           ].filter(Boolean).join(' • '),
           alignment: AlignmentType.LEFT,
+          spacing: { after: 250 },
+          run: {
+            size: 24,
+            color: "666666",
+          }
         }),
-        new Paragraph({ text: '' }),
         ...(resume.summary ? [
           new Paragraph({
             text: 'PROFESSIONAL SUMMARY',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 28,
+              bold: true,
+              color: "333333",
+            },
           }),
-          new Paragraph({ text: resume.summary }),
-          new Paragraph({ text: '' }),
+          new Paragraph({ 
+            text: resume.summary,
+            spacing: { after: 200 },
+            run: {
+              size: 24,
+            }
+          }),
         ] : []),
         ...(resume.professionalExperience.length > 0 ? [
           new Paragraph({
             text: 'EXPERIENCE',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 28,
+              bold: true,
+              color: "333333",
+            },
           }),
           ...resume.professionalExperience.flatMap(exp => [
             new Paragraph({
               children: [
                 new TextRun({ 
                   text: `${exp.role}, ${exp.organization}`, 
-                  bold: true 
+                  bold: true,
+                  size: 24,
                 }),
               ],
+              spacing: { before: 100, after: 50 },
             }),
             new Paragraph({
               text: `${exp.startDate} - ${exp.endDate}`,
+              spacing: { after: 50 },
+              run: {
+                size: 24,
+              }
             }),
             ...exp.responsibilities.filter(r => r.trim()).map(resp => new Paragraph({
               text: `• ${resp}`,
+              spacing: { after: 50 },
+              run: {
+                size: 24,
+              }
             })),
-            new Paragraph({ text: '' }),
+            new Paragraph({ text: '', spacing: { after: 100 } }),
           ]),
         ] : []),
         ...(resume.education.length > 0 ? [
           new Paragraph({
             text: 'EDUCATION',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 28,
+              bold: true,
+              color: "333333",
+            },
           }),
           ...resume.education.flatMap(edu => [
             new Paragraph({
-              children: [new TextRun({ text: `${edu.degree}, ${edu.institution}`, bold: true })],
+              children: [new TextRun({ text: `${edu.degree}, ${edu.institution}`, bold: true, size: 24 })],
+              spacing: { before: 100 },
             }),
-            new Paragraph({ text: `${edu.startDate} - ${edu.endDate}` }),
-            new Paragraph({ text: '' }),
+            new Paragraph({ text: `${edu.startDate} - ${edu.endDate}`, run: { size: 24 } }),
+            new Paragraph({ text: '', spacing: { after: 100 } }),
           ]),
         ] : []),
         ...(skills.length > 0 ? [
           new Paragraph({
             text: 'SKILLS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 28,
+              bold: true,
+              color: "333333",
+            },
           }),
-          new Paragraph({ text: skills.join(' • ') }),
-          new Paragraph({ text: '' }),
+          new Paragraph({ 
+            text: skills.join(' • '),
+            spacing: { after: 200 },
+            run: {
+              size: 24,
+            }
+          }),
         ] : []),
         ...(resume.projects.length > 0 ? [
           new Paragraph({
             text: 'PROJECTS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 28,
+              bold: true,
+              color: "333333",
+            },
           }),
           ...resume.projects.flatMap(proj => [
             new Paragraph({
-              children: [new TextRun({ text: proj.name, bold: true })],
+              children: [new TextRun({ text: proj.name, bold: true, size: 24 })],
             }),
-            new Paragraph({ text: proj.description }),
-            new Paragraph({ text: '' }),
+            new Paragraph({ text: proj.description, run: { size: 24 } }),
+            new Paragraph({ text: '', spacing: { after: 100 } }),
           ]),
         ] : []),
         ...(resume.certifications.length > 0 ? [
           new Paragraph({
             text: 'CERTIFICATIONS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 28,
+              bold: true,
+              color: "333333",
+            },
           }),
           ...resume.certifications.map(cert => new Paragraph({
             text: `${cert.name} - ${cert.issuer} (${cert.year})`,
+            run: { size: 24 }
           })),
-          new Paragraph({ text: '' }),
+          new Paragraph({ text: '', spacing: { after: 100 } }),
         ] : []),
         ...(resume.awards.length > 0 ? [
           new Paragraph({
             text: 'AWARDS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 28,
+              bold: true,
+              color: "333333",
+            },
           }),
           ...resume.awards.map(award => new Paragraph({
             text: `${award.title} - ${award.organization} (${award.year})`,
+            run: { size: 24 }
           })),
         ] : []),
       ],
@@ -414,7 +765,7 @@ const generateMinimalDocx = (resume: ResumeData, skills: string[]) => {
   })
 }
 
-// Creative template - similar to classic but with different emphasis
+// Creative template - centered header with purple accent and left border on headings
 const generateCreativeDocx = (resume: ResumeData, skills: string[]) => {
   return new Document({
     sections: [{
@@ -424,11 +775,23 @@ const generateCreativeDocx = (resume: ResumeData, skills: string[]) => {
           text: resume.personalInformation.name,
           heading: HeadingLevel.HEADING_1,
           alignment: AlignmentType.CENTER,
+          spacing: { after: 100 },
+          run: {
+            size: 64,
+            bold: true,
+            color: "FFFFFF", // White text (can't do gradient in DOCX, using solid color)
+          },
+          // Note: DOCX doesn't support gradient backgrounds, so we'll use purple color for section titles
         }),
         ...(resume.personalInformation.profession ? [
           new Paragraph({
             text: resume.personalInformation.profession,
             alignment: AlignmentType.CENTER,
+            spacing: { after: 100 },
+            run: {
+              size: 36,
+              color: "667eea", // Purple
+            }
           }),
         ] : []),
         new Paragraph({
@@ -438,101 +801,246 @@ const generateCreativeDocx = (resume: ResumeData, skills: string[]) => {
             resume.personalInformation.address
           ].filter(Boolean).join(' | '),
           alignment: AlignmentType.CENTER,
+          spacing: { after: 200 },
+          run: {
+            size: 24,
+            color: "555555",
+          }
         }),
-        new Paragraph({ text: '' }),
         ...(resume.summary ? [
           new Paragraph({
             text: 'PROFESSIONAL SUMMARY',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "667eea", // Purple
+            },
+            border: {
+              left: {
+                color: "667eea",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 24, // 4px thick left border
+              },
+            },
+            indent: {
+              left: 200, // Indent for left border effect
+            },
           }),
-          new Paragraph({ text: resume.summary }),
-          new Paragraph({ text: '' }),
+          new Paragraph({ 
+            text: resume.summary,
+            spacing: { after: 200 },
+            run: {
+              size: 24,
+            }
+          }),
         ] : []),
         ...(resume.professionalExperience.length > 0 ? [
           new Paragraph({
             text: 'PROFESSIONAL EXPERIENCE',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "667eea",
+            },
+            border: {
+              left: {
+                color: "667eea",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 24,
+              },
+            },
+            indent: {
+              left: 200,
+            },
           }),
           ...resume.professionalExperience.flatMap(exp => [
             new Paragraph({
               children: [
                 new TextRun({ 
                   text: `${exp.role} | ${exp.organization}${exp.location ? `, ${exp.location}` : ''}`, 
-                  bold: true 
+                  bold: true,
+                  size: 24,
                 }),
               ],
+              spacing: { before: 100, after: 50 },
             }),
             new Paragraph({
               text: `${exp.startDate} - ${exp.endDate}`,
+              spacing: { after: 50 },
+              run: {
+                size: 24,
+              }
             }),
             ...exp.responsibilities.filter(r => r.trim()).map(resp => new Paragraph({
               text: `• ${resp}`,
               bullet: { level: 0 },
+              spacing: { after: 50 },
+              run: {
+                size: 24,
+              }
             })),
-            new Paragraph({ text: '' }),
+            new Paragraph({ text: '', spacing: { after: 100 } }),
           ]),
         ] : []),
         ...(resume.education.length > 0 ? [
           new Paragraph({
             text: 'EDUCATION',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "667eea",
+            },
+            border: {
+              left: {
+                color: "667eea",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 24,
+              },
+            },
+            indent: {
+              left: 200,
+            },
           }),
           ...resume.education.flatMap(edu => [
             new Paragraph({
-              children: [new TextRun({ text: edu.degree, bold: true })],
+              children: [new TextRun({ text: edu.degree, bold: true, size: 24 })],
+              spacing: { before: 100 },
             }),
-            new Paragraph({ text: edu.institution }),
-            new Paragraph({ text: `${edu.startDate} - ${edu.endDate}` }),
-            ...(edu.gpa ? [new Paragraph({ text: `GPA: ${edu.gpa}` })] : []),
-            new Paragraph({ text: '' }),
+            new Paragraph({ text: edu.institution, run: { size: 24 } }),
+            new Paragraph({ text: `${edu.startDate} - ${edu.endDate}`, run: { size: 24 } }),
+            ...(edu.gpa ? [new Paragraph({ text: `GPA: ${edu.gpa}`, run: { size: 24 } })] : []),
+            new Paragraph({ text: '', spacing: { after: 100 } }),
           ]),
         ] : []),
         ...(skills.length > 0 ? [
           new Paragraph({
             text: 'SKILLS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "667eea",
+            },
+            border: {
+              left: {
+                color: "667eea",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 24,
+              },
+            },
+            indent: {
+              left: 200,
+            },
           }),
-          new Paragraph({ text: skills.join(' • ') }),
-          new Paragraph({ text: '' }),
+          new Paragraph({ 
+            text: skills.join(' • '),
+            spacing: { after: 200 },
+            run: {
+              size: 24,
+            }
+          }),
         ] : []),
         ...(resume.certifications.length > 0 ? [
           new Paragraph({
             text: 'CERTIFICATIONS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "667eea",
+            },
+            border: {
+              left: {
+                color: "667eea",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 24,
+              },
+            },
+            indent: {
+              left: 200,
+            },
           }),
           ...resume.certifications.flatMap(cert => [
             new Paragraph({
-              children: [new TextRun({ text: cert.name, bold: true })],
+              children: [new TextRun({ text: cert.name, bold: true, size: 24 })],
             }),
-            new Paragraph({ text: `${cert.issuer} - ${cert.year}` }),
+            new Paragraph({ text: `${cert.issuer} - ${cert.year}`, run: { size: 24 } }),
           ]),
-          new Paragraph({ text: '' }),
+          new Paragraph({ text: '', spacing: { after: 100 } }),
         ] : []),
         ...(resume.projects.length > 0 ? [
           new Paragraph({
             text: 'PROJECTS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "667eea",
+            },
+            border: {
+              left: {
+                color: "667eea",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 24,
+              },
+            },
+            indent: {
+              left: 200,
+            },
           }),
           ...resume.projects.flatMap(proj => [
             new Paragraph({
-              children: [new TextRun({ text: proj.name, bold: true })],
+              children: [new TextRun({ text: proj.name, bold: true, size: 24 })],
             }),
-            new Paragraph({ text: proj.description }),
+            new Paragraph({ text: proj.description, run: { size: 24 } }),
             ...(proj.technologies ? [
               new Paragraph({ 
-                children: [new TextRun({ text: proj.technologies, italics: true })],
+                children: [new TextRun({ text: proj.technologies, italics: true, size: 24 })],
               }),
             ] : []),
-            new Paragraph({ text: '' }),
+            new Paragraph({ text: '', spacing: { after: 100 } }),
           ]),
         ] : []),
         ...(resume.awards.length > 0 ? [
           new Paragraph({
             text: 'AWARDS',
             heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+            run: {
+              size: 32,
+              bold: true,
+              color: "667eea",
+            },
+            border: {
+              left: {
+                color: "667eea",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 24,
+              },
+            },
+            indent: {
+              left: 200,
+            },
           }),
           ...resume.awards.map(award => new Paragraph({
             text: `${award.title} - ${award.organization} (${award.year})`,
+            run: { size: 24 }
           })),
         ] : []),
       ],
