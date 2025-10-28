@@ -2,11 +2,13 @@ import { ResumeData } from "@/types/resume"
 
 /**
  * Parses skills from string or array format into a string array
- * @param skills - Skills in string format (separated by ' • ') or array format
+ * This function provides backward compatibility for old data that may have skills as a string
+ * @param skills - Skills in array format or legacy string format (separated by ' • ')
  * @returns Array of skill strings
  */
-export const parseSkillsArray = (skills: string | unknown): string[] => {
+export const parseSkillsArray = (skills: string | string[] | unknown): string[] => {
   if (typeof skills === 'string') {
+    // Legacy format: parse string separated by ' • '
     return skills.split(' • ').filter((s: string) => s.trim())
   }
   if (Array.isArray(skills)) {
@@ -36,7 +38,7 @@ export const getEditableResume = (resume: any): ResumeData => {
       professionalExperience: [],
       education: [],
       projects: [],
-      skills: "",
+      skills: [],
       certifications: [],
       awards: [],
     }
@@ -153,7 +155,7 @@ export const getEditableResume = (resume: any): ResumeData => {
       technologies: proj.technologies || "",
       link: proj.link || "",
     })),
-    skills: Array.isArray(resume.skills) ? resume.skills.join(' • ') : (resume.skills || ""),
+    skills: parseSkillsArray(resume.skills),
     certifications: resume.certifications || [],
     awards: resume.awards || [],
   }

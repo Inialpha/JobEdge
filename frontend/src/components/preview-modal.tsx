@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { parseSkillsArray } from "@/utils/resumeUtils"
 
 type PreviewModalProps = {
   isOpen: boolean
@@ -91,7 +92,7 @@ export function PreviewModal({ isOpen, onClose, resume }: PreviewModalProps) {
 
             <section>
               <h3 className="text-xl font-semibold">Skills</h3>
-              <p>{resume.skills.content}</p>
+              <p>{parseSkillsArray(resume.skills.content).join(' • ')}</p>
             </section>
           </div>
         </ScrollArea>

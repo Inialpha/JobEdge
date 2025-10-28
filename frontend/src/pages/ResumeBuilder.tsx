@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation } from '@/types/resume';
-import { getEditableResume, parseSkillsArray } from '@/utils/resumeUtils';
+import { getEditableResume } from '@/utils/resumeUtils';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
 import { ResumePreview } from '@/components/ResumePreview';
 import { createRoot, Root } from 'react-dom/client';
@@ -84,15 +84,15 @@ console.log("passedResume", passedResume)
 
   const addSkill = useCallback((skill: string) => {
     if (skill.trim()) {
-      const currentSkills = resume.skills.split(" • ").filter(s => s.trim());
-      updateResume('skills', [...currentSkills, skill.trim()].join(" • "));
+      const currentSkills = Array.isArray(resume.skills) ? resume.skills : [];
+      updateResume('skills', [...currentSkills, skill.trim()]);
     }
   }, [resume.skills, updateResume]);
 
   const removeSkill = useCallback((index: number) => {
-    const currentSkills = resume.skills.split(" • ").filter(s => s.trim());
+    const currentSkills = Array.isArray(resume.skills) ? resume.skills : [];
     const updated = currentSkills.filter((_, i) => i !== index);
-    updateResume('skills', updated.join(" • "));
+    updateResume('skills', updated);
   }, [resume.skills, updateResume]);
 
   const addExperienceItem = useCallback(() => {
@@ -910,7 +910,7 @@ console.log("passedResume", passedResume)
                 }}>+ Add</button>
               </div>
               <div>
-                {parseSkillsArray(resume.skills).map((skill: string, index: number) => (
+                {(Array.isArray(resume.skills) ? resume.skills : []).map((skill: string, index: number) => (
                   <span key={index} className="skill-tag skill-tag-edit">
                     {skill}
                     <button onClick={() => removeSkill(index)}>×</button>
