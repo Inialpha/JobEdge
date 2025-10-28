@@ -2,6 +2,7 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Unde
 import { saveAs } from 'file-saver'
 import { ResumeData, Template } from '@/types/resume'
 import { parseSkillsArray } from './resumeUtils'
+import { generateClassicTemplateDocx } from "@/components/resume-docx/generateClassicDocx";
 
 export const downloadPDF = async (elementId: string) => {
   const element = document.getElementById(elementId)
@@ -41,7 +42,7 @@ export const downloadDocx = async (resume: ResumeData, template: Template = 'cla
       doc = generateCreativeDocx(resume, skills);
       break;
     default:
-      doc = generateClassicDocx(resume, skills);
+      doc = generateClassicTemplateDocx(resume, skills);
   }
 
   const blob = await Packer.toBlob(doc)
