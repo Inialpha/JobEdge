@@ -314,3 +314,95 @@ class ResumeFromObjectAPIView(APIView):
         except Exception as e:
             print("Error creating resume:", e)
             return Response({"error": "An error occurred"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ConvertPdfToDocxAPIView(APIView):
+    """
+    API View for converting PDF to DOCX format using pdf2docx library.
+    """
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """
+        Receive a PDF file, convert it to DOCX, and return the DOCX file.
+        """
+        import os
+        import tempfile
+        from pdf2docx import Converter
+        from django.http import FileResponse
+        
+        # Get the uploaded PDF file
+        pdf_file = request.FILES.get('pdf_file')
+        
+        if not pdf_file:
+            return Response(
+                {"error": "No PDF file provided"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Validate that the uploaded file is a PDF
+        if not pdf_file.name.endswith('.pdf'):
+            return Response(
+                {"error": "File must be a PDF"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Create temporary files for PDF input and DOCX output
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_pdf:
+                # Write uploaded PDF to temporary file
+                for chunk in pdf_file.chunks():
+                    temp_pdf.write(chunk)
+                temp_pdf_path = temp_pdf.name
+            
+            # Create temporary DOCX file path
+            temp_docx_path = temp_pdf_path.replace('.pdf', '.docx')
+            
+            # Convert PDF to DOCX
+            cv = Converter(temp_pdf_path)
+            cv.convert(temp_docx_path)
+            cv.close()
+            
+            # Open the converted DOCX file for response
+            docx_file = open(temp_docx_path, 'rb')
+            
+            # Create response with DOCX file
+            response = FileResponse(
+                docx_file,
+                content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            )
+            response['Content-Disposition'] = f'attachment; filename="resume.docx"'
+            
+            # Clean up temporary PDF file immediately
+            os.unlink(temp_pdf_path)
+            
+            # Schedule DOCX cleanup after response is sent
+            # Note: The file will be deleted after the response is fully sent
+            def cleanup_docx():
+                try:
+                    os.unlink(temp_docx_path)
+                except Exception:
+                    pass
+            
+            # Register cleanup callback
+            import atexit
+            atexit.register(cleanup_docx)
+            
+            return response
+            
+        except Exception as e:
+            # Clean up temporary files in case of error
+            try:
+                if 'temp_pdf_path' in locals():
+                    os.unlink(temp_pdf_path)
+                if 'temp_docx_path' in locals() and os.path.exists(temp_docx_path):
+                    os.unlink(temp_docx_path)
+            except Exception:
+                pass
+            
+            print(f"Error converting PDF to DOCX: {e}")
+            return Response(
+                {"error": "Failed to convert PDF to DOCX"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
