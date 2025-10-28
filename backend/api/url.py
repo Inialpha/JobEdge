@@ -1,5 +1,5 @@
 from django.urls import path
-from .views.resumes import ResumeAPIView, GenerateResume, GenerateResumeFromJobDescription, ResumeFromObjectAPIView
+from .views.resumes import ResumeAPIView, GenerateResume, GenerateResumeFromJobDescription, ResumeFromObjectAPIView, ConvertPdfToDocxAPIView
 from .views.users import UserAPIView, CustomSignup
 from .views.jobs import JobSearchAPIView, JobAPIView
 # import authemail
@@ -10,6 +10,7 @@ urlpatterns = [
     path('generate_resume/', GenerateResume.as_view(), name="generate-resume"),
     path('resume/generate/', GenerateResumeFromJobDescription.as_view(), name="generate-resume-from-job-description"),
     path('resume/from-object/', ResumeFromObjectAPIView.as_view(), name='resume-from-object'),
+    path('resume/convert-pdf-to-docx/', ConvertPdfToDocxAPIView.as_view(), name='convert-pdf-to-docx'),
     path('resumes/', ResumeAPIView.as_view(), name='resume-list'),
     path('resumes/<str:pk>/', ResumeAPIView.as_view(), name='resume-detail'),
     # users
