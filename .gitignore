@@ -1,3 +1,5 @@
+.vite/
+.vite/*
 initialize.sh
 /media
 delete.sql
