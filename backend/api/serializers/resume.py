@@ -41,6 +41,18 @@ class ResumeSerializer(serializers.Serializer):
         default=[],
         help_text="List of user's education"
     )
+    certifications = serializers.ListField(
+        child=serializers.DictField(),
+        default=[],
+        help_text="List of user's certificates",
+        required=False,
+    )
+    awards = serializers.ListField(
+        child=serializers.DictField(),
+        default=[],
+        help_text="List of user's awards",
+        required=False
+    )
     languages = serializers.ListField(
         child=serializers.CharField(max_length=255),
         default=[],

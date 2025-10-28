@@ -12,6 +12,14 @@ class Resume(BaseModel):
     skills = models.JSONField(default=list, help_text="List of user's skills")
     projects = models.JSONField(default=list, help_text="User's projects")
     educations = models.JSONField(default=list, help_text="List of user's education")
+    certifications = models.JSONField(default=list, help_text="List of user's certificate",
+        null=True,
+        blank=True
+    )
+    awards = models.JSONField(default=list, help_text="List of user's awards",
+        null=True,
+        blank=True
+    )
     languages = models.JSONField(default=list, help_text="Languages spoken by the user")
 
     created_at = models.DateTimeField(auto_now_add=True, help_text="Timestamp when the resume was created")
