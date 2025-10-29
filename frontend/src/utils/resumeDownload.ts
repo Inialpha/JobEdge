@@ -1,6 +1,6 @@
 import { saveAs } from 'file-saver'
-import { Template } from '@/types/resume'
-import { Packer } from 'docx'
+import { Template, ResumeData } from '@/types/resume'
+import { Packer, Document } from 'docx'
 
 import {
   generateClassicDocx,
@@ -9,8 +9,12 @@ import {
   generateModernDocx,
 }  from "@/utils/DOCXResumes"
 
+interface User {
+  firstName: string;
+  lastName: string;
+}
 
-export const downloadPDF = async (elementId: string, user) => {
+export const downloadPDF = async (elementId: string, user: User) => {
   const element = document.getElementById(elementId)
   if (!element) return
 
@@ -29,24 +33,23 @@ export const downloadPDF = async (elementId: string, user) => {
   }
 }
 
-export const downloadDocx = async (resume: ResumeData, user, template: Template = 'classic') => {
-  const skills = resume.skills;
+export const downloadDocx = async (resume: ResumeData, user: User, template: Template = 'classic') => {
   let doc: Document;
 
   // Template-specific document generation
   console.log(user)
   switch (template) {
     case 'modern':
-      doc = generateModernDocx(resume, skills);
+      doc = generateModernDocx(resume);
       break;
     case 'minimal':
-      doc = generateMinimalDocx(resume, skills);
+      doc = generateMinimalDocx(resume);
       break;
     case 'creative':
-      doc = generateCreativeDocx(resume, skills);
+      doc = generateCreativeDocx(resume);
       break;
     default:
-      doc = generateClassicDocx(resume, skills);
+      doc = generateClassicDocx(resume);
   }
 
   const blob = await Packer.toBlob(doc)

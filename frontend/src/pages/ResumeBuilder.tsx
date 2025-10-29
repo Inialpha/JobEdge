@@ -7,6 +7,7 @@ import { ResumePreview } from '@/components/ResumePreview';
 import { createRoot, Root } from 'react-dom/client';
 import { postRequest } from '@/utils/apis';
 import { useSelector } from "react-redux";
+import { RootState } from '@/store/store';
 
 export default function ResumeBuilder() {
   const location = useLocation();
@@ -62,7 +63,7 @@ console.log("passedResume", passedResume)
     year: ''
   });
 
-  const updateResume = useCallback((field: keyof ResumeData, value: string | ProfessionalExperience[] | Education[] | Project[] | Certification[] | Award[] | PersonalInformation) => {
+  const updateResume = useCallback((field: keyof ResumeData, value: string | string[] | ProfessionalExperience[] | Education[] | Project[] | Certification[] | Award[] | PersonalInformation) => {
     setResume(prev => ({ ...prev, [field]: value }));
   }, []);
 
