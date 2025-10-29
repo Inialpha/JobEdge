@@ -12,7 +12,7 @@ import GoogleSignUpBotton from "@/components/GoogleSignUpBotton";
 
 
 export default function Signup() {
-  //const [loading, setLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
   const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const navigate = useNavigate();
   const {
@@ -33,30 +33,40 @@ export default function Signup() {
 
 
     const url = `${import.meta.env.VITE_AUTH_URL}/signup/`
-    const response = await postRequest(url, newData, false);
-    console.log(response)
-    if (response.ok) {
-      setFeedback({type: 'success', message: 'Signup successful! Please check your email to verify your account before logging in.'});
-      setTimeout(() => {
-        navigate('/login')
-      }, 5000);
-    } else {
-      const res = await response.json()
-      console.log(res)
-      
-      // Handle specific error messages
-      if (res.email && Array.isArray(res.email) && res.email[0].includes('already exists')) {
-        setFeedback({type: 'error', message: 'This email address is already in use. Please use a different email or try logging in.'})
-      } else if (res.detail) {
-        setFeedback({type: 'error', message: res.detail})
+    setIsLoading(true);
+    try {
+      const response = await postRequest(url, newData, false);
+      console.log(response)
+      if (response.ok) {
+        setFeedback({type: 'success', message: 'Signup successful! Please check your email to verify your account before logging in.'});
+        setTimeout(() => {
+          navigate('/login')
+        }, 5000);
       } else {
-        setFeedback({type: 'error', message: 'Signup failed. Please try again later.'})
+        const res = await response.json()
+        console.log(res)
+        
+        // Handle specific error messages
+        if (res.email && Array.isArray(res.email) && res.email[0].includes('already exists')) {
+          setFeedback({type: 'error', message: 'This email address is already in use. Please use a different email or try logging in.'})
+        } else if (res.detail) {
+          setFeedback({type: 'error', message: res.detail})
+        } else {
+          setFeedback({type: 'error', message: 'Signup failed. Please try again later.'})
+        }
+        
+        setTimeout(() => {
+          setFeedback(null)
+        }, 5000);
       }
-      
+    } catch (error) {
+      setFeedback({type: 'error', message: 'An error occurred. Please try again later.'})
       setTimeout(() => {
         setFeedback(null)
       }, 5000);
-   }
+    } finally {
+      setIsLoading(false);
+    }
   }
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-700 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -145,8 +155,18 @@ export default function Signup() {
             </div>
 
             <div>
-              <Button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-2 shadow-lg">
-                Sign up
+              <Button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing up...
+                  </span>
+                ) : (
+                  'Sign up'
+                )}
               </Button>
             </div>
           </form>
