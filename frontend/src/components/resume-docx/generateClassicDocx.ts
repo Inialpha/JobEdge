@@ -3,10 +3,8 @@ import {
   Paragraph,
   TextRun,
   AlignmentType,
-  UnderlineType,
   BorderStyle,
   convertInchesToTwip,
-  HeadingLevel,
 } from 'docx';
 
 // Types

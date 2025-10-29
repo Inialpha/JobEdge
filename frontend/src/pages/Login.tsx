@@ -15,6 +15,7 @@ import { login } from '../store/userSlice';
 export default function Login() {
   const navigate = useNavigate();
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
   const {
     register,
@@ -25,6 +26,7 @@ export default function Login() {
 
     const url = `${import.meta.env.VITE_AUTH_URL}/login/`
 
+    setIsLoading(true);
     try {
       const response = await postRequest(url, data);
       if (response.ok) {
@@ -71,8 +73,10 @@ export default function Login() {
         }
       }
     } catch (error) {
-        setFeedback({variant: 'error', message: "An error occured please try again"});
+        setFeedback({variant: 'error', message: "An error occurred please try again"});
         console.log(error);
+    } finally {
+      setIsLoading(false);
     }
     setTimeout(() => {
       setFeedback(null)
@@ -128,8 +132,18 @@ export default function Login() {
             </div>
 
             <div>
-              <Button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-2 shadow-lg">
-                Login
+              <Button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Logging in...
+                  </span>
+                ) : (
+                  'Login'
+                )}
               </Button>
             </div>
           </form>
