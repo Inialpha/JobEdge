@@ -320,22 +320,25 @@ class ConvertPdfToDocxAPIView(APIView):
     """
     API View for converting PDF to DOCX format using pdf2docx library.
     """
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    #authentication_classes = [TokenAuthentication]
+    #permission_classes = [IsAuthenticated]
 
     def post(self, request):
         """
         Receive a PDF file, convert it to DOCX, and return the DOCX file.
         """
+        print(request)
         import os
         import tempfile
         from pdf2docx import Converter
         from django.http import FileResponse
+        print("after imports")
         
         # Get the uploaded PDF file
         pdf_file = request.FILES.get('pdf_file')
         
         if not pdf_file:
+            print("{error: No PDF file provided,")
             return Response(
                 {"error": "No PDF file provided"}, 
                 status=status.HTTP_400_BAD_REQUEST
@@ -343,6 +346,7 @@ class ConvertPdfToDocxAPIView(APIView):
         
         # Validate that the uploaded file is a PDF
         if not pdf_file.name.endswith('.pdf'):
+            print("pdf_file.name.endswith(")
             return Response(
                 {"error": "File must be a PDF"}, 
                 status=status.HTTP_400_BAD_REQUEST

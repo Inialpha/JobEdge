@@ -6,10 +6,12 @@ import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
 import { ResumePreview } from '@/components/ResumePreview';
 import { createRoot, Root } from 'react-dom/client';
 import { postRequest } from '@/utils/apis';
+import { useSelector } from "react-redux";
 
 export default function ResumeBuilder() {
   const location = useLocation();
   const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.user);
   const passedResume = location.state?.resume;
   const passedTemplate = location.state?.template || 'classic';
 console.log("passedResume", passedResume)
@@ -23,7 +25,6 @@ console.log("passedResume", passedResume)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   console.log("buildee", resume)
 
-  // Separate states for adding new items
   const [newExperience, setNewExperience] = useState<ProfessionalExperience>({
     organization: '',
     role: '',
@@ -785,8 +786,8 @@ console.log("passedResume", passedResume)
                 {saveMessage.text}
               </div>
             )}
-            <button className="btn btn-primary" onClick={() => downloadPDF('resumePreview')}>📄 Download PDF</button>
-            <button className="btn btn-secondary" onClick={() => downloadDocx('resumePreview', currentTemplate)}>📥 Download DOCX</button>
+            <button className="btn btn-primary" onClick={() => downloadPDF('resumePreview', user)}>📄 Download PDF</button>
+            <button className="btn btn-secondary" onClick={() => downloadDocx(resume, user, currentTemplate)}>📥 Download DOCX</button>
             <button 
               className="btn" 
               style={{background: '#17a2b8', color: 'white'}}

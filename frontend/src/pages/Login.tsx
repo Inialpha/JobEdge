@@ -37,7 +37,6 @@ export default function Login() {
           const userRes = await getRequest(profileUrl)
           if (userRes.ok) {
             const userJson = await userRes.json();
-            console.log("user_json...", userJson) 
             const userData = {
               'id': userJson.id,
               'firstName': userJson.first_name,
@@ -45,7 +44,6 @@ export default function Login() {
               'isStaff': userJson.is_staff,
               'hasMasterResume': userJson.has_master_resume,
             }
-            console.log("user data", userData)
             dispatch(login(userData));
             setTimeout(() => {
               if (userData.isStaff) {

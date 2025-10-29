@@ -38,3 +38,11 @@ class CustomSignupSerializer(SignupSerializer):
     last_name = serializers.CharField(max_length=30)
     is_staff = serializers.BooleanField(read_only=True)
     has_master_resume = serializers.BooleanField(read_only=True)
+
+class ProfileSerializer(SignupSerializer):
+    id = serializers.UUIDField(default=uuid.uuid4, read_only=True)
+    email = serializers.EmailField(max_length=255)
+    first_name = serializers.CharField(max_length=255)
+    last_name = serializers.CharField(max_length=30)
+    is_staff = serializers.BooleanField(read_only=True)
+    has_master_resume = serializers.BooleanField(read_only=True)

@@ -2,10 +2,22 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from ..models import User
-from ..serializers.user import UserSerializer, CustomSignupSerializer
+from ..serializers.user import UserSerializer, CustomSignupSerializer, ProfileSerializer
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
+
+class ProfileAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, *args, **kwargs):
+        try:
+            serializer = UserSerializer(request.user)
+            return Response(serializer.data)
+        except Exception as e:
+            print(e)
+            raise e
 
 class UserAPIView(APIView):
     authentication_classes = [TokenAuthentication]
