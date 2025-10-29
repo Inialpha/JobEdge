@@ -461,6 +461,15 @@ console.log("passedResume", passedResume)
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
+        .btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+        .btn:disabled:hover {
+          transform: none;
+          box-shadow: none;
+        }
         .editor {
           padding: 20px;
         }
@@ -824,7 +833,6 @@ console.log("passedResume", passedResume)
               className="btn btn-primary" 
               onClick={handlePdfDownload}
               disabled={isPdfDownloading}
-              style={{opacity: isPdfDownloading ? 0.6 : 1, cursor: isPdfDownloading ? 'not-allowed' : 'pointer'}}
             >
               {isPdfDownloading ? (
                 <>
@@ -842,7 +850,6 @@ console.log("passedResume", passedResume)
               className="btn btn-secondary" 
               onClick={handleDocxDownload}
               disabled={isDocxDownloading}
-              style={{opacity: isDocxDownloading ? 0.6 : 1, cursor: isDocxDownloading ? 'not-allowed' : 'pointer'}}
             >
               {isDocxDownloading ? (
                 <>

@@ -73,7 +73,7 @@ export default function Login() {
         }
       }
     } catch (error) {
-        setFeedback({variant: 'error', message: "An error occured please try again"});
+        setFeedback({variant: 'error', message: "An error occurred please try again"});
         console.log(error);
     } finally {
       setIsLoading(false);
