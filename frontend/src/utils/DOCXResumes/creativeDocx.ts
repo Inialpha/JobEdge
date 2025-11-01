@@ -10,6 +10,7 @@ import {
   VerticalAlign,
   ShadingType,
   TabStopPosition,
+  TableLayoutType
 } from 'docx';
 
 import { ResumeData } from './classicDocx';
@@ -104,6 +105,7 @@ export function generateCreativeDocx(resume: ResumeData): Document {
       }),
     ],
     width: { size: 100, type: WidthType.PERCENTAGE },
+    layout: TableLayoutType.FIXED,
   });
 
   // Add some spacing after header

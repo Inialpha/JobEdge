@@ -341,13 +341,20 @@ console.log("passedResume", passedResume)
   }, [user]);
 
   const handleDocxDownload = useCallback(async () => {
+    //setSaveMessage({type: 'error', text: 'Docx is not available for this template'});
+    //setTimeout(() => setSaveMessage(null), 3000);
+    //return
+    
     setIsDocxDownloading(true);
     try {
       await downloadDocx(resume, user, currentTemplate);
       setSaveMessage({type: 'success', text: 'DOCX downloaded successfully!'});
     } catch (error) {
       console.error('Error downloading DOCX:', error);
-      setSaveMessage({type: 'error', text: 'Failed to download DOCX. Please try again.'});
+      setSaveMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message :'Failed to download DOCX. Please try again.'
+      });
     } finally {
       setIsDocxDownloading(false);
       setTimeout(() => setSaveMessage(null), 3000);
@@ -661,7 +668,7 @@ console.log("passedResume", passedResume)
         
         /* Modern Template */
         .modern-template {
-          display: grid;
+          display: gridi;
           grid-template-columns: 35% 65%;
           gap: 0;
           min-height: 800px;

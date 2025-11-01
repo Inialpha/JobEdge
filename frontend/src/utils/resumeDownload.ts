@@ -21,7 +21,7 @@ export const downloadPDF = async (elementId: string, user: User) => {
   const html2pdf = (window as { html2pdf?: () => { set: (opt: unknown) => { from: (el: HTMLElement) => { save: () => void } } } }).html2pdf
   if (html2pdf) {
     const opt = {
-      margin: 0.5,
+      margin: [0.5, 0.5, 1.2, 0.5],
       filename: `${user.firstName}_${user.lastName}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
@@ -39,19 +39,14 @@ export const downloadDocx = async (resume: ResumeData, user: User, template: Tem
   // Template-specific document generation
   console.log(user)
   switch (template) {
-    case 'modern':
-      doc = generateModernDocx(resume);
-      break;
-    case 'minimal':
-      doc = generateMinimalDocx(resume);
-      break;
-    case 'creative':
-      doc = generateCreativeDocx(resume);
+    case 'classic':
+      doc = generateClassicDocx(resume);
       break;
     default:
-      doc = generateClassicDocx(resume);
+      doc = null 
   }
 
+  if (doc === null) throw Error("Docx is not available for this template")
   const blob = await Packer.toBlob(doc)
   saveAs(blob, `${user.firstName}_${user.lastName}.docx`)
 }

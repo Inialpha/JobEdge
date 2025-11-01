@@ -15,7 +15,7 @@ export const ModernTemplate = ({ resume }: ModernTemplateProps) => {
   const skills = parseSkillsArray(resume.skills)
 
   return (
-    <>
+    <div style={{display: 'grid', gridTemplateColumns: '40% 60%', gap: '3px'}}>
       <div className="sidebar">
         <div className="resume-name">{escapeHtml(resume.personalInformation.name)}</div>
         <div className="resume-title">{escapeHtml(resume.summary.substring(0, 50) || "Professional")}</div>
@@ -27,7 +27,7 @@ export const ModernTemplate = ({ resume }: ModernTemplateProps) => {
         {skills.length > 0 && (
           <>
             <div className="resume-section-title">Skills</div>
-            <div className="resume-content">
+            <div className="">
               {skills.map((skill, index) => (
                 <div key={index} className="skill-tag">{escapeHtml(skill)} {index < skills.length - 1 && (" • ")}</div>
               ))}
@@ -37,7 +37,7 @@ export const ModernTemplate = ({ resume }: ModernTemplateProps) => {
         {resume.education.length > 0 && (
           <>
             <div className="resume-section-title">Education</div>
-            <div className="resume-content">
+            <div className="">
               {resume.education.map((edu, index) => (
                 <div key={index} style={{ marginBottom: '10px' }}>
                   <div><strong>{escapeHtml(edu.degree)}</strong></div>
@@ -122,6 +122,6 @@ export const ModernTemplate = ({ resume }: ModernTemplateProps) => {
           </>
         )}
       </div>
-    </>
+    </div>
   )
 }
