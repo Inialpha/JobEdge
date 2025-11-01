@@ -28,13 +28,13 @@ export function generateCreativeDocx(resume: ResumeData): Document {
   
   const headerContent: Paragraph[] = [];
 
-  // Name (32px = 24pt, white, bold)
+  // Name (32px = 24pt, in docx half-points: 64)
   headerContent.push(
     new Paragraph({
       text: resume.personalInformation.name,
       spacing: { after: 100 },
       run: {
-        size: 64, // 32pt
+        size: 64, // 32px (docx uses half-points: 32px * 2 = 64)
         bold: true,
         color: 'FFFFFF',
         font: 'Segoe UI',
@@ -42,14 +42,14 @@ export function generateCreativeDocx(resume: ResumeData): Document {
     })
   );
 
-  // Profession/Title (18px = 13.5pt, white with 0.9 opacity)
+  // Profession/Title (18px in docx half-points: 36)
   if (resume.personalInformation.profession) {
     headerContent.push(
       new Paragraph({
         text: resume.personalInformation.profession,
         spacing: { after: 200 },
         run: {
-          size: 36, // 18pt
+          size: 36, // 18px (docx uses half-points: 18px * 2 = 36)
           color: 'FFFFFF',
           font: 'Segoe UI',
         },
@@ -57,7 +57,7 @@ export function generateCreativeDocx(resume: ResumeData): Document {
     );
   }
 
-  // Contact information (12px = 9pt, white with 0.9 opacity)
+  // Contact information (12px in docx half-points: 24)
   const contactParts: string[] = [];
   if (resume.personalInformation.address) {
     contactParts.push(resume.personalInformation.address);
@@ -72,7 +72,7 @@ export function generateCreativeDocx(resume: ResumeData): Document {
       text: contactParts.join(' | '),
       spacing: { after: 0 },
       run: {
-        size: 24, // 12pt
+        size: 24, // 12px (docx uses half-points: 12px * 2 = 24)
         color: 'FFFFFF',
         font: 'Segoe UI',
       },
@@ -105,8 +105,6 @@ export function generateCreativeDocx(resume: ResumeData): Document {
     ],
     width: { size: 100, type: WidthType.PERCENTAGE },
   });
-
-  sections.push(new Paragraph({ text: '' })); // Placeholder for table
 
   // Add some spacing after header
   sections.push(
@@ -377,12 +375,6 @@ export function generateCreativeDocx(resume: ResumeData): Document {
     });
   }
 
-  // Replace first paragraph with header table
-  sections[0] = new Paragraph({
-    children: [],
-    spacing: { after: 0 },
-  });
-
   return new Document({
     sections: [
       {
@@ -404,7 +396,7 @@ export function generateCreativeDocx(resume: ResumeData): Document {
 
 /**
  * Helper function to create creative section titles
- * Uppercase, bold, with purple color (#667eea)
+ * 16px (32 half-points), uppercase, bold, with purple color (#667eea)
  */
 function createCreativeSectionTitle(title: string): Paragraph {
   return new Paragraph({
@@ -412,7 +404,7 @@ function createCreativeSectionTitle(title: string): Paragraph {
       new TextRun({
         text: title,
         bold: true,
-        size: 32, // 16pt
+        size: 32, // 16px (docx uses half-points: 16px * 2 = 32)
         color: '667EEA',
       }),
     ],
