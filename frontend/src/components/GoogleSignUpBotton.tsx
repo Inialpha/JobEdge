@@ -75,7 +75,10 @@ export default function GoogleSignUpButton() {
           }, 5000);
         } else {
           const error = await userRes.json();
-          setFeedback({message: error.detail, variant: 'error'
+          const errorMessage = typeof error === 'object' && error !== null && 'detail' in error 
+            ? String(error.detail) 
+            : 'An error occurred';
+          setFeedback({message: errorMessage, variant: 'error'
           });
         }
       } catch (error) {

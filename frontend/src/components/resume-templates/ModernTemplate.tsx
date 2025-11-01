@@ -39,11 +39,11 @@ export const ModernTemplate = ({ resume }: ModernTemplateProps) => {
             </div>
           </>
         )}
-        {resume.education.length > 0 && (
+        {resume?.education?.length > 0 && (
           <>
             <div className="resume-section-title">Education</div>
             <div className="">
-              {resume?.education?.map((edu, index) => (
+              {resume.education.map((edu, index) => (
                 <div key={index} style={{ marginBottom: '10px' }}>
                   <div><strong>{escapeHtml(edu?.degree || '')}</strong></div>
                   <div>{escapeHtml(edu?.institution || '')}</div>

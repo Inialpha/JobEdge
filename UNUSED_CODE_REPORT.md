@@ -4,7 +4,9 @@ This report documents code that appears to be unused or minimally used in the fr
 
 ## Components
 
-### GoogleSignUpBotton.tsx
+### GoogleSignUpButton.tsx (GoogleSignUpBotton.tsx)
+**Note:** The filename has a typo - it's actually `GoogleSignUpBotton.tsx` (missing 't' in 'Button') in the codebase.
+
 - **Removed unused function**: `fetchUserData` - This function was defined but never called. It was intended for token validation but the implementation was commented out. The function has been removed, but the logic can be re-added when token validation is implemented.
 - **Removed unused import**: `axios` - After removing the `fetchUserData` function, the axios import was no longer needed.
 - **Unused state**: The `user` state variable is set but only used for conditional rendering that may not be actively used in the current flow.
