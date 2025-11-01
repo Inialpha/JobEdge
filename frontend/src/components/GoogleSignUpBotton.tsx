@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { getRequest, postRequest } from "@/utils/apis";
 import { useDispatch } from 'react-redux';
@@ -7,14 +7,18 @@ import { login } from '../store/userSlice';
 // First, install the required packages:
 // npm install @react-oauth/google jwt-decode axios
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 //import { jwt_decode } from 'jwt-decode';
-import axios from 'axios';
 import { setCookie } from '../utils/cookieManager';
 
+interface UserData {
+  name: string;
+  email: string;
+}
 
 export default function GoogleSignUpButton() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<UserData | null>(null);
+  const [, setFeedback] = useState<{message: string, variant: string} | null>(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -23,23 +27,13 @@ export default function GoogleSignUpButton() {
     const token = localStorage.getItem('authToken');
     if (token) {
       // Validate token with your backend
-      // fetchUserData(token);
+      // Future: implement token validation
     }
   }, []);
 
-  const fetchUserData = async (token) => {
-    try {
-      const response = await axios.get('http://localhost:8000/api/users', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUser(response.data);
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      localStorage.removeItem('authToken');
-    }
-  };
+  // Removed unused fetchUserData function - can be re-added when token validation is implemented
 
-  const handleGoogleSuccess = async (credentialResponse) => {
+  const handleGoogleSuccess = async (credentialResponse: any) => {
     console.log("credentialResponse", credentialResponse)
     const { credential } = credentialResponse;
     console.log("credential", credential)
@@ -76,9 +70,9 @@ export default function GoogleSignUpButton() {
           setFeedback({message: error.detail, variant: 'error'
           });
         }
-      } catch (error) {
+      } catch (error: any) {
         console.log(error)
-        setFeedback({message: error.detail, variant: 'error'
+        setFeedback({message: error?.detail || 'An error occurred', variant: 'error'
         })
       }
     } catch (error) {

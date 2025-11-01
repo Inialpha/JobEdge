@@ -4,9 +4,9 @@ import { Packer, Document } from 'docx'
 
 import {
   generateClassicDocx,
-  generateCreativeDocx,
-  generateMinimalDocx,
-  generateModernDocx,
+  // generateCreativeDocx,
+  // generateMinimalDocx,
+  // generateModernDocx,
 }  from "@/utils/DOCXResumes"
 
 interface User {
@@ -34,7 +34,7 @@ export const downloadPDF = async (elementId: string, user: User) => {
 }
 
 export const downloadDocx = async (resume: ResumeData, user: User, template: Template = 'classic') => {
-  let doc: Document;
+  let doc: Document | null = null;
 
   // Template-specific document generation
   console.log(user)
