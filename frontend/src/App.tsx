@@ -25,12 +25,12 @@ const routes = createBrowserRouter(
       <Route path="resume" element={
           <AccordionResume />
       }/>
-      <Route path="resume-builder" element={<ResumeBuilder />} />
       <Route path="admin/dashboard" element={<AdminDashboard />} />
       
       {/* Protected routes with authentication */}
       <Route element={<AuthMiddleware />}>
         <Route path="tailor-resume" element={<TailorResumePage />} />
+        <Route path="resume-builder" element={<ResumeBuilder />} />
         
         {/* User Dashboard with nested routes */}
         <Route path="dashboard" element={<UserDashboardLayout />}>
