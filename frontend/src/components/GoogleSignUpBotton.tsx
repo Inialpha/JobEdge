@@ -33,7 +33,11 @@ export default function GoogleSignUpButton() {
 
   // Removed unused fetchUserData function - can be re-added when token validation is implemented
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+  interface CredentialResponse {
+    credential?: string;
+  }
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     console.log("credentialResponse", credentialResponse)
     const { credential } = credentialResponse;
     console.log("credential", credential)
@@ -60,19 +64,24 @@ export default function GoogleSignUpButton() {
             'isStaff': userJson.is_staff,
             'hasMasterResume': userJson.has_master_resume,
           }
-            console.log("user data", userData)
-            dispatch(login(userData));
-            setTimeout(() => {
-              userData.isStaff ? navigate("/admin/dashboard") : navigate("/dashboard")
-            }, 5000);
+          console.log("user data", userData)
+          dispatch(login(userData));
+          setTimeout(() => {
+            if (userData.isStaff) {
+              navigate("/admin/dashboard");
+            } else {
+              navigate("/dashboard");
+            }
+          }, 5000);
         } else {
           const error = await userRes.json();
           setFeedback({message: error.detail, variant: 'error'
           });
         }
-      } catch (error: any) {
+      } catch (error) {
         console.log(error)
-        setFeedback({message: error?.detail || 'An error occurred', variant: 'error'
+        const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+        setFeedback({message: errorMessage, variant: 'error'
         })
       }
     } catch (error) {
