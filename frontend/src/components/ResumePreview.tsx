@@ -21,7 +21,7 @@ export const ResumePreview = ({ resume, template }: ResumePreviewProps) => {
   }
 
   return (
-    <div className={`resume-preview ${template}-template`}>
+    <div className="">
       {renderTemplate()}
     </div>
   )

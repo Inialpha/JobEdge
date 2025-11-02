@@ -6,10 +6,13 @@ import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
 import { ResumePreview } from '@/components/ResumePreview';
 import { createRoot, Root } from 'react-dom/client';
 import { postRequest } from '@/utils/apis';
+import { useSelector } from "react-redux";
+import { RootState } from '@/store/store';
 
 export default function ResumeBuilder() {
   const location = useLocation();
   const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.user);
   const passedResume = location.state?.resume;
   const passedTemplate = location.state?.template || 'classic';
 console.log("passedResume", passedResume)
@@ -18,12 +21,13 @@ console.log("passedResume", passedResume)
   const [currentTemplate, setCurrentTemplate] = useState<Template>(passedTemplate);
   const [resume, setResume] = useState<ResumeData>(() => getEditableResume(passedResume));
   const [isSaving, setIsSaving] = useState(false);
+  const [isPdfDownloading, setIsPdfDownloading] = useState(false);
+  const [isDocxDownloading, setIsDocxDownloading] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   console.log("buildee", resume)
 
-  // Separate states for adding new items
   const [newExperience, setNewExperience] = useState<ProfessionalExperience>({
     organization: '',
     role: '',
@@ -61,7 +65,7 @@ console.log("passedResume", passedResume)
     year: ''
   });
 
-  const updateResume = useCallback((field: keyof ResumeData, value: string | ProfessionalExperience[] | Education[] | Project[] | Certification[] | Award[] | PersonalInformation) => {
+  const updateResume = useCallback((field: keyof ResumeData, value: string | string[] | ProfessionalExperience[] | Education[] | Project[] | Certification[] | Award[] | PersonalInformation) => {
     setResume(prev => ({ ...prev, [field]: value }));
   }, []);
 
@@ -322,6 +326,41 @@ console.log("passedResume", passedResume)
     updateResume('professionalExperience', updated);
   }, [resume.professionalExperience, updateResume]);
 
+  const handlePdfDownload = useCallback(async () => {
+    setIsPdfDownloading(true);
+    try {
+      await downloadPDF('resumePreview', user);
+      setSaveMessage({type: 'success', text: 'PDF downloaded successfully!'});
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      setSaveMessage({type: 'error', text: 'Failed to download PDF. Please try again.'});
+    } finally {
+      setIsPdfDownloading(false);
+      setTimeout(() => setSaveMessage(null), 3000);
+    }
+  }, [user]);
+
+  const handleDocxDownload = useCallback(async () => {
+    //setSaveMessage({type: 'error', text: 'Docx is not available for this template'});
+    //setTimeout(() => setSaveMessage(null), 3000);
+    //return
+    
+    setIsDocxDownloading(true);
+    try {
+      await downloadDocx(resume, user, currentTemplate);
+      setSaveMessage({type: 'success', text: 'DOCX downloaded successfully!'});
+    } catch (error) {
+      console.error('Error downloading DOCX:', error);
+      setSaveMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message :'Failed to download DOCX. Please try again.'
+      });
+    } finally {
+      setIsDocxDownloading(false);
+      setTimeout(() => setSaveMessage(null), 3000);
+    }
+  }, [resume, user, currentTemplate]);
+
   // Update preview when resume or template changes
   useEffect(() => {
     const element = document.getElementById('resumePreview');
@@ -428,6 +467,15 @@ console.log("passedResume", passedResume)
         .btn:hover {
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+        .btn:disabled:hover {
+          transform: none;
+          box-shadow: none;
         }
         .editor {
           padding: 20px;
@@ -620,17 +668,20 @@ console.log("passedResume", passedResume)
         
         /* Modern Template */
         .modern-template {
-          display: grid;
+          display: gridi;
           grid-template-columns: 35% 65%;
           gap: 0;
+          min-height: 800px;
         }
         .modern-template .sidebar {
           background: #2c3e50;
           color: white;
           padding: 30px 20px;
+          grid-column: 1;
         }
         .modern-template .main-content {
           padding: 30px;
+          grid-column: 2;
         }
         .modern-template .resume-name {
           font-size: 28px;
@@ -785,8 +836,40 @@ console.log("passedResume", passedResume)
                 {saveMessage.text}
               </div>
             )}
-            <button className="btn btn-primary" onClick={() => downloadPDF('resumePreview')}>📄 Download PDF</button>
-            <button className="btn btn-secondary" onClick={() => downloadDocx(resume, currentTemplate)}>📥 Download DOCX</button>
+            <button 
+              className="btn btn-primary" 
+              onClick={handlePdfDownload}
+              disabled={isPdfDownloading}
+            >
+              {isPdfDownloading ? (
+                <>
+                  <svg className="animate-spin inline-block h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Downloading...
+                </>
+              ) : (
+                '📄 Download PDF'
+              )}
+            </button>
+            <button 
+              className="btn btn-secondary" 
+              onClick={handleDocxDownload}
+              disabled={isDocxDownloading}
+            >
+              {isDocxDownloading ? (
+                <>
+                  <svg className="animate-spin inline-block h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Downloading...
+                </>
+              ) : (
+                '📥 Download DOCX'
+              )}
+            </button>
             <button 
               className="btn" 
               style={{background: '#17a2b8', color: 'white'}}
