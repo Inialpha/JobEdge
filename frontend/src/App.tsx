@@ -2,7 +2,6 @@ import './App.css'
 import JobsPage from "@/pages/JobsPage";
 import JobDetails from "@/pages/JobDetails";
 import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router-dom';
-import AccordionResume from "@/pages/ResumeForm";
 import Signup from "@/pages/Signup";
 import Login from "@/pages/Login";
 import AdminDashboard from "@/pages/admin/Dashboard"
@@ -13,6 +12,7 @@ import UserDashboardLayout from "@/pages/UserDashboard";
 import ResumesComponent from "@/components/dashboard/user/Resumes";
 import SettingsComponent from "@/components/dashboard/user/Settings";
 import { AuthMiddleware } from "@/utils/middleware";
+import VerifyEmail from "@/pages/VerifyEmail"
 
 const routes = createBrowserRouter(
   createRoutesFromElements(
@@ -20,11 +20,9 @@ const routes = createBrowserRouter(
       <Route path="/" element={<LandingPage />} />
       <Route path="signup" element={<Signup />} />
       <Route path="login" element={<Login />} />
+      <Route path="verify-email" element={<VerifyEmail />} />
       <Route path="jobs/detail" element={<JobDetails />} />
       <Route path='jobs' element={<JobsPage />} />
-      <Route path="resume" element={
-          <AccordionResume />
-      }/>
       <Route path="admin/dashboard" element={<AdminDashboard />} />
       
       {/* Protected routes with authentication */}

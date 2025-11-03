@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { FileText, Briefcase, Users, CheckCircle } from 'lucide-react';
+import { FileText, Briefcase, CheckCircle } from 'lucide-react';
 
 export default function LandingPage() {
   return (
@@ -16,7 +16,7 @@ export default function LandingPage() {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              <Link to="/resume">
+              <Link to="/tailor-resume">
                 <Button variant="ghost">Generate Resume</Button>
               </Link>
               <Link to="/login">
@@ -46,7 +46,7 @@ export default function LandingPage() {
                   Get Started Free
                 </Button>
               </Link>
-              <Link to="/resume">
+              <Link to="/resume-builder">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
                   Create Resume
                 </Button>
@@ -55,7 +55,7 @@ export default function LandingPage() {
           </div>
           
           {/* Feature Highlights */}
-          <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="text-center p-6 bg-white rounded-lg shadow-sm">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mb-4">
                 <FileText className="h-6 w-6 text-primary" />
@@ -80,17 +80,6 @@ export default function LandingPage() {
               </p>
             </div>
             
-            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mb-4">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Career Support
-              </h3>
-              <p className="text-gray-600">
-                Get expert guidance and tools to advance your professional journey
-              </p>
-            </div>
           </div>
         </div>
       </section>
@@ -179,7 +168,7 @@ export default function LandingPage() {
               <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/resume" className="text-gray-400 hover:text-white transition-colors">
+                  <Link to="/tailor-resume" className="text-gray-400 hover:text-white transition-colors">
                     Generate Resume
                   </Link>
                 </li>
