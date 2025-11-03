@@ -61,7 +61,6 @@ interface GeneratedResume {
 
 export default function TailorResumePage() {
   const [jobDescription, setJobDescription] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState('modern');
   const [generatedResume, setGeneratedResume] = useState<GeneratedResume | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -82,7 +81,7 @@ export default function TailorResumePage() {
       const url = `${import.meta.env.VITE_API_URL}/resume/generate/`;
       const data = {
         job_description: jobDescription,
-        template: selectedTemplate
+        template: 'classic'
       };
 
       const response = await postRequest(url, data, true);
@@ -91,7 +90,7 @@ export default function TailorResumePage() {
         const result = await response.json();
         setGeneratedResume(result);
         navigate("/resume-builder", {
-          state: {resume: result, template: selectedTemplate}
+          state: {resume: result, template: 'classic'}
         });
         setError('');
       } else {
@@ -109,7 +108,6 @@ export default function TailorResumePage() {
 
   const handleClear = () => {
     setJobDescription('');
-    setSelectedTemplate('modern');
     setGeneratedResume(null);
     setError('');
   };
@@ -298,22 +296,6 @@ export default function TailorResumePage() {
               <div className="char-count">
                 {jobDescription.length} characters
               </div>
-            </div>
-
-            {/* Template Selector */}
-            <div className="form-group">
-              <label htmlFor="template" className="form-label">Resume Template</label>
-              <select 
-                id="template" 
-                value={selectedTemplate} 
-                onChange={(e) => setSelectedTemplate(e.target.value)}
-                className="form-select"
-              >
-                <option value="classic">Classic</option>
-                <option value="modern">Modern</option>
-                <option value="minimal">Minimal</option>
-                <option value="creative">Creative</option>
-              </select>
             </div>
 
             {/* Buttons */}

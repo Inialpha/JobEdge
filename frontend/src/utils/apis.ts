@@ -79,19 +79,6 @@ export const getUser = async () => {
     return response;
 }
 
-export const getAuthors = async (podcastId: string[]) => {
-    const url = `${import.meta.env.VITE_API_URL}/authours/${podcastId}`;
-    const cookie = getCookie('token')
-    const headers = new Headers({
-        'Authorization': `Token ${cookie || ''}`,
-    });
-    const response = await fetch(url, {
-	method: 'GET',
-	headers
-    });
-    return response;
-}
-
 
 export const deleteRequest = async (url: string) => {
     const cookie = getCookie('token')
