@@ -4,7 +4,16 @@ import { FileText, Briefcase, CheckCircle } from 'lucide-react';
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <>
+      <style>{`
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          min-height: 100vh;
+        }
+      `}</style>
+      
+      <div className="min-h-screen flex flex-col">
       {/* Navigation Bar */}
       <nav className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,23 +40,23 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="flex-grow bg-gradient-to-b from-gray-50 to-white">
+      <section className="flex-grow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
           <div className="text-center">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 mb-6">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white mb-6">
               Your Career Journey Starts Here
             </h1>
-            <p className="text-xl sm:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl sm:text-2xl text-white mb-8 max-w-3xl mx-auto opacity-90">
               Create professional resumes, discover opportunities, and land your dream job with JobEdge
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/signup">
-                <Button size="lg" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto bg-white text-purple-600 hover:bg-gray-100">
                   Get Started Free
                 </Button>
               </Link>
               <Link to="/resume-builder">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600">
                   Create Resume
                 </Button>
               </Link>
@@ -56,9 +65,9 @@ export default function LandingPage() {
           
           {/* Feature Highlights */}
           <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mb-4">
-                <FileText className="h-6 w-6 text-primary" />
+            <div className="text-center p-6 bg-white rounded-lg shadow-lg">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full mb-4">
+                <FileText className="h-6 w-6 text-white" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Professional Resumes
@@ -68,9 +77,9 @@ export default function LandingPage() {
               </p>
             </div>
             
-            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mb-4">
-                <Briefcase className="h-6 w-6 text-primary" />
+            <div className="text-center p-6 bg-white rounded-lg shadow-lg">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full mb-4">
+                <Briefcase className="h-6 w-6 text-white" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Job Opportunities
@@ -85,7 +94,7 @@ export default function LandingPage() {
       </section>
 
       {/* About Section */}
-      <section className="bg-gray-50 py-20">
+      <section className="bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -223,5 +232,6 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
+    </>
   );
 }
