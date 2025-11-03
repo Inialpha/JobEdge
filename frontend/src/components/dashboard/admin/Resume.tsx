@@ -74,13 +74,19 @@ export default function ResumeComponent() {
     if (file) {
       console.log(file)
       setIsUploading(true);
+      
+      if (!user?.id) {
+        setFeedback({message: "User authentication required. Please log in again.", variant: 'error'});
+        setIsUploading(false);
+        setTimeout(() => setFeedback(null), 5000);
+        return;
+      }
+      
       try {
         const url = `${import.meta.env.VITE_API_URL}/resumes/`
         const formData = new FormData()
         formData.append("file", file)
-        if (user?.id) {
-          formData.append("user_id", user.id)
-        }
+        formData.append("user_id", user.id)
         const response = await postFormData(url, formData)
         if (response.ok) {
           const resume = await response.json()
