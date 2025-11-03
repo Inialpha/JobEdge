@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-7v_7-u*1*7()b-77k4v^6*v!qp18pf4(*$r@dsrer9!qiy@a!&'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -80,7 +80,7 @@ TEMPLATES = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", "http://localhost:4173",
+    "http://localhost:5173", "http://localhost:4173", "https://job-edge.vercel.app"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
