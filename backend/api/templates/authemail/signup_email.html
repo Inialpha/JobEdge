@@ -2,12 +2,109 @@
 <html lang="en-US">
 <head>
     <meta charset="UTF-8" />
-    <title>Thank you for signing up!</title>
+    <title>Welcome to JobEdge!</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px 30px;
+            color: #333;
+        }
+        .content h2 {
+            color: #667eea;
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .content p {
+            line-height: 1.6;
+            font-size: 16px;
+            margin: 15px 0;
+        }
+        .verify-button {
+            display: inline-block;
+            margin: 30px 0;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .verify-button:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
 </head>
 <body>
-<p>
-Verify your email address by clicking on this link:<br>
-<a href="http://127.0.0.1:8000/api/auth/verify-email/?code={{ code }}">http://127.0.0.1:8000/api/auth/verify-email/?code={{ code }}</a>
-</p>
+    <div class="email-container">
+        <div class="header">
+            <h1>Welcome to JobEdge</h1>
+            <p>Your Career Journey Starts Here</p>
+        </div>
+        
+        <div class="content">
+            <h2>Thank you for signing up!</h2>
+            <p>We're excited to have you join our community. JobEdge is here to help you create professional resumes and find your dream job.</p>
+            
+            <p>To get started, please verify your email address by clicking the button below:</p>
+            
+            <div style="text-align: center;">
+                <a href="http://localhost:5173/verify-email/?code={{ code }}" class="verify-button">
+                    Verify Email Address
+                </a>
+            </div>
+            
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #667eea;">
+                http://localhost:5173/verify-email/?code={{ code }}
+            </p>
+            
+            <p>If you didn't create an account with JobEdge, please ignore this email.</p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2025 JobEdge. All rights reserved.</p>
+            <p>Empowering professionals to take control of their careers</p>
+        </div>
+    </div>
 </body>
 </html>
