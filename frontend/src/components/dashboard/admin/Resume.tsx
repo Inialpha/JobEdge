@@ -1,11 +1,8 @@
 import type React from "react"
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { UploadCloud, FileText, Plus, Download, Trash2 } from "lucide-react"
+import { UploadCloud, FileText, Plus, Download, Trash2, Edit } from "lucide-react"
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { getRequest, postFormData, deleteRequest } from '@/utils/apis'
@@ -20,19 +17,35 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
-// Mock data for resumes
-const mockResumes = [
-  { id: 1, name: "Software Engineer Resume", lastModified: "2023-05-15", status: "Complete" },
-  { id: 2, name: "Product Manager Resume", lastModified: "2023-05-10", status: "In Progress" },
-  { id: 3, name: "Data Analyst Resume", lastModified: "2023-05-05", status: "Complete" },
-]
+interface Resume {
+  id: number;
+  name: string;
+  profession?: string;
+  is_master: boolean;
+  updated_at?: string;
+  lastModified?: string;
+  status?: string;
+}
 
 export default function ResumeComponent() {
-  const [resumes, setResumes] = useState(mockResumes);
+  const [resumes, setResumes] = useState<Resume[]>([]);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [resumeToDelete, setResumeToDelete] = useState<Resume | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.user);
 
@@ -49,6 +62,8 @@ export default function ResumeComponent() {
         }
       } catch (error) {
         console.log(error)
+      } finally {
+        setLoading(false);
       }
     }
     fetchResume()
@@ -63,7 +78,9 @@ export default function ResumeComponent() {
         const url = `${import.meta.env.VITE_API_URL}/resumes/`
         const formData = new FormData()
         formData.append("file", file)
-        formData.append("user_id", user.id)
+        if (user?.id) {
+          formData.append("user_id", user.id)
+        }
         const response = await postFormData(url, formData)
         if (response.ok) {
           const resume = await response.json()
@@ -93,15 +110,22 @@ export default function ResumeComponent() {
     }
   }
 
-  const handleDeleteResume = async (id: number) => {
-    const url = `${import.meta.env.VITE_API_URL}/resumes/${id}/`
+  const handleDeleteClick = (resume: Resume) => {
+    setResumeToDelete(resume);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteResume = async () => {
+    if (!resumeToDelete) return;
+    
+    const url = `${import.meta.env.VITE_API_URL}/resumes/${resumeToDelete.id}/`
     try {
       const response = await deleteRequest(url);
       console.log(response)
       if (response.ok) {
         setFeedback({message: "Resume is succesfully deleted"
         });
-        setResumes(resumes.filter((resume) => resume.id !== id))
+        setResumes(resumes.filter((resume) => resume.id !== resumeToDelete.id))
       } else {
         setFeedback({message: "There was an error please try again", variant: 'error'     })
         console.log("can't fetch resume")
@@ -112,6 +136,8 @@ export default function ResumeComponent() {
       })
       console.log(error)
     } finally {
+      setShowDeleteDialog(false);
+      setResumeToDelete(null);
       setTimeout(() => {
        
         setFeedback(null)
@@ -120,11 +146,11 @@ export default function ResumeComponent() {
 
   }
 
-  const handleEditResume = (resume: any) => {
-    navigate("/resume", {state: {"resume": resume}})
+  const handleEditResume = (resume: Resume) => {
+    navigate("/resume-builder", {state: {"resume": resume}})
   }
 
-  const handleDownload = (resume: any) => {
+  const handleDownload = (resume: Resume) => {
     const editableResume = getEditableResume(resume)
     const doc = generatePDF(editableResume);
     doc.save(resume.name);
@@ -145,8 +171,16 @@ export default function ResumeComponent() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500">Loading resumes...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 space-y-4 md:p-8 pt-6">
+    <div className="p-6">
       {feedback && <Feedback                        message={feedback.message}                  {...(feedback.variant && { variant: feedback.variant })}                              />}
       
       {/* Create Master Resume Dialog */}
@@ -192,92 +226,110 @@ export default function ResumeComponent() {
         disabled={isUploading}
       />
 
-      <h2 className="text-3xl font-bold tracking-tight">Resume</h2>
-      <div className="flex items-center justify-end space-y-2 space-x-4 ">
-        <div className="flex items-center space-x-2">
-          <Button onClick={() => setShowCreateDialog(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Create Master Resume
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the resume "{resumeToDelete?.name || 'Untitled Resume'}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowDeleteDialog(false);
+              setResumeToDelete(null);
+            }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteResume} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Resumes</h1>
+        <Button 
+          onClick={() => setShowCreateDialog(true)}
+          className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Create Master Resume
+        </Button>
+      </div>
+
+      {resumes.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-lg shadow">
+          <FileText className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">No resumes yet</h3>
+          <p className="text-gray-500 mb-4">Create your first resume to get started</p>
+          <Button 
+            onClick={() => navigate("/resume-builder")}
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+          >
+            Create Resume
           </Button>
         </div>
-      </div>
-    <div className="space-y-6">
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Upload Master Resume</CardTitle>
-          <CardDescription>Upload a new master resume file</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Label htmlFor="resume-upload" className="cursor-pointer">
-            <div className="flex items-center justify-center w-full">
-              <Label
-                htmlFor="resume-upload"
-                className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600"
-              >
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <UploadCloud className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" />
-                  <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                    <span className="font-semibold">Click to upload</span> or drag and drop
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">PDF, DOCX or TXT (MAX. 10MB)</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {resumes.map((resume) => (
+            <div
+              key={resume.id}
+              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 border border-gray-200"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                    {resume.name || "Untitled Resume"}
+                  </h3>
+                  {resume.profession && (
+                    <p className="text-sm text-gray-600">{resume.profession}</p>
+                  )}
+                  {resume.is_master && (
+                    <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold text-purple-700 bg-purple-100 rounded">
+                      Master Resume
+                    </span>
+                  )}
                 </div>
-                <Input
-                  id="resume-upload"
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                  accept=".pdf,.docx,.txt"
-                />
-              </Label>
-            </div>
-          </Label>
-        </CardContent>
-      </Card>
+                <FileText className="h-8 w-8 text-purple-600" />
+              </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Resumes</CardTitle>
-          <CardDescription>Manage and edit your existing resumes</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Last Modified</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {resumes.map((resume) => (
-                <TableRow key={resume.id}>
-                  <TableCell className="font-medium">{resume.name}</TableCell>
-                  <TableCell>{resume.lastModified}</TableCell>
-                  <TableCell>{resume.status}</TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button onClick={() => handleEditResume(resume)} size="sm" variant="outline">
-                        <FileText className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleDownload(resume)}>
-                        <Download className="h-4 w-4 mr-2" />
-                        Download
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleDeleteResume(resume.id)}>
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+              <div className="text-sm text-gray-500 mb-4">
+                <p>Updated: {resume.updated_at ? new Date(resume.updated_at).toLocaleDateString() : (resume.lastModified || 'N/A')}</p>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEditResume(resume)}
+                  className="flex-1 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300"
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDownload(resume)}
+                  className="flex-1 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300"
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Download
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDeleteClick(resume)}
+                  className="hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

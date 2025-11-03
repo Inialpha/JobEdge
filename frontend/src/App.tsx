@@ -13,6 +13,7 @@ import ResumesComponent from "@/components/dashboard/user/Resumes";
 import SettingsComponent from "@/components/dashboard/user/Settings";
 import { AuthMiddleware } from "@/utils/middleware";
 import VerifyEmail from "@/pages/VerifyEmail"
+import NotFound from "@/pages/NotFound"
 
 const routes = createBrowserRouter(
   createRoutesFromElements(
@@ -37,6 +38,9 @@ const routes = createBrowserRouter(
           <Route path="settings" element={<SettingsComponent />} />
         </Route>
       </Route>
+      
+      {/* 404 catch-all route */}
+      <Route path="*" element={<NotFound />} />
     </Route>
   )
 )
