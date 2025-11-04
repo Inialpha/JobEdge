@@ -1,8 +1,13 @@
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { FileText, Briefcase, CheckCircle } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 
 export default function LandingPage() {
+  const user = useSelector((state: RootState) => state.user);
+  const isLoggedIn = user.id !== '';
+
   return (
     <>
       <style>{`
@@ -28,12 +33,20 @@ export default function LandingPage() {
               <Link to="/tailor-resume">
                 <Button variant="ghost">Generate Resume</Button>
               </Link>
-              <Link to="/login">
-                <Button variant="ghost">Login</Button>
-              </Link>
-              <Link to="/signup">
-                <Button>Sign Up</Button>
-              </Link>
+              {isLoggedIn ? (
+                <Link to="/dashboard/resumes">
+                  <Button>Dashboard</Button>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login">
+                    <Button variant="ghost">Login</Button>
+                  </Link>
+                  <Link to="/signup">
+                    <Button>Sign Up</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -45,7 +45,7 @@ const userSlice = createSlice({
       currentState.isStaff = isStaff;
       currentState.hasMasterResume = hasMasterResume;
     },
-    logout: (_state: UserState) => {
+    logout: () => {
       return { ...initialState };
     },
     updateUserInfo: (
