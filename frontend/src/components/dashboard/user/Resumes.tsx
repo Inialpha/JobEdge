@@ -21,6 +21,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useDispatch } from "react-redux"
+import { updateUserInfo } from "@/store/userSlice"
+
 
 interface Resume {
   id: string;
@@ -31,6 +34,7 @@ interface Resume {
 }
 
 export default function ResumesComponent() {
+  const dispatch = useDispatch()
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -97,7 +101,6 @@ export default function ResumesComponent() {
         if (response.ok) {
           const resume = await response.json();
           setFeedback({type: 'success', message: "Resume uploaded successfully. Redirecting to editor..."});
-          
           // Navigate to resume-builder with the parsed resume
           setTimeout(() => {
             navigate('/resume-builder', { state: { resume } });
@@ -128,10 +131,15 @@ export default function ResumesComponent() {
     try {
       const url = `${import.meta.env.VITE_API_URL}/resumes/${resumeToDelete.id}/`;
       const response = await deleteRequest(url);
-      
       if (response.ok) {
         setResumes(resumes.filter((r) => r.id !== resumeToDelete.id));
         setFeedback({type: 'success', message: "Resume deleted successfully"});
+        if (resumeToDelete.is_master === true)
+          dispatch(
+            updateUserInfo({
+              hasMasterResume: false,
+            })
+          )
       } else {
         setFeedback({type: 'error', message: "Failed to delete resume. Please try again."});
       }

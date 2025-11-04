@@ -14,6 +14,8 @@ export const AuthMiddleware = () => {
 export const AdminMiddleware = () => {
 
   const user = useSelector((state: RootState) => state.user);
+console.log(user)
   const isStaff = user.isStaff
+console.log(isStaff)
   return isStaff ? <Outlet /> : <Navigate to="/login" />;
 };

@@ -11,7 +11,7 @@ import ResumeBuilder from "@/pages/ResumeBuilder";
 import UserDashboardLayout from "@/pages/UserDashboard";
 import ResumesComponent from "@/components/dashboard/user/Resumes";
 import SettingsComponent from "@/components/dashboard/user/Settings";
-import { AuthMiddleware } from "@/utils/middleware";
+import { AuthMiddleware, AdminMiddleware } from "@/utils/middleware";
 import VerifyEmail from "@/pages/VerifyEmail"
 import NotFound from "@/pages/NotFound"
 
@@ -23,8 +23,7 @@ const routes = createBrowserRouter(
       <Route path="login" element={<Login />} />
       <Route path="verify-email" element={<VerifyEmail />} />
       <Route path="jobs/detail" element={<JobDetails />} />
-      <Route path='jobs' element={<JobsPage />} />
-      <Route path="admin/dashboard" element={<AdminDashboard />} />
+      <Route path="jobs" element={<JobsPage />} />
       
       {/* Protected routes with authentication */}
       <Route element={<AuthMiddleware />}>
@@ -36,6 +35,9 @@ const routes = createBrowserRouter(
           <Route index element={<ResumesComponent />} />
           <Route path="resumes" element={<ResumesComponent />} />
           <Route path="settings" element={<SettingsComponent />} />
+        </Route>
+        <Route element={<AdminMiddleware />}>
+          <Route path="admin/dashboard" element={<AdminDashboard />} />
         </Route>
       </Route>
       

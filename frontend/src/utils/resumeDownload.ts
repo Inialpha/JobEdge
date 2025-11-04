@@ -21,11 +21,16 @@ export const downloadPDF = async (elementId: string, user: User) => {
   const html2pdf = (window as { html2pdf?: () => { set: (opt: unknown) => { from: (el: HTMLElement) => { save: () => void } } } }).html2pdf
   if (html2pdf) {
     const opt = {
-      margin: [0.5, 0.5, 1.2, 0.5],
+      margin: [0.5, 0.5, 0.5, 0.5],
       filename: `${user.firstName}_${user.lastName}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      pagebreak: {
+        mode: ['css',],
+	avoid: ["p", "li", "span", "h1", "h2", "h3", ".no-break"]
+	
+      },
     }
     html2pdf().set(opt).from(element).save()
   } else {

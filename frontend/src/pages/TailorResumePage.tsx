@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { postRequest } from "@/utils/apis";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+
 
 interface ContactInfo {
   name?: string;
@@ -60,6 +63,7 @@ interface GeneratedResume {
 }
 
 export default function TailorResumePage() {
+  const user = useSelector((state: RootState) => state.user);
   const [jobDescription, setJobDescription] = useState('');
   const [generatedResume, setGeneratedResume] = useState<GeneratedResume | null>(null);
   const [loading, setLoading] = useState(false);
@@ -72,6 +76,10 @@ export default function TailorResumePage() {
       setError('Please enter a job description');
       return;
     }
+    if (!user.hasMasterResume) {
+      setError("Please go to your dashboard and add your master resume first");
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -81,7 +89,6 @@ export default function TailorResumePage() {
       const url = `${import.meta.env.VITE_API_URL}/resume/generate/`;
       const data = {
         job_description: jobDescription,
-        template: 'classic'
       };
 
       const response = await postRequest(url, data, true);
@@ -90,7 +97,7 @@ export default function TailorResumePage() {
         const result = await response.json();
         setGeneratedResume(result);
         navigate("/resume-builder", {
-          state: {resume: result, template: 'classic'}
+          state: {resume: result}
         });
         setError('');
       } else {

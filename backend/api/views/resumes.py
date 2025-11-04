@@ -25,14 +25,21 @@ class ResumeAPIView(APIView):
         """
         Retrieve a single resume by ID or list all resumes.
         """
+        user = request.user
         if pk:
             # Fetch a single resume
             resume = get_object_or_404(Resume, pk=pk)
-            serializer = ResumeSerializer(resume)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            if user.is_staff or resume.user == user:
+                serializer = ResumeSerializer(resume)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    "details": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
         else:
-            # Fetch all resumes
-            resumes = Resume.objects.all()
+            if user.is_staff:
+                resumes = Resume.objects.all()
+            else:
+                resumes = Resume.objects.filter(user=user)
             serializer = ResumeSerializer(resumes, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -320,8 +327,8 @@ class ConvertPdfToDocxAPIView(APIView):
     """
     API View for converting PDF to DOCX format using pdf2docx library.
     """
-    #authentication_classes = [TokenAuthentication]
-    #permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         """
