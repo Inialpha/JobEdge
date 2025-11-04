@@ -104,7 +104,7 @@ export const MinimalTemplate = ({ resume }: MinimalTemplateProps) => {
             {resume.projects.map((proj, index) => (
               <div key={index} style={{ marginBottom: '10px' }}>
                 <div><strong>{escapeHtml(proj?.name || '')}</strong></div>
-                <div>{escapeHtml(proj?.description || '')}</div>
+                <div className="no-break">{escapeHtml(proj?.description || '')}</div>
                 <div><em>{escapeHtml(proj?.technologies || '')}</em></div>
               </div>
             ))}
