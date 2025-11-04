@@ -31,7 +31,7 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const user = useSelector((state: RootState) => state.user);
   const { activeView, setActiveView } = useView("dashboard");
-  console.log(user)
+  //console.log(user)
   
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
 

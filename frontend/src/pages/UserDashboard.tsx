@@ -4,13 +4,28 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Bell, Search, Menu, X, FileText, Settings, LogOut } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 import { useView } from "@/hooks/useView";
+import { logout } from "@/store/userSlice";
+import { postRequest } from "@/utils/apis";
+import { deleteCookie } from "@/utils/cookieManager";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function UserDashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const user = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { activeView, setActiveView } = useView("resumes");
 
@@ -29,13 +44,56 @@ export default function UserDashboardLayout() {
     }
   };
 
-  const handleLogout = () => {
-    // TODO: Implement logout functionality
-    navigate("/login");
+  const handleLogoutClick = () => {
+    setShowLogoutDialog(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/auth/logout/`;
+      await postRequest(url, {});
+      
+      // Clear the token cookie
+      deleteCookie('token');
+      
+      // Dispatch logout action to clear user state
+      dispatch(logout());
+      
+      // Navigate to login page
+      navigate("/login");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      // Even if the API call fails, we should still log out locally
+      deleteCookie('token');
+      dispatch(logout());
+      navigate("/login");
+    } finally {
+      setShowLogoutDialog(false);
+    }
   };
 
   return (
     <div className="h-screen bg-gray-100 w-full">
+      {/* Logout Confirmation Dialog */}
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You will need to sign in again to access your dashboard and resumes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowLogoutDialog(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogoutConfirm} className="bg-red-600 hover:bg-red-700">
+              Logout
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-20">
         <div className="flex items-center justify-between px-6 py-4">
@@ -100,7 +158,7 @@ export default function UserDashboardLayout() {
             <div className="border-t border-gray-200 mt-4 pt-4">
               <button
                 className="flex items-center px-6 py-3 text-gray-700 w-full rounded-lg hover:bg-gray-100 transition-colors"
-                onClick={handleLogout}
+                onClick={handleLogoutClick}
               >
                 <LogOut className="h-5 w-5 mr-3" />
                 Logout

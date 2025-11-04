@@ -8,14 +8,16 @@ import { createRoot, Root } from 'react-dom/client';
 import { postRequest } from '@/utils/apis';
 import { useSelector } from "react-redux";
 import { RootState } from '@/store/store';
+import { useDispatch } from "react-redux"
+import { updateUserInfo } from "@/store/userSlice"
 
 export default function ResumeBuilder() {
+  const dispatch = useDispatch()
   const location = useLocation();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.user);
   const passedResume = location.state?.resume;
   const passedTemplate = location.state?.template || 'classic';
-console.log("passedResume", passedResume)
   const rootRef = useRef<Root | null>(null);
   
   const [currentTemplate, setCurrentTemplate] = useState<Template>(passedTemplate);
@@ -26,7 +28,6 @@ console.log("passedResume", passedResume)
   const [saveMessage, setSaveMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  console.log("buildee", resume)
 
   const [newExperience, setNewExperience] = useState<ProfessionalExperience>({
     organization: '',
@@ -214,8 +215,6 @@ console.log("passedResume", passedResume)
   const saveAsMasterResume = useCallback(async () => {
     // Validate required fields
     const errors: {[key: string]: string} = {};
-    
-    // Validate personal information
     if (!resume.personalInformation.name.trim()) {
       errors['personalInformation.name'] = 'Name is required';
     }
@@ -278,7 +277,6 @@ console.log("passedResume", passedResume)
     // Clear validation errors if all is good
     setValidationErrors({});
     
-    // Clear any existing timeout
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
@@ -297,6 +295,11 @@ console.log("passedResume", passedResume)
       if (response.ok) {
         await response.json();
         setSaveMessage({type: 'success', text: 'Resume saved as master resume successfully!'});
+        dispatch(
+          updateUserInfo({
+            hasMasterResume: true
+          })
+        )
         setTimeout(() => {
           navigate('/dashboard', { state: { component: 'resumes' } });
         }, 1500);
