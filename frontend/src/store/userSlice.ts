@@ -60,8 +60,8 @@ const userSlice = createSlice({
       const { firstName, lastName, isStaff, hasMasterResume } = action.payload;
       if (firstName) currentState.firstName = firstName;
       if (lastName) currentState.lastName = lastName;
-      if (isStaff) currentState.isStaff = isStaff;
-      if (hasMasterResume) currentState.hasMasterResume = hasMasterResume;
+      if (isStaff !== undefined) currentState.isStaff = isStaff;
+      if (hasMasterResume !== undefined) currentState.hasMasterResume = hasMasterResume;
     },
   },
 });
