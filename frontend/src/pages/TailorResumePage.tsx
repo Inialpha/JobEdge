@@ -3,6 +3,7 @@ import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { postRequest } from "@/utils/apis";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 
 interface ContactInfo {
