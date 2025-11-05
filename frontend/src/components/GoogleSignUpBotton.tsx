@@ -61,6 +61,7 @@ export default function GoogleSignUpButton() {
             'id': userJson.id,
             'firstName': userJson.first_name,
             'lastName': userJson.last_name,
+            'email': userJson.email,
             'isStaff': userJson.is_staff,
             'hasMasterResume': userJson.has_master_resume,
           }

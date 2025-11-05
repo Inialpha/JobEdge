@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation } from '@/types/resume';
 import { getEditableResume } from '@/utils/resumeUtils';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
@@ -10,6 +10,14 @@ import { useSelector } from "react-redux";
 import { RootState } from '@/store/store';
 import { useDispatch } from "react-redux"
 import { updateUserInfo } from "@/store/userSlice"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 export default function ResumeBuilder() {
   const dispatch = useDispatch()
@@ -221,6 +229,11 @@ export default function ResumeBuilder() {
       errors['personalInformation.profession'] = 'Profession is required';
     }
     
+    // Validate professional summary
+    if (!resume.summary.trim()) {
+      errors['summary'] = 'Professional summary is required';
+    }
+    
     // Validate education
     resume.education.forEach((edu, index) => {
       if (!edu.institution.trim()) {
@@ -284,8 +297,57 @@ export default function ResumeBuilder() {
     setSaveMessage(null);
     try {
       const url = `${import.meta.env.VITE_API_URL}/resume/from-object/`;
+      
+      // Trim all resume values and nested values to remove empty strings
+      const trimmedResume: ResumeData = {
+        personalInformation: {
+          name: resume.personalInformation.name.trim(),
+          profession: resume.personalInformation.profession?.trim() || '',
+          email: resume.personalInformation.email.trim(),
+          linkedin: resume.personalInformation.linkedin.trim(),
+          twitter: resume.personalInformation.twitter.trim(),
+          phone: resume.personalInformation.phone.trim(),
+          website: resume.personalInformation.website.trim(),
+          address: resume.personalInformation.address.trim()
+        },
+        summary: resume.summary.trim(),
+        skills: resume.skills.map(skill => skill.trim()).filter(skill => skill !== ''),
+        professionalExperience: resume.professionalExperience.map(exp => ({
+          organization: exp.organization.trim(),
+          role: exp.role.trim(),
+          startDate: exp.startDate.trim(),
+          endDate: exp.endDate.trim(),
+          location: exp.location.trim(),
+          responsibilities: exp.responsibilities.map(resp => resp.trim()).filter(resp => resp !== '')
+        })),
+        education: resume.education.map(edu => ({
+          institution: edu.institution.trim(),
+          degree: edu.degree.trim(),
+          field: edu.field.trim(),
+          startDate: edu.startDate.trim(),
+          endDate: edu.endDate.trim(),
+          gpa: edu.gpa.trim()
+        })),
+        projects: resume.projects.map(proj => ({
+          name: proj.name.trim(),
+          description: proj.description.trim(),
+          technologies: proj.technologies.trim(),
+          link: proj.link.trim()
+        })),
+        certifications: resume.certifications.map(cert => ({
+          name: cert.name.trim(),
+          issuer: cert.issuer.trim(),
+          year: cert.year.trim()
+        })),
+        awards: resume.awards.map(award => ({
+          title: award.title.trim(),
+          organization: award.organization.trim(),
+          year: award.year.trim()
+        }))
+      };
+      
       const resumeData = {
-        ...resume,
+        ...trimmedResume,
         is_master: true
       };
       
@@ -813,6 +875,22 @@ export default function ResumeBuilder() {
         }
       `}</style>
       
+      <div style={{background: 'white', padding: '10px 20px', marginBottom: '10px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}}>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/dashboard">Dashboard</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Resume Builder</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+      
       <div className="container">
         {/* Editor Panel */}
         <div className="editor-panel">
@@ -971,7 +1049,16 @@ export default function ResumeBuilder() {
             {/* Professional Summary */}
             <div className="section">
               <div className="section-title">Professional Summary</div>
-              <textarea value={resume.summary} onChange={(e) => updateResume('summary', e.target.value)} />
+              <textarea 
+                value={resume.summary} 
+                onChange={(e) => updateResume('summary', e.target.value)}
+                style={{borderColor: validationErrors['summary'] ? '#dc3545' : undefined}}
+              />
+              {validationErrors['summary'] && (
+                <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                  {validationErrors['summary']}
+                </div>
+              )}
             </div>
 
             {/* Skills */}
@@ -1355,12 +1442,6 @@ export default function ResumeBuilder() {
                   placeholder="Technologies Used" 
                   value={newProject.technologies}
                   onChange={(e) => setNewProject({...newProject, technologies: e.target.value})}
-                />
-                <input 
-                  type="text" 
-                  placeholder="Project Link (optional)" 
-                  value={newProject.link}
-                  onChange={(e) => setNewProject({...newProject, link: e.target.value})}
                 />
                 <button className="add-btn" onClick={addProjectItem}>Add Project</button>
               </div>
