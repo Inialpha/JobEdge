@@ -1413,12 +1413,6 @@ export default function ResumeBuilder() {
                     value={proj.technologies}
                     onChange={(e) => updateProjectItem(index, 'technologies', e.target.value)}
                   />
-                  <input 
-                    type="text" 
-                    placeholder="Project Link (optional)" 
-                    value={proj.link}
-                    onChange={(e) => updateProjectItem(index, 'link', e.target.value)}
-                  />
                   <button className="remove-btn" onClick={() => removeProject(index)}>Remove</button>
                 </div>
               ))}
