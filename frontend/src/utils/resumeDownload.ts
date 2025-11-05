@@ -28,7 +28,7 @@ export const downloadPDF = async (elementId: string, user: User) => {
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
       pagebreak: {
         mode: ['css',],
-	avoid: ["p", "li", "span", "h1", "h2", "h3", ".no-break"]
+	avoid: ["p", "li", "span", "h1", "h2", "h3", "strong", ".no-break"]
 	
       },
     }

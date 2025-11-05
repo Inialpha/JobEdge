@@ -6,7 +6,7 @@ from django.core.validators import URLValidator, validate_email
 from django.core.exceptions import ValidationError
 from ..models import Resume, Job, User
 from ..serializers.resume import ResumeSerializer
-from file_reader import File
+from file_reader import File, extract_text_safe
 from ai_services.resume_extractor import ai, generate_resume
 from django.db.models import Q
 from ..serializers.job import JobSerializer 
@@ -57,9 +57,9 @@ class ResumeAPIView(APIView):
             print("No user for user's id")
             return Response({"details": "No user for user's id"}, status=status.HTTP_400_BAD_REQUEST)
 
-        file = File(file_name)
-        resume_data = ai(file.text)
-        resume_data["text"] = file.text
+        text = extract_text_safe(file_name)
+        resume_data = ai(text)
+        resume_data["text"] = text
         resume_data['user'] = user_id
         resume_data["is_master"] = True
         
@@ -77,11 +77,8 @@ class ResumeAPIView(APIView):
             serializer = ResumeSerializer(data=resume_data)
             if not serializer.is_valid():
                 pass
-            print(resume_data, "\n\n\n\n")
-            print(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
-            print(e)
             return Response({"error": "An error occured"}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk):
@@ -101,7 +98,6 @@ class ResumeAPIView(APIView):
         """
         resume = get_object_or_404(Resume, pk=pk)
         user = request.user
-        print(user)
         if resume.is_master:
             user.has_master_resume = False
             user.save()
@@ -280,7 +276,7 @@ class ResumeFromObjectAPIView(APIView):
         url_validator = URLValidator()
         for url_field in url_fields:
             url_value = resume_data.get(url_field, "")
-            if url_value:  # Only validate non-empty URLs
+            if url_value:
                 try:
                     url_validator(url_value)
                 except ValidationError:
@@ -290,7 +286,7 @@ class ResumeFromObjectAPIView(APIView):
         
         # Validate email only if it has a value
         email_value = resume_data.get("email", "")
-        if email_value:  # Only validate non-empty email
+        if email_value:
             try:
                 validate_email(email_value)
             except ValidationError:

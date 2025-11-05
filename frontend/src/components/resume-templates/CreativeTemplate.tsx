@@ -63,7 +63,7 @@ export const CreativeTemplate = ({ resume }: CreativeTemplateProps) => {
       )}
       {resume?.education?.length > 0 && (
         <>
-          <div className="resume-section-title">Education</div>
+          <div className="resume-section-title no-break">Education</div>
           <div className="resume-content">
             {resume.education.map((edu, index) => (
               <div key={index} style={{ marginBottom: '10px' }}>
@@ -78,7 +78,7 @@ export const CreativeTemplate = ({ resume }: CreativeTemplateProps) => {
       )}
       {skills.length > 0 && (
         <>
-          <div className="resume-section-title">Skills</div>
+          <div className="resume-section-title no-break">Skills</div>
           <div className="resume-content">
             {skills.map((skill, index) => (
               <span key={index} className="skill-tag">{escapeHtml(skill)} {index < skills.length - 1 && (" • ")}</span>
@@ -88,7 +88,7 @@ export const CreativeTemplate = ({ resume }: CreativeTemplateProps) => {
       )}
       {resume?.certifications?.length > 0 && (
         <>
-          <div className="resume-section-title">Certifications</div>
+          <div className="resume-section-title no-break">Certifications</div>
           <div className="resume-content">
             {resume.certifications.map((cert, index) => (
               <div key={index}>
@@ -101,7 +101,7 @@ export const CreativeTemplate = ({ resume }: CreativeTemplateProps) => {
       )}
       {resume?.projects?.length > 0 && (
         <>
-          <div className="resume-section-title">Projects</div>
+          <div className="resume-section-title no-break">Projects</div>
           <div className="resume-content">
             {resume.projects.map((proj, index) => (
               <div key={index} style={{ marginBottom: '10px' }}>
@@ -115,7 +115,7 @@ export const CreativeTemplate = ({ resume }: CreativeTemplateProps) => {
       )}
       {resume?.awards?.length > 0 && (
         <>
-          <div className="resume-section-title">Awards</div>
+          <div className="resume-section-title no-break">Awards</div>
           <div className="resume-content">
             {resume.awards.map((award, index) => (
               <div key={index}>

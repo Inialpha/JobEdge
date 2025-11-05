@@ -17,10 +17,9 @@ export default function ResumeBuilder() {
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.user);
   const passedResume = location.state?.resume;
-  const passedTemplate = location.state?.template || 'classic';
   const rootRef = useRef<Root | null>(null);
   
-  const [currentTemplate, setCurrentTemplate] = useState<Template>(passedTemplate);
+  const [currentTemplate, setCurrentTemplate] = useState<Template>("classic");
   const [resume, setResume] = useState<ResumeData>(() => getEditableResume(passedResume));
   const [isSaving, setIsSaving] = useState(false);
   const [isPdfDownloading, setIsPdfDownloading] = useState(false);
