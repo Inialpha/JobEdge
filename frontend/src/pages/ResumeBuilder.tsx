@@ -301,49 +301,49 @@ export default function ResumeBuilder() {
       // Trim all resume values and nested values to remove empty strings
       const trimmedResume: ResumeData = {
         personalInformation: {
-          name: resume.personalInformation.name.trim(),
-          profession: resume.personalInformation.profession?.trim() || '',
-          email: resume.personalInformation.email.trim(),
-          linkedin: resume.personalInformation.linkedin.trim(),
-          twitter: resume.personalInformation.twitter.trim(),
-          phone: resume.personalInformation.phone.trim(),
-          website: resume.personalInformation.website.trim(),
-          address: resume.personalInformation.address.trim()
+          name: resume.personalInformation?.name?.trim() || '',
+          profession: resume.personalInformation?.profession?.trim() || '',
+          email: resume.personalInformation?.email?.trim() || '',
+          linkedin: resume.personalInformation?.linkedin?.trim() || '',
+          twitter: resume.personalInformation?.twitter?.trim() || '',
+          phone: resume.personalInformation?.phone?.trim() || '',
+          website: resume.personalInformation?.website?.trim() || '',
+          address: resume.personalInformation?.address?.trim() || ''
         },
-        summary: resume.summary.trim(),
-        skills: resume.skills.map(skill => skill.trim()).filter(skill => skill !== ''),
-        professionalExperience: resume.professionalExperience.map(exp => ({
-          organization: exp.organization.trim(),
-          role: exp.role.trim(),
-          startDate: exp.startDate.trim(),
-          endDate: exp.endDate.trim(),
-          location: exp.location.trim(),
-          responsibilities: exp.responsibilities.map(resp => resp.trim()).filter(resp => resp !== '')
-        })),
-        education: resume.education.map(edu => ({
-          institution: edu.institution.trim(),
-          degree: edu.degree.trim(),
-          field: edu.field.trim(),
-          startDate: edu.startDate.trim(),
-          endDate: edu.endDate.trim(),
-          gpa: edu.gpa.trim()
-        })),
-        projects: resume.projects.map(proj => ({
-          name: proj.name.trim(),
-          description: proj.description.trim(),
-          technologies: proj.technologies.trim(),
-          link: proj.link.trim()
-        })),
-        certifications: resume.certifications.map(cert => ({
-          name: cert.name.trim(),
-          issuer: cert.issuer.trim(),
-          year: cert.year.trim()
-        })),
-        awards: resume.awards.map(award => ({
-          title: award.title.trim(),
-          organization: award.organization.trim(),
-          year: award.year.trim()
-        }))
+        summary: resume.summary?.trim() || '',
+        skills: resume.skills?.map(skill => skill?.trim()).filter(skill => skill !== '') || [],
+        professionalExperience: resume.professionalExperience?.map(exp => ({
+          organization: exp.organization?.trim() || '',
+          role: exp.role?.trim() || '',
+          startDate: exp.startDate?.trim() || '',
+          endDate: exp.endDate?.trim() || '',
+          location: exp.location?.trim() || '',
+          responsibilities: exp.responsibilities?.map(resp => resp?.trim()).filter(resp => resp !== '') || []
+        })) || [],
+        education: resume.education?.map(edu => ({
+          institution: edu.institution?.trim() || '',
+          degree: edu.degree?.trim() || '',
+          field: edu.field?.trim() || '',
+          startDate: edu.startDate?.trim() || '',
+          endDate: edu.endDate?.trim() || '',
+          gpa: edu.gpa?.trim() || ''
+        })) || [],
+        projects: resume.projects?.map(proj => ({
+          name: proj.name?.trim() || '',
+          description: proj.description?.trim() || '',
+          technologies: proj.technologies?.trim() || '',
+          link: proj.link?.trim() || ''
+        })) || [],
+        certifications: resume.certifications?.map(cert => ({
+          name: cert.name?.trim() || '',
+          issuer: cert.issuer?.trim() || '',
+          year: cert.year?.trim() || ''
+        })) || [],
+        awards: resume.awards?.map(award => ({
+          title: award.title?.trim() || '',
+          organization: award.organization?.trim() || '',
+          year: award.year?.trim() || ''
+        })) || []
       };
       
       const resumeData = {
