@@ -376,7 +376,7 @@ export default function ResumeBuilder() {
       setIsSaving(false);
       saveTimeoutRef.current = setTimeout(() => setSaveMessage(null), 5000);
     }
-  }, [resume, navigate]);
+  }, [resume, navigate, dispatch]);
 
   const updateResponsibility = useCallback((expIndex: number, respIndex: number, value: string) => {
     const updated = [...resume.professionalExperience];
