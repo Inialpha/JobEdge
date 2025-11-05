@@ -311,14 +311,14 @@ export default function ResumeBuilder() {
           address: resume.personalInformation?.address?.trim() || ''
         },
         summary: resume.summary?.trim() || '',
-        skills: resume.skills?.map(skill => skill?.trim()).filter(skill => skill !== '') || [],
+        skills: resume.skills?.map(skill => skill?.trim()).filter(skill => skill && skill !== '') || [],
         professionalExperience: resume.professionalExperience?.map(exp => ({
           organization: exp.organization?.trim() || '',
           role: exp.role?.trim() || '',
           startDate: exp.startDate?.trim() || '',
           endDate: exp.endDate?.trim() || '',
           location: exp.location?.trim() || '',
-          responsibilities: exp.responsibilities?.map(resp => resp?.trim()).filter(resp => resp !== '') || []
+          responsibilities: exp.responsibilities?.map(resp => resp?.trim()).filter(resp => resp && resp !== '') || []
         })) || [],
         education: resume.education?.map(edu => ({
           institution: edu.institution?.trim() || '',
