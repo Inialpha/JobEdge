@@ -18,6 +18,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import cleanData from "@/utils/cleanData"
+
 
 export default function ResumeBuilder() {
   const dispatch = useDispatch()
@@ -299,52 +301,7 @@ export default function ResumeBuilder() {
       const url = `${import.meta.env.VITE_API_URL}/resume/from-object/`;
       
       // Trim all resume values and nested values to remove empty strings
-      const trimmedResume: ResumeData = {
-        personalInformation: {
-          name: resume.personalInformation?.name?.trim() || '',
-          profession: resume.personalInformation?.profession?.trim() || '',
-          email: resume.personalInformation?.email?.trim() || '',
-          linkedin: resume.personalInformation?.linkedin?.trim() || '',
-          twitter: resume.personalInformation?.twitter?.trim() || '',
-          phone: resume.personalInformation?.phone?.trim() || '',
-          website: resume.personalInformation?.website?.trim() || '',
-          address: resume.personalInformation?.address?.trim() || ''
-        },
-        summary: resume.summary?.trim() || '',
-        skills: resume.skills?.map(skill => skill?.trim()).filter(skill => skill && skill !== '') || [],
-        professionalExperience: resume.professionalExperience?.map(exp => ({
-          organization: exp.organization?.trim() || '',
-          role: exp.role?.trim() || '',
-          startDate: exp.startDate?.trim() || '',
-          endDate: exp.endDate?.trim() || '',
-          location: exp.location?.trim() || '',
-          responsibilities: exp.responsibilities?.map(resp => resp?.trim()).filter(resp => resp && resp !== '') || []
-        })) || [],
-        education: resume.education?.map(edu => ({
-          institution: edu.institution?.trim() || '',
-          degree: edu.degree?.trim() || '',
-          field: edu.field?.trim() || '',
-          startDate: edu.startDate?.trim() || '',
-          endDate: edu.endDate?.trim() || '',
-          gpa: edu.gpa?.trim() || ''
-        })) || [],
-        projects: resume.projects?.map(proj => ({
-          name: proj.name?.trim() || '',
-          description: proj.description?.trim() || '',
-          technologies: proj.technologies?.trim() || '',
-          link: proj.link?.trim() || ''
-        })) || [],
-        certifications: resume.certifications?.map(cert => ({
-          name: cert.name?.trim() || '',
-          issuer: cert.issuer?.trim() || '',
-          year: cert.year?.trim() || ''
-        })) || [],
-        awards: resume.awards?.map(award => ({
-          title: award.title?.trim() || '',
-          organization: award.organization?.trim() || '',
-          year: award.year?.trim() || ''
-        })) || []
-      };
+      const trimmedResume: ResumeData = cleanData(trimmedResume)
       
       const resumeData = {
         ...trimmedResume,
@@ -405,10 +362,6 @@ export default function ResumeBuilder() {
   }, [user]);
 
   const handleDocxDownload = useCallback(async () => {
-    //setSaveMessage({type: 'error', text: 'Docx is not available for this template'});
-    //setTimeout(() => setSaveMessage(null), 3000);
-    //return
-    
     setIsDocxDownloading(true);
     try {
       await downloadDocx(resume, user, currentTemplate);

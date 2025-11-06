@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useDispatch } from "react-redux"
 import { updateUserInfo } from "@/store/userSlice"
+import { useQuery } from '@tanstack/react-query';
 
 
 interface Resume {
@@ -36,7 +37,7 @@ interface Resume {
 export default function ResumesComponent() {
   const dispatch = useDispatch()
   const [resumes, setResumes] = useState<Resume[]>([]);
-  const [loading, setLoading] = useState(true);
+  //const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [resumeToDelete, setResumeToDelete] = useState<Resume | null>(null);
@@ -44,25 +45,36 @@ export default function ResumesComponent() {
   const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchResumes();
-  }, []);
 
   const fetchResumes = async () => {
     try {
       const url = `${import.meta.env.VITE_API_URL}/resumes/`;
-      const response = await getRequest(url);
-      
+      const response = await getRequest(url);      
       if (response.ok) {
         const data = await response.json();
-        setResumes(data);
+        console.log("data", data)
+        return data
       }
+      throw new Error('Failed to fetch resumes');
+    
     } catch (error) {
       console.error("Error fetching resumes:", error);
-    } finally {
-      setLoading(false);
     }
-  };
+      throw error;
+  }
+
+  const { data: resumeData, isLoading: isLoadingResume } = useQuery({
+    queryKey: ['userData'],
+    queryFn: fetchResumes,
+    //initialData: [],
+  })
+
+  useEffect(() => {
+    if (resumeData) {
+      console.log("(resumeData)", resumeData)
+      setResumes(resumeData || []);
+    }
+  }, [resumeData]);
 
   const handleEdit = (resume: Resume) => {
     navigate("/resume-builder", { state: { resume } });
@@ -155,7 +167,7 @@ export default function ResumesComponent() {
     }
   };
 
-  if (loading) {
+  if (isLoadingResume) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-gray-500">Loading resumes...</p>
