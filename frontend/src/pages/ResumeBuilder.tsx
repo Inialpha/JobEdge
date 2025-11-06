@@ -301,7 +301,7 @@ export default function ResumeBuilder() {
       const url = `${import.meta.env.VITE_API_URL}/resume/from-object/`;
       
       // Trim all resume values and nested values to remove empty strings
-      const trimmedResume: ResumeData = cleanData(trimmedResume)
+      const trimmedResume: ResumeData = cleanData(resume)
       
       const resumeData = {
         ...trimmedResume,
