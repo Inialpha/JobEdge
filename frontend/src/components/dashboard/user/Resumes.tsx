@@ -59,8 +59,8 @@ export default function ResumesComponent() {
     
     } catch (error) {
       console.error("Error fetching resumes:", error);
-    }
       throw error;
+    }
   }
 
   const { data: resumeData, isLoading: isLoadingResume } = useQuery({
