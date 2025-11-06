@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation } from '@/types/resume';
 import { getEditableResume } from '@/utils/resumeUtils';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
@@ -10,6 +10,16 @@ import { useSelector } from "react-redux";
 import { RootState } from '@/store/store';
 import { useDispatch } from "react-redux"
 import { updateUserInfo } from "@/store/userSlice"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import cleanData from "@/utils/cleanData"
+
 
 export default function ResumeBuilder() {
   const dispatch = useDispatch()
@@ -17,10 +27,9 @@ export default function ResumeBuilder() {
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.user);
   const passedResume = location.state?.resume;
-  const passedTemplate = location.state?.template || 'classic';
   const rootRef = useRef<Root | null>(null);
   
-  const [currentTemplate, setCurrentTemplate] = useState<Template>(passedTemplate);
+  const [currentTemplate, setCurrentTemplate] = useState<Template>("classic");
   const [resume, setResume] = useState<ResumeData>(() => getEditableResume(passedResume));
   const [isSaving, setIsSaving] = useState(false);
   const [isPdfDownloading, setIsPdfDownloading] = useState(false);
@@ -222,6 +231,11 @@ export default function ResumeBuilder() {
       errors['personalInformation.profession'] = 'Profession is required';
     }
     
+    // Validate professional summary
+    if (!resume.summary.trim()) {
+      errors['summary'] = 'Professional summary is required';
+    }
+    
     // Validate education
     resume.education.forEach((edu, index) => {
       if (!edu.institution.trim()) {
@@ -285,8 +299,12 @@ export default function ResumeBuilder() {
     setSaveMessage(null);
     try {
       const url = `${import.meta.env.VITE_API_URL}/resume/from-object/`;
+      
+      // Trim all resume values and nested values to remove empty strings
+      const trimmedResume: ResumeData = cleanData(resume)
+      
       const resumeData = {
-        ...resume,
+        ...trimmedResume,
         is_master: true
       };
       
@@ -315,7 +333,7 @@ export default function ResumeBuilder() {
       setIsSaving(false);
       saveTimeoutRef.current = setTimeout(() => setSaveMessage(null), 5000);
     }
-  }, [resume, navigate]);
+  }, [resume, navigate, dispatch]);
 
   const updateResponsibility = useCallback((expIndex: number, respIndex: number, value: string) => {
     const updated = [...resume.professionalExperience];
@@ -344,10 +362,6 @@ export default function ResumeBuilder() {
   }, [user]);
 
   const handleDocxDownload = useCallback(async () => {
-    //setSaveMessage({type: 'error', text: 'Docx is not available for this template'});
-    //setTimeout(() => setSaveMessage(null), 3000);
-    //return
-    
     setIsDocxDownloading(true);
     try {
       await downloadDocx(resume, user, currentTemplate);
@@ -814,6 +828,22 @@ export default function ResumeBuilder() {
         }
       `}</style>
       
+      <div style={{background: 'white', padding: '10px 20px', marginBottom: '10px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}}>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/dashboard">Dashboard</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Resume Builder</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+      
       <div className="container">
         {/* Editor Panel */}
         <div className="editor-panel">
@@ -972,7 +1002,16 @@ export default function ResumeBuilder() {
             {/* Professional Summary */}
             <div className="section">
               <div className="section-title">Professional Summary</div>
-              <textarea value={resume.summary} onChange={(e) => updateResume('summary', e.target.value)} />
+              <textarea 
+                value={resume.summary} 
+                onChange={(e) => updateResume('summary', e.target.value)}
+                style={{borderColor: validationErrors['summary'] ? '#dc3545' : undefined}}
+              />
+              {validationErrors['summary'] && (
+                <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                  {validationErrors['summary']}
+                </div>
+              )}
             </div>
 
             {/* Skills */}
@@ -1327,12 +1366,6 @@ export default function ResumeBuilder() {
                     value={proj.technologies}
                     onChange={(e) => updateProjectItem(index, 'technologies', e.target.value)}
                   />
-                  <input 
-                    type="text" 
-                    placeholder="Project Link (optional)" 
-                    value={proj.link}
-                    onChange={(e) => updateProjectItem(index, 'link', e.target.value)}
-                  />
                   <button className="remove-btn" onClick={() => removeProject(index)}>Remove</button>
                 </div>
               ))}
@@ -1356,12 +1389,6 @@ export default function ResumeBuilder() {
                   placeholder="Technologies Used" 
                   value={newProject.technologies}
                   onChange={(e) => setNewProject({...newProject, technologies: e.target.value})}
-                />
-                <input 
-                  type="text" 
-                  placeholder="Project Link (optional)" 
-                  value={newProject.link}
-                  onChange={(e) => setNewProject({...newProject, link: e.target.value})}
                 />
                 <button className="add-btn" onClick={addProjectItem}>Add Project</button>
               </div>

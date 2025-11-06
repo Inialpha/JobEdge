@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Bell, Search, Menu, X, FileText, Settings, LogOut } from "lucide-react";
+import { Menu, X, FileText, Settings, LogOut, FileEdit, Sparkles, ChevronDown } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 import { useView } from "@/hooks/useView";
@@ -20,6 +19,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function UserDashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,6 +40,8 @@ export default function UserDashboardLayout() {
 
   const sidebarItems = [
     { name: "Resumes", icon: FileText, path: "/dashboard/resumes" },
+    { name: "Resume Builder", icon: FileEdit, path: "/resume-builder" },
+    { name: "Tailor Resume", icon: Sparkles, path: "/tailor-resume" },
     { name: "Settings", icon: Settings, path: "/dashboard/settings" },
   ];
 
@@ -107,27 +116,35 @@ export default function UserDashboardLayout() {
             </h1>
           </div>
 
-          <div className="relative flex-1 max-w-md mx-4 hidden md:block">
-            <Input
-              type="text"
-              placeholder="Search..."
-              className="pl-10 pr-4 rounded-full"
-            />
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-          </div>
+          <div className="flex-1"></div>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon">
-              <Bell className="h-5 w-5" />
-            </Button>
-            <Avatar>
-              <AvatarImage src="/placeholder-avatar.jpg" alt={user?.firstName || "User"} />
-              <AvatarFallback className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-                {user?.firstName?.[0] || "U"}
-              </AvatarFallback>
-            </Avatar>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <Avatar>
+                    <AvatarImage src="/placeholder-avatar.jpg" alt={user?.firstName || "User"} />
+                    <AvatarFallback className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+                      {user?.firstName?.[0] || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user?.firstName} {user?.lastName}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogoutClick}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>

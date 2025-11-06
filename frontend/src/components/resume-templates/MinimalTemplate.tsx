@@ -36,7 +36,7 @@ export const MinimalTemplate = ({ resume }: MinimalTemplateProps) => {
       )}
       {resume?.professionalExperience?.length > 0 && (
         <>
-          <div className="resume-section-title">PROFESSIONAL EXPERIENCE</div>
+          <div className="resume-section-title no-break">PROFESSIONAL EXPERIENCE</div>
           <div className="resume-content">
             {resume.professionalExperience.map((exp, index) => (
               <div key={index}>
@@ -61,7 +61,7 @@ export const MinimalTemplate = ({ resume }: MinimalTemplateProps) => {
       )}
       {resume?.education?.length > 0 && (
         <>
-          <div className="resume-section-title">Education</div>
+          <div className="resume-section-title no-break">Education</div>
           <div className="resume-content">
             {resume.education.map((edu, index) => (
               <div key={index} style={{ marginBottom: '10px' }}>
@@ -76,7 +76,7 @@ export const MinimalTemplate = ({ resume }: MinimalTemplateProps) => {
       )}
       {skills.length > 0 && (
         <>
-          <div className="resume-section-title">Skills</div>
+          <div className="resume-section-title no-break">Skills</div>
           <div className="resume-content">
             {skills.map((skill, index) => (
               <span key={index} className="skill-tag">{escapeHtml(skill)} {index < skills.length - 1 && (" • ")}</span>
@@ -86,7 +86,7 @@ export const MinimalTemplate = ({ resume }: MinimalTemplateProps) => {
       )}
       {resume?.certifications?.length > 0 && (
         <>
-          <div className="resume-section-title">Certifications</div>
+          <div className="resume-section-title no-break">Certifications</div>
           <div className="resume-content">
             {resume.certifications.map((cert, index) => (
               <div key={index}>
@@ -99,7 +99,7 @@ export const MinimalTemplate = ({ resume }: MinimalTemplateProps) => {
       )}
       {resume?.projects?.length > 0 && (
         <>
-          <div className="resume-section-title">Projects</div>
+          <div className="resume-section-title no-break">Projects</div>
           <div className="resume-content">
             {resume.projects.map((proj, index) => (
               <div key={index} style={{ marginBottom: '10px' }}>
@@ -113,7 +113,7 @@ export const MinimalTemplate = ({ resume }: MinimalTemplateProps) => {
       )}
       {resume?.awards?.length > 0 && (
         <>
-          <div className="resume-section-title">Awards</div>
+          <div className="resume-section-title no-break">Awards</div>
           <div className="resume-content">
             {resume.awards.map((award, index) => (
               <div key={index}>

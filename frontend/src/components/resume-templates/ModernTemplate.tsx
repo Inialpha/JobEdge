@@ -64,7 +64,7 @@ export const ModernTemplate = ({ resume }: ModernTemplateProps) => {
         )}
         {resume?.professionalExperience?.length > 0 && (
           <>
-            <div className="resume-section-title">PROFESSIONAL EXPERIENCE</div>
+            <div className="resume-section-title no-break">PROFESSIONAL EXPERIENCE</div>
             <div className="resume-content">
               {resume.professionalExperience.map((exp, index) => (
                 <div key={index}>
@@ -89,7 +89,7 @@ export const ModernTemplate = ({ resume }: ModernTemplateProps) => {
         )}
         {resume?.certifications?.length > 0 && (
           <>
-            <div className="resume-section-title">Certifications</div>
+            <div className="resume-section-title no-break">Certifications</div>
             <div className="resume-content">
               {resume.certifications.map((cert, index) => (
                 <div key={index}>
@@ -102,7 +102,7 @@ export const ModernTemplate = ({ resume }: ModernTemplateProps) => {
         )}
         {resume?.projects?.length > 0 && (
           <>
-            <div className="resume-section-title">Projects</div>
+            <div className="resume-section-title no-break">Projects</div>
             <div className="resume-content">
               {resume.projects.map((proj, index) => (
                 <div key={index} style={{ marginBottom: '10px' }}>
@@ -116,7 +116,7 @@ export const ModernTemplate = ({ resume }: ModernTemplateProps) => {
         )}
         {resume?.awards?.length > 0 && (
           <>
-            <div className="resume-section-title">Awards</div>
+            <div className="resume-section-title no-break">Awards</div>
             <div className="resume-content">
               {resume.awards.map((award, index) => (
                 <div key={index}>
