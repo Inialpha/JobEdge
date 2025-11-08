@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation } from '@/types/resume';
 import { getEditableResume } from '@/utils/resumeUtils';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
@@ -10,14 +10,6 @@ import { useSelector } from "react-redux";
 import { RootState } from '@/store/store';
 import { useDispatch } from "react-redux"
 import { updateUserInfo } from "@/store/userSlice"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import cleanData from "@/utils/cleanData"
 
 
@@ -827,22 +819,6 @@ export default function ResumeBuilder() {
           margin-bottom: 3px;
         }
       `}</style>
-      
-      <div style={{background: 'white', padding: '10px 20px', marginBottom: '10px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}}>
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/dashboard">Dashboard</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Resume Builder</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
       
       <div className="container">
         {/* Editor Panel */}

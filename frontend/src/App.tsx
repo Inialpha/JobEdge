@@ -5,12 +5,12 @@ import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } 
 import Signup from "@/pages/Signup";
 import Login from "@/pages/Login";
 import AdminDashboard from "@/pages/admin/Dashboard"
-import TailorResumePage from "@/pages/TailorResumePage";
 import LandingPage from "@/pages/LandingPage";
-import ResumeBuilder from "@/pages/ResumeBuilder";
 import UserDashboardLayout from "@/pages/UserDashboard";
 import ResumesComponent from "@/components/dashboard/user/Resumes";
 import SettingsComponent from "@/components/dashboard/user/Settings";
+import ResumeBuilderComponent from "@/components/dashboard/user/ResumeBuilder";
+import TailorResumeComponent from "@/components/dashboard/user/TailorResume";
 import { AuthMiddleware, AdminMiddleware } from "@/utils/middleware";
 import VerifyEmail from "@/pages/VerifyEmail"
 import NotFound from "@/pages/NotFound"
@@ -27,13 +27,12 @@ const routes = createBrowserRouter(
       
       {/* Protected routes with authentication */}
       <Route element={<AuthMiddleware />}>
-        <Route path="tailor-resume" element={<TailorResumePage />} />
-        <Route path="resume-builder" element={<ResumeBuilder />} />
-        
         {/* User Dashboard with nested routes */}
         <Route path="dashboard" element={<UserDashboardLayout />}>
           <Route index element={<ResumesComponent />} />
           <Route path="resumes" element={<ResumesComponent />} />
+          <Route path="resume-builder" element={<ResumeBuilderComponent />} />
+          <Route path="tailor-resume" element={<TailorResumeComponent />} />
           <Route path="settings" element={<SettingsComponent />} />
         </Route>
         <Route element={<AdminMiddleware />}>
