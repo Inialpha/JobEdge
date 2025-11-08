@@ -13,6 +13,8 @@ import {
   Sparkles,
   ChevronDown,
   LogOut,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -33,6 +35,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 
 const DashboardHome = () => <div className="p-4">Dashboard Home Content</div>
@@ -40,11 +48,13 @@ const DashboardHome = () => <div className="p-4">Dashboard Home Content</div>
 
 export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const user = useSelector((state: RootState) => state.user);
   const { activeView, setActiveView } = useView("dashboard");
   const navigate = useNavigate();
   
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
+  const toggleSidebarCollapse = () => setSidebarCollapsed(!sidebarCollapsed)
 
   const sidebarItems = [
     { name: "Dashboard", icon: Layout, component: DashboardHome },
@@ -109,28 +119,53 @@ export default function AdminDashboard() {
       </header>
       <div className="flex h-[calc(100vh-73px)] w-full relative">
       {/* Sidebar */}
-       <aside className={`absolute w-64 bg-white shadow-md inset-y-0 left-0 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}  md:relative md:translate-x-0 transition duration-200 ease-in-out z-10`}>
+       <aside className={`absolute bg-white shadow-md inset-y-0 left-0 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}  md:relative md:translate-x-0 transition-all duration-200 ease-in-out z-10 ${sidebarCollapsed ? 'md:w-16' : 'md:w-64'} w-64`}>
+        {/* Collapse/Expand Button - Only visible on medium screens and above */}
+        <div className="hidden md:flex justify-end p-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebarCollapse}
+            className="h-8 w-8"
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
         <nav className="py-4 px-2">
-          {sidebarItems.map((item) => (
-            <button
-              key={item.name}
-              className={`flex items-center px-6 py-3 text-gray-700 w-full rounded-lg transition-colors ${
-                activeView === item.name.toLowerCase() 
-                  ? "bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 font-semibold" 
-                  : "hover:bg-gray-100"
-              }`}
-              onClick={() => {
-                if (item.path) {
-                  navigate(item.path);
-                } else {
-                  setActiveView(item.name.toLowerCase());
-                }
-              }}
-            >
-              <item.icon className="h-5 w-5 mr-3" />
-              {item.name}
-            </button>
-          ))}
+          <TooltipProvider delayDuration={0}>
+            {sidebarItems.map((item) => (
+              <Tooltip key={item.name}>
+                <TooltipTrigger asChild>
+                  <button
+                    className={`flex items-center ${sidebarCollapsed ? 'justify-center px-3' : 'px-6'} py-3 text-gray-700 w-full rounded-lg transition-colors ${
+                      activeView === item.name.toLowerCase() 
+                        ? "bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 font-semibold" 
+                        : "hover:bg-gray-100"
+                    }`}
+                    onClick={() => {
+                      if (item.path) {
+                        navigate(item.path);
+                      } else {
+                        setActiveView(item.name.toLowerCase());
+                      }
+                    }}
+                  >
+                    <item.icon className={`h-5 w-5 ${sidebarCollapsed ? '' : 'mr-3'}`} />
+                    {!sidebarCollapsed && <span>{item.name}</span>}
+                  </button>
+                </TooltipTrigger>
+                {sidebarCollapsed && (
+                  <TooltipContent side="right">
+                    <p>{item.name}</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            ))}
+          </TooltipProvider>
         </nav>
       </aside>
 
