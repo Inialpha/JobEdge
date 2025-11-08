@@ -30,7 +30,7 @@ export default function LandingPage() {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              <Link to="/tailor-resume">
+              <Link to="/dashboard/tailor-resume">
                 <Button variant="ghost">Generate Resume</Button>
               </Link>
               {isLoggedIn ? (
@@ -68,7 +68,7 @@ export default function LandingPage() {
                   Get Started Free
                 </Button>
               </Link>
-              <Link to="/resume-builder">
+              <Link to="/dashboard/resume-builder">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600">
                   Create Resume
                 </Button>
@@ -190,7 +190,7 @@ export default function LandingPage() {
               <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/tailor-resume" className="text-gray-400 hover:text-white transition-colors">
+                  <Link to="/dashboard/tailor-resume" className="text-gray-400 hover:text-white transition-colors">
                     Generate Resume
                   </Link>
                 </li>
