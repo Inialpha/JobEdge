@@ -48,8 +48,8 @@ export default function UserDashboardLayout() {
 
   const sidebarItems = [
     { name: "Resumes", icon: FileText, path: "/dashboard/resumes" },
-    { name: "Resume Builder", icon: FileEdit, path: "/resume-builder" },
-    { name: "Tailor Resume", icon: Sparkles, path: "/tailor-resume" },
+    { name: "Resume Builder", icon: FileEdit, path: "/dashboard/resume-builder" },
+    { name: "Tailor Resume", icon: Sparkles, path: "/dashboard/tailor-resume" },
     { name: "Settings", icon: Settings, path: "/dashboard/settings" },
   ];
 

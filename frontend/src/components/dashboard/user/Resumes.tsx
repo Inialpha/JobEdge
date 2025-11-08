@@ -77,18 +77,18 @@ export default function ResumesComponent() {
   }, [resumeData]);
 
   const handleEdit = (resume: Resume) => {
-    navigate("/resume-builder", { state: { resume } });
+    navigate("/dashboard/resume-builder", { state: { resume } });
   };
 
   const handleDownload = (resume: Resume) => {
     // Navigate to resume builder with download option
-    navigate("/resume-builder", { state: { resume, autoDownload: true } });
+    navigate("/dashboard/resume-builder", { state: { resume, autoDownload: true } });
   };
 
   const handleCreateFromScratch = () => {
     setShowCreateDialog(false);
     // Navigate to resume-builder without any resume data
-    navigate('/resume-builder');
+    navigate('/dashboard/resume-builder');
   };
 
   const handleUploadFile = () => {
@@ -115,7 +115,7 @@ export default function ResumesComponent() {
           setFeedback({type: 'success', message: "Resume uploaded successfully. Redirecting to editor..."});
           // Navigate to resume-builder with the parsed resume
           setTimeout(() => {
-            navigate('/resume-builder', { state: { resume } });
+            navigate('/dashboard/resume-builder', { state: { resume } });
           }, 1000);
         } else {
           setFeedback({type: 'error', message: "There was an error uploading the file. Please try again."});
@@ -271,7 +271,7 @@ export default function ResumesComponent() {
           <h3 className="text-lg font-semibold text-gray-700 mb-2">No resumes yet</h3>
           <p className="text-gray-500 mb-4">Create your first resume to get started</p>
           <Button 
-            onClick={() => navigate("/resume-builder")}
+            onClick={() => navigate("/dashboard/resume-builder")}
             className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
           >
             Create Resume
