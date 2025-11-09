@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +18,6 @@ interface JobResult {
 }
 
 export default function SearchJobs() {
-  const user = useSelector((state: RootState) => state.user);
   const navigate = useNavigate();
   
   const [keywords, setKeywords] = useState<string[]>([]);
@@ -41,10 +38,14 @@ export default function SearchJobs() {
       try {
         const url = `${import.meta.env.VITE_API_URL}/resumes/`;
         const response = await getRequest(url);
-        const masterResume = response.data.find((resume: any) => resume.is_master);
         
-        if (masterResume && masterResume.keywords && Array.isArray(masterResume.keywords)) {
-          setKeywords(masterResume.keywords);
+        if (response.ok) {
+          const data = await response.json();
+          const masterResume = data.find((resume: any) => resume.is_master);
+          
+          if (masterResume && masterResume.keywords && Array.isArray(masterResume.keywords)) {
+            setKeywords(masterResume.keywords);
+          }
         }
       } catch (error) {
         console.error('Error loading master resume:', error);
@@ -94,9 +95,15 @@ export default function SearchJobs() {
       const url = `${import.meta.env.VITE_API_URL}/jobs/search-jobs/?${params.toString()}`;
       const response = await getRequest(url);
       
-      setJobs(response.data.jobs || []);
+      if (response.ok) {
+        const data = await response.json();
+        setJobs(data.jobs || []);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to search jobs. Please try again.');
+      }
     } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to search jobs. Please try again.');
+      setError('Failed to search jobs. Please try again.');
       console.error('Error searching jobs:', error);
     } finally {
       setIsSearching(false);
@@ -113,10 +120,16 @@ export default function SearchJobs() {
       const url = `${import.meta.env.VITE_API_URL}/resume/generate/`;
       const response = await postRequest(url, { job_link: jobLink });
       
-      // Navigate to ResumeBuilder with the generated resume
-      navigate('/dashboard/resume-builder', { state: { resume: response.data } });
+      if (response.ok) {
+        const data = await response.json();
+        // Navigate to ResumeBuilder with the generated resume
+        navigate('/dashboard/resume-builder', { state: { resume: data } });
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to generate resume. Please try again.');
+      }
     } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to generate resume. Please try again.');
+      setError('Failed to generate resume. Please try again.');
       console.error('Error generating resume:', error);
     } finally {
       setIsGenerating(null);
