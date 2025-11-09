@@ -135,7 +135,7 @@ export default function TailorResumePage() {
         .tailor-container {
           max-width: 800px;
           margin: 0 auto;
-          padding: 20px;
+          padding: 10px;
         }
         .tailor-card {
           background: white;
@@ -265,7 +265,7 @@ export default function TailorResumePage() {
         }
       `}</style>
       
-      <div className="tailor-container">
+      <div className="max-w-[800px] mx-auto md:p-[20px]">
         <div className="tailor-card">
           <div className="tailor-header">
             <h1>Tailor Your Resume</h1>

@@ -58,6 +58,8 @@ class ResumeSerializer(serializers.Serializer):
         default=[],
         help_text="Languages spoken by the user"
     )
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
 
     def create(self, validated_data):
         """

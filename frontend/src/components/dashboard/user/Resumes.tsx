@@ -287,10 +287,10 @@ export default function ResumesComponent() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-800 mb-1">
-                    {resume.name || "Untitled Resume"}
+                    {resume.personal_information.name || "Untitled Resume"}
                   </h3>
-                  {resume.profession && (
-                    <p className="text-sm text-gray-600">{resume.profession}</p>
+                  {resume.personal_information.profession && (
+                    <p className="text-sm text-gray-600">{resume.personal_information.profession}</p>
                   )}
                   {resume.is_master && (
                     <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold text-purple-700 bg-purple-100 rounded">

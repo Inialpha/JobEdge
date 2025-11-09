@@ -69,14 +69,9 @@ export default function UserDashboardLayout() {
     try {
       const url = `${import.meta.env.VITE_API_URL}/auth/logout/`;
       await postRequest(url, {});
-      
-      // Clear the token cookie
       deleteCookie('token');
-      
-      // Dispatch logout action to clear user state
       dispatch(logout());
       
-      // Navigate to login page
       navigate("/login");
     } catch (error) {
       console.error("Error during logout:", error);
