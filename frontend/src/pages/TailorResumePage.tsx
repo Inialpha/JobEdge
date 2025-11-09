@@ -97,7 +97,7 @@ export default function TailorResumePage() {
         const result = await response.json();
         setGeneratedResume(result);
         navigate("/dashboard/resume-builder", {
-          state: {resume: result}
+          state: {resume: result, component: 'resume builder'}
         });
         setError('');
       } else {

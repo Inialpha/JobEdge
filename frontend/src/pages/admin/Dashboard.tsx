@@ -61,8 +61,8 @@ export default function AdminDashboard() {
     { name: "Analytics", icon: BarChart, component: AnalyticsComponent },
     { name: "Users", icon: Users, component: UsersComponent },
     { name: "Resumes", icon: FileText, component: ResumeComponent },
-    { name: "Resume Builder", icon: FileEdit, path: "/resume-builder" },
-    { name: "Tailor Resume", icon: Sparkles, path: "/tailor-resume" },
+    { name: "Resume Builder", icon: FileEdit, path: "/dashboard/resume-builder" },
+    { name: "Tailor Resume", icon: Sparkles, path: "/dashboard/tailor-resume" },
     { name: "Settings", icon: Settings, component: SettingsComponent },
   ]
   
@@ -148,7 +148,9 @@ export default function AdminDashboard() {
                     }`}
                     onClick={() => {
                       if (item.path) {
-                        navigate(item.path);
+                        // If navigating to resume-builder or tailor-resume, set the component state
+                        const viewName = item.name.toLowerCase();
+                        navigate(item.path, { state: { component: viewName } });
                       } else {
                         setActiveView(item.name.toLowerCase());
                       }
