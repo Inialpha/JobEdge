@@ -1,7 +1,7 @@
 from django.urls import path
 from .views.resumes import ResumeAPIView, GenerateResume, GenerateResumeFromJobDescription, ResumeFromObjectAPIView, ConvertPdfToDocxAPIView
 from .views.users import UserAPIView, CustomSignup, ProfileAPIView
-from .views.jobs import JobSearchAPIView, JobAPIView
+from .views.jobs import JobSearchAPIView, JobAPIView, SearchJobsAPIView
 # import authemail
 from authemail import views
 
@@ -19,6 +19,7 @@ urlpatterns = [
     path('users/profile/', ProfileAPIView.as_view(), name='user-profile'),
     path('users/<str:pk>/', UserAPIView.as_view(), name='update-delete-user'),
     path('jobs/search/', JobSearchAPIView.as_view(), name='jobsearch'),
+    path('jobs/search-jobs/', SearchJobsAPIView.as_view(), name='search-jobs'),
     path('jobs/', JobAPIView.as_view(), name='job-list'),
     path('api/jobs/<int:id>/', JobAPIView.as_view(), name='job-detail'),
 

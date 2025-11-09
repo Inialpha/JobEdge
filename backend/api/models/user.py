@@ -16,6 +16,7 @@ class User(EmailAbstractUser, PermissionsMixin):
     password = models.CharField(max_length=128)
     is_staff = models.BooleanField(default=False)
     has_master_resume = models.BooleanField(default=False)
+    current_job_search = models.JSONField(default=list, help_text="Current job search results")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

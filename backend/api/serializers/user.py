@@ -46,3 +46,4 @@ class ProfileSerializer(SignupSerializer):
     last_name = serializers.CharField(max_length=30)
     is_staff = serializers.BooleanField(read_only=True)
     has_master_resume = serializers.BooleanField(read_only=True)
+    current_job_search = serializers.JSONField(read_only=True)
