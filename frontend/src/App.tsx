@@ -11,6 +11,7 @@ import ResumesComponent from "@/components/dashboard/user/Resumes";
 import SettingsComponent from "@/components/dashboard/user/Settings";
 import ResumeBuilderComponent from "@/components/dashboard/user/ResumeBuilder";
 import TailorResumeComponent from "@/components/dashboard/user/TailorResume";
+import SearchJobsComponent from "@/components/dashboard/user/SearchJobs";
 import { AuthMiddleware, AdminMiddleware } from "@/utils/middleware";
 import VerifyEmail from "@/pages/VerifyEmail"
 import NotFound from "@/pages/NotFound"
@@ -33,6 +34,7 @@ const routes = createBrowserRouter(
           <Route path="resumes" element={<ResumesComponent />} />
           <Route path="resume-builder" element={<ResumeBuilderComponent />} />
           <Route path="tailor-resume" element={<TailorResumeComponent />} />
+          <Route path="jobs" element={<SearchJobsComponent />} />
           <Route path="settings" element={<SettingsComponent />} />
         </Route>
         <Route element={<AdminMiddleware />}>

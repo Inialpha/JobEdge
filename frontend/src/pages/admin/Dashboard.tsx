@@ -11,6 +11,7 @@ import {
   X,
   FileEdit,
   Sparkles,
+  Briefcase,
   ChevronDown,
   LogOut,
   ChevronLeft,
@@ -63,6 +64,7 @@ export default function AdminDashboard() {
     { name: "Resumes", icon: FileText, component: ResumeComponent },
     { name: "Resume Builder", icon: FileEdit, path: "/dashboard/resume-builder" },
     { name: "Tailor Resume", icon: Sparkles, path: "/dashboard/tailor-resume" },
+    { name: "Jobs", icon: Briefcase, path: "/dashboard/jobs" },
     { name: "Settings", icon: Settings, component: SettingsComponent },
   ]
   
