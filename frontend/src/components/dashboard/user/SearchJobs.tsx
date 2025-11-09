@@ -111,7 +111,7 @@ export default function SearchJobs() {
   };
 
   const handleApply = (jobLink: string) => {
-    window.open(jobLink, '_blank');
+    window.open(jobLink, '_blank', 'noopener,noreferrer');
   };
 
   const handleGenerateResume = async (jobLink: string) => {
