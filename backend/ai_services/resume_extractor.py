@@ -128,8 +128,6 @@ Return the extracted information as a JSON object following this structure.
 
 def generate_resume(job: str, resume: dict):
     """Generate a tailored resume based on a job description and a master resume."""
-    print("\n\n\n\n")
-    print(resume)
     try:
         system_message = (
             "You are a human resource expert specializing in tailoring resumes to fit specific job descriptions. "
@@ -138,7 +136,7 @@ def generate_resume(job: str, resume: dict):
 
             "Optimize the existing summary to consicely and more professionally describe the candidate’s professional profile, experience and strengths. Tailored to match the job without fabricating information that is not in the master resume."
 
-            "The summary should be a concise summary describing the candidate’s professional experience, projects and strengths relevant to the given job. It must be tailored to match the job without adding anything that is not in the master resume."
+            "The summary should be a concise summary describing the candidate’s professional experience, projects and strengths relevant to the given job. It must be tailored to match the job without adding anything that is not in the master resume. The summary should be obtimised and capture the candidate's value proposition and relevance to the job."
 
             "Only select and return professional experiences that are relevant to the job without modyfication. All selected professional experiences should be returned as they are in the master resumer"
 
