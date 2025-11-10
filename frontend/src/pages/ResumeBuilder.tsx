@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation } from '@/types/resume';
 import { getEditableResume } from '@/utils/resumeUtils';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
@@ -10,14 +10,6 @@ import { useSelector } from "react-redux";
 import { RootState } from '@/store/store';
 import { useDispatch } from "react-redux"
 import { updateUserInfo } from "@/store/userSlice"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import cleanData from "@/utils/cleanData"
 
 
@@ -305,7 +297,8 @@ export default function ResumeBuilder() {
       
       const resumeData = {
         ...trimmedResume,
-        is_master: true
+        keywords: passedResume.keywords,
+        is_master: true,
       };
       
       const response = await postRequest(url, resumeData);
@@ -405,18 +398,7 @@ export default function ResumeBuilder() {
   return (
     <>
       <style>{`
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-        body {
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          min-height: 100vh;
-          padding: 20px;
-        }
-        .container {
+        .icontainer {
           max-width: 1400px;
           margin: 0 auto;
           display: grid;
@@ -427,7 +409,7 @@ export default function ResumeBuilder() {
           background: white;
           border-radius: 10px;
           box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-          height: fit-content;
+          iheight: fit-content;
           max-height: calc(100vh - 40px);
           overflow-y: auto;
         }
@@ -444,7 +426,7 @@ export default function ResumeBuilder() {
           text-align: center;
           position: sticky;
           top: 0;
-          z-index: 10;
+          z-index: 2;
         }
         .header h1 {
           font-size: 22px;
@@ -828,25 +810,9 @@ export default function ResumeBuilder() {
         }
       `}</style>
       
-      <div style={{background: 'white', padding: '10px 20px', marginBottom: '10px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}}>
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/dashboard">Dashboard</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Resume Builder</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
-      
-      <div className="container">
+      <div className="max-w-[1400px] mx-auto grid gap-5 grid-cols-1 lg:grid-cols-[350px_1fr]">
         {/* Editor Panel */}
-        <div className="editor-panel">
+        <div className="bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] h-fit max-h-[50vh] overflow-y-auto">
           <div className="header">
             <h1>Resume Builder</h1>
             <p>Edit & Download as PDF/DOCX</p>
@@ -1449,7 +1415,7 @@ export default function ResumeBuilder() {
         </div>
 
         {/* Preview Panel */}
-        <div className="preview-panel">
+        <div className="bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] p-6">
           <div id="resumePreview" className="resume-preview classic-template"></div>
         </div>
       </div>

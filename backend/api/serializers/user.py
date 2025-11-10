@@ -29,6 +29,7 @@ class UserSerializer(serializers.Serializer):
 
 from authemail.serializers import SignupSerializer
 from rest_framework import serializers
+from .resume import ResumeSerializer
 
 
 class CustomSignupSerializer(SignupSerializer):
@@ -46,3 +47,12 @@ class ProfileSerializer(SignupSerializer):
     last_name = serializers.CharField(max_length=30)
     is_staff = serializers.BooleanField(read_only=True)
     has_master_resume = serializers.BooleanField(read_only=True)
+    current_job_search = serializers.JSONField(read_only=True)
+    resume = serializers.SerializerMethodField()
+    
+    def get_resume(self, obj):
+        """Get the master resume for the user"""
+        master_resume = obj.resumes.filter(is_master=True).first()
+        if master_resume:
+            return ResumeSerializer(master_resume).data
+        return None

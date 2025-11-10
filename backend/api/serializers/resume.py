@@ -4,7 +4,7 @@ from django.conf import settings
 import uuid
 import os
 import filetype
-from .user import UserSerializer
+#from .user import UserSerializer
 
 class ResumeSerializer(serializers.Serializer):
     id = serializers.CharField(max_length=255, read_only=True)
@@ -58,6 +58,8 @@ class ResumeSerializer(serializers.Serializer):
         default=[],
         help_text="Languages spoken by the user"
     )
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
 
     def create(self, validated_data):
         """

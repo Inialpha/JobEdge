@@ -94,7 +94,7 @@ export default function ResumeComponent() {
           
           // Navigate to resume-builder with the parsed resume
           setTimeout(() => {
-            navigate('/resume-builder', { state: { resume } });
+            navigate('/resume-builder', { state: { resume, component: 'resume builder' } });
           }, 1000);
         } else {
           setFeedback({message: "There was an error please try again", variant: 'error'
@@ -153,7 +153,7 @@ export default function ResumeComponent() {
   }
 
   const handleEditResume = (resume: Resume) => {
-    navigate("/resume-builder", {state: {"resume": resume}})
+    navigate("/resume-builder", {state: {"resume": resume, component: 'resume builder'}})
   }
 
   const handleDownload = (resume: Resume) => {
@@ -165,7 +165,7 @@ export default function ResumeComponent() {
   const handleCreateFromScratch = () => {
     setShowCreateDialog(false);
     // Navigate to resume-builder without any resume data
-    navigate('/resume-builder');
+    navigate('/resume-builder', { state: { component: 'resume builder' } });
   }
 
   const handleUploadFile = () => {
@@ -270,7 +270,7 @@ export default function ResumeComponent() {
           <h3 className="text-lg font-semibold text-gray-700 mb-2">No resumes yet</h3>
           <p className="text-gray-500 mb-4">Create your first resume to get started</p>
           <Button 
-            onClick={() => navigate("/resume-builder")}
+            onClick={() => navigate("/resume-builder", { state: { component: 'resume builder' } })}
             className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
           >
             Create Resume

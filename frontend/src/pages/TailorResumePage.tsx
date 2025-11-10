@@ -1,17 +1,9 @@
 import { useState } from 'react';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { postRequest } from "@/utils/apis";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 
 
 interface ContactInfo {
@@ -104,8 +96,8 @@ export default function TailorResumePage() {
       if (response.ok) {
         const result = await response.json();
         setGeneratedResume(result);
-        navigate("/resume-builder", {
-          state: {resume: result}
+        navigate("/dashboard/resume-builder", {
+          state: {resume: result, component: 'resume builder'}
         });
         setError('');
       } else {
@@ -143,7 +135,7 @@ export default function TailorResumePage() {
         .tailor-container {
           max-width: 800px;
           margin: 0 auto;
-          padding: 20px;
+          padding: 10px;
         }
         .tailor-card {
           background: white;
@@ -273,23 +265,7 @@ export default function TailorResumePage() {
         }
       `}</style>
       
-      <div style={{background: 'white', padding: '10px 20px', marginBottom: '10px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', maxWidth: '800px', margin: '0 auto 10px auto'}}>
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/dashboard">Dashboard</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Tailor Resume</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
-      
-      <div className="tailor-container">
+      <div className="max-w-[800px] mx-auto md:p-[20px]">
         <div className="tailor-card">
           <div className="tailor-header">
             <h1>Tailor Your Resume</h1>

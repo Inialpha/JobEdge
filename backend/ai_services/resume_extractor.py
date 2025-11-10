@@ -128,17 +128,17 @@ Return the extracted information as a JSON object following this structure.
 
 def generate_resume(job: str, resume: dict):
     """Generate a tailored resume based on a job description and a master resume."""
-    print("\n\n\n\n")
-    print(resume)
     try:
         system_message = (
             "You are a human resource expert specializing in tailoring resumes to fit specific job descriptions. "
-            "Your task is to create a tailored resume that aligns with the job description. "
-            "Constraints: Do not add new information or modify facts. "
+            "Your task is to create a tailored resume that aligns with the job description."
 
-            "Optimize the existing summary to consicely and more professionally describe the candidate’s professional profile, experience and strengths. Tailored to match the job without fabricating information that is not in the master resume."
+            """Constraints:
+- Do not modify professional experiences, education, projects, or certifications.
+- Only the summary can be rewritten to optimize for relevance to the job."""
 
-            "The summary should be a concise summary describing the candidate’s professional experience, projects and strengths relevant to the given job. It must be tailored to match the job without adding anything that is not in the master resume."
+
+            "Write an optimised summary that effectively capture the candidate's value proposition and relevance to the job."
 
             "Only select and return professional experiences that are relevant to the job without modyfication. All selected professional experiences should be returned as they are in the master resumer"
 
@@ -168,7 +168,8 @@ Extract the resume information using this JSON schema and descriptions:
   "email": str — Candidate's email address
   "profession": str — Candidate's profession (e.g "Software Engeneer")
 
-  "summary": str — Optimize the existing summary to consicely and more professionally describe the candidate’s professional profile, experience and strengths. Tailored to match the job without fabricating information that is not in the master resume.
+  "summary": str — An Optimized summary that effectively capture the candidate
+  's value proposition and relevance to the job."   
 
   "personal_information": Dict — A dictionary of personal information dictionaries, each with 'field' and 'value' keys. Example: {{
   "name": "John Doe", "email": "john.doe@email.com", "phone": "+1-555-123-4567", "address": "123 Main St, City, State ZIP", "linkedin": "https://linkedin.com/in/johndoe", "website": "https://johndoe.com", "profession": "Software Engeneer"
@@ -211,9 +212,7 @@ Return the extracted information as a JSON object following this structure.
                 {"role": "user", "content": user_prompt},
             ],
             temperature=0,
-            #max_completion_tokens=8192,
             top_p=1,
-            #reasoning_effort="medium",
             stream=False,
         )
 

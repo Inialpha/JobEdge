@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Menu, X, FileText, Settings, LogOut, FileEdit, Sparkles, ChevronDown } from "lucide-react";
+import { Menu, X, FileText, Settings, LogOut, FileEdit, Sparkles, Briefcase, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 import { useView } from "@/hooks/useView";
@@ -27,9 +27,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function UserDashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
@@ -37,11 +44,13 @@ export default function UserDashboardLayout() {
   const { activeView, setActiveView } = useView("resumes");
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const toggleSidebarCollapse = () => setSidebarCollapsed(!sidebarCollapsed);
 
   const sidebarItems = [
     { name: "Resumes", icon: FileText, path: "/dashboard/resumes" },
-    { name: "Resume Builder", icon: FileEdit, path: "/resume-builder" },
-    { name: "Tailor Resume", icon: Sparkles, path: "/tailor-resume" },
+    { name: "Resume Builder", icon: FileEdit, path: "/dashboard/resume-builder" },
+    { name: "Tailor Resume", icon: Sparkles, path: "/dashboard/tailor-resume" },
+    { name: "Jobs", icon: Briefcase, path: "/dashboard/jobs" },
     { name: "Settings", icon: Settings, path: "/dashboard/settings" },
   ];
 
@@ -61,14 +70,9 @@ export default function UserDashboardLayout() {
     try {
       const url = `${import.meta.env.VITE_API_URL}/auth/logout/`;
       await postRequest(url, {});
-      
-      // Clear the token cookie
       deleteCookie('token');
-      
-      // Dispatch logout action to clear user state
       dispatch(logout());
       
-      // Navigate to login page
       navigate("/login");
     } catch (error) {
       console.error("Error during logout:", error);
@@ -152,34 +156,70 @@ export default function UserDashboardLayout() {
       <div className="flex h-[calc(100vh-73px)] w-full relative">
         {/* Sidebar */}
         <aside
-          className={`absolute w-64 bg-white shadow-md inset-y-0 left-0 transform ${
+          className={`absolute bg-white shadow-md inset-y-0 left-0 transform ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } md:relative md:translate-x-0 transition duration-200 ease-in-out z-10`}
+          } md:relative md:translate-x-0 transition-all duration-200 ease-in-out z-10 ${sidebarCollapsed ? 'md:w-16' : 'md:w-64'} w-64`}
         >
+          {/* Collapse/Expand Button - Only visible on medium screens and above */}
+          <div className="hidden md:flex justify-end p-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebarCollapse}
+              className="h-8 w-8"
+            >
+              {sidebarCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
           <nav className="py-4 px-2">
-            {sidebarItems.map((item) => (
-              <button
-                key={item.name}
-                className={`flex items-center px-6 py-3 text-gray-700 w-full rounded-lg transition-colors ${
-                  activeView === item.name.toLowerCase()
-                    ? "bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 font-semibold"
-                    : "hover:bg-gray-100"
-                }`}
-                onClick={() => handleNavigation(item.name, item.path)}
-              >
-                <item.icon className="h-5 w-5 mr-3" />
-                {item.name}
-              </button>
-            ))}
+            <TooltipProvider delayDuration={0}>
+              {sidebarItems.map((item) => (
+                <Tooltip key={item.name}>
+                  <TooltipTrigger asChild>
+                    <button
+                      className={`flex items-center ${sidebarCollapsed ? 'justify-center px-3' : 'px-6'} py-3 text-gray-700 w-full rounded-lg transition-colors ${
+                        activeView === item.name.toLowerCase()
+                          ? "bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 font-semibold"
+                          : "hover:bg-gray-100"
+                      }`}
+                      onClick={() => handleNavigation(item.name, item.path)}
+                    >
+                      <item.icon className={`h-5 w-5 ${sidebarCollapsed ? '' : 'mr-3'}`} />
+                      {!sidebarCollapsed && <span>{item.name}</span>}
+                    </button>
+                  </TooltipTrigger>
+                  {sidebarCollapsed && (
+                    <TooltipContent side="right">
+                      <p>{item.name}</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              ))}
+            </TooltipProvider>
             
             <div className="border-t border-gray-200 mt-4 pt-4">
-              <button
-                className="flex items-center px-6 py-3 text-gray-700 w-full rounded-lg hover:bg-gray-100 transition-colors"
-                onClick={handleLogoutClick}
-              >
-                <LogOut className="h-5 w-5 mr-3" />
-                Logout
-              </button>
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      className={`flex items-center ${sidebarCollapsed ? 'justify-center px-3' : 'px-6'} py-3 text-gray-700 w-full rounded-lg hover:bg-gray-100 transition-colors`}
+                      onClick={handleLogoutClick}
+                    >
+                      <LogOut className={`h-5 w-5 ${sidebarCollapsed ? '' : 'mr-3'}`} />
+                      {!sidebarCollapsed && <span>Logout</span>}
+                    </button>
+                  </TooltipTrigger>
+                  {sidebarCollapsed && (
+                    <TooltipContent side="right">
+                      <p>Logout</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </nav>
         </aside>
