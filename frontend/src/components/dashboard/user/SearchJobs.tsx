@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { X, Search, ExternalLink, FileText, Loader2 } from 'lucide-react';
 import { getRequest, postRequest } from '@/utils/apis';
 import { useQuery } from '@tanstack/react-query';
+import CircularLoader from '@/components/ui/circularLoader';
 
 
 interface JobResult {
@@ -17,6 +18,12 @@ interface JobResult {
   date: string;
   link: string;
   snippet: string;
+}
+
+interface Resume {
+  id: string;
+  keywords: string[];
+  is_master: boolean;
 }
 
 interface User {
@@ -27,6 +34,7 @@ interface User {
   is_staff: boolean;
   has_master_resume: boolean;
   current_job_search: JobResult[];
+  resume: Resume | null;
 }
 
 export default function SearchJobs() {
@@ -59,38 +67,16 @@ export default function SearchJobs() {
     }
   }
 
-  const { data: userData } = useQuery<User>({
+  const { data: userData, isLoading } = useQuery<User>({
     queryKey: ['userProfile'],
     queryFn: fetchUser,
   })
 
-  const fetchResumes = async () => {
-    try {
-      const url = `${import.meta.env.VITE_API_URL}/resumes/`;
-      const response = await getRequest(url);      
-      if (response.ok) {
-        const data = await response.json();
-        return data;
-      }
-      throw new Error('Failed to fetch resumes');
-    
-    } catch (error) {
-      console.error("Error fetching resumes:", error);
-      throw error;
-    }
-  }
-
-  const { data: resumeData } = useQuery({
-    queryKey: ['resumes'],
-    queryFn: fetchResumes,
-  })
- 
   useEffect(() => {
-    if (resumeData) {
-      const masterResume = resumeData.find((res: any) => res.is_master)
-      setKeywords(masterResume?.keywords || [])
+    if (userData?.resume) {
+      setKeywords(userData.resume.keywords || [])
     }
-  }, [resumeData]);
+  }, [userData]);
 
   useEffect(() => {
     if (userData?.current_job_search) {
@@ -217,20 +203,29 @@ export default function SearchJobs() {
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Search for Jobs Using your master resume</h1>
-      </div>
+    <div className="max-w-[1400px] mx-auto p-6">
+      {/* Show loader when user data is loading */}
+      {isLoading && (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <CircularLoader size="large" />
+        </div>
+      )}
+      
+      {!isLoading && (
+        <>
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">Search for Jobs Using your master resume</h1>
+          </div>
 
-      {/* Search Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Job Search Criteria</CardTitle>
-          <CardDescription>
-            Customize your job search with keywords from your resume and additional filters
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          {/* Search Form */}
+          <Card className="bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
+            <CardHeader>
+              <CardTitle>Job Search Criteria</CardTitle>
+              <CardDescription>
+                Customize your job search with keywords from your resume and additional filters
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
           {/* Keywords */}
           <div className="space-y-2">
             <Label htmlFor="keywords">Keywords *</Label>
@@ -352,7 +347,7 @@ export default function SearchJobs() {
             Search Results ({jobs.length} {jobs.length === 1 ? 'job' : 'jobs'})
           </h2>
           {jobs.map((job, index) => (
-            <Card key={index} className="bg-white shadow-md hover:shadow-lg transition-shadow">
+            <Card key={index} className="bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="text-lg">{job.title}</CardTitle>
                 {job.date && (
@@ -390,6 +385,8 @@ export default function SearchJobs() {
             </Card>
           ))}
         </div>
+      )}
+        </>
       )}
     </div>
   );
