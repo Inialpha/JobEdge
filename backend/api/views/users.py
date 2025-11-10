@@ -13,7 +13,7 @@ class ProfileAPIView(APIView):
     
     def get(self, request, *args, **kwargs):
         try:
-            serializer = UserSerializer(request.user)
+            serializer = ProfileSerializer(request.user)
             return Response(serializer.data)
         except Exception as e:
             print(e)

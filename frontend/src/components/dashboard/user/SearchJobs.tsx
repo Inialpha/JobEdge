@@ -19,6 +19,16 @@ interface JobResult {
   snippet: string;
 }
 
+interface User {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  is_staff: boolean;
+  has_master_resume: boolean;
+  current_job_search: JobResult[];
+}
+
 export default function SearchJobs() {
   const navigate = useNavigate();
   
@@ -34,14 +44,33 @@ export default function SearchJobs() {
   const [jobs, setJobs] = useState<JobResult[]>([]);
   const [error, setError] = useState<string>('');
   
+  const fetchUser = async () => {
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/users/profile/`;
+      const response = await getRequest(url);      
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+      throw new Error('Failed to fetch user profile');
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      throw error;
+    }
+  }
+
+  const { data: userData } = useQuery<User>({
+    queryKey: ['userProfile'],
+    queryFn: fetchUser,
+  })
+
   const fetchResumes = async () => {
     try {
       const url = `${import.meta.env.VITE_API_URL}/resumes/`;
       const response = await getRequest(url);      
       if (response.ok) {
         const data = await response.json();
-        console.log("data", data)
-        return data
+        return data;
       }
       throw new Error('Failed to fetch resumes');
     
@@ -51,18 +80,23 @@ export default function SearchJobs() {
     }
   }
 
-  const { data: resumeData, isLoading: isLoadingResume } = useQuery({
+  const { data: resumeData } = useQuery({
     queryKey: ['resumes'],
     queryFn: fetchResumes,
-    //initialData: [],
   })
  
   useEffect(() => {
     if (resumeData) {
       const masterResume = resumeData.find((res: any) => res.is_master)
-      setKeywords(masterResume?.keywords)
+      setKeywords(masterResume?.keywords || [])
     }
   }, [resumeData]);
+
+  useEffect(() => {
+    if (userData?.current_job_search) {
+      setJobs(userData.current_job_search);
+    }
+  }, [userData]);
 
   const addKeyword = () => {
     if (keywordInput.trim() && !keywords.includes(keywordInput.trim())) {
@@ -123,7 +157,7 @@ export default function SearchJobs() {
     window.open(jobLink, '_blank', 'noopener,noreferrer');
   };
 
-  async function getDescription(url) {
+  async function getDescription(url: string) {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const html = await res.text();
@@ -131,10 +165,10 @@ export default function SearchJobs() {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
-    let description = null;
+    let description: string | null = null;
 
     const jsonLdTag = doc.querySelector('script[type="application/ld+json"]');
-    if (jsonLdTag) {
+    if (jsonLdTag?.textContent) {
       try {
         const jobData = JSON.parse(jsonLdTag.textContent);
         if (jobData.description) {
@@ -146,8 +180,8 @@ export default function SearchJobs() {
       }
       if (!description) {
         const metaDesc = doc.querySelector('meta[property="og:description"]');
-        if (metaDesc && metaDesc.content) {
-          description = metaDesc.content;
+        if (metaDesc && metaDesc.getAttribute('content')) {
+          description = metaDesc.getAttribute('content');
       }
     }
 
@@ -183,9 +217,9 @@ export default function SearchJobs() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Search for Jobs Using your master resume</h1>
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Search for Jobs Using your master resume</h1>
       </div>
 
       {/* Search Form */}
@@ -292,7 +326,7 @@ export default function SearchJobs() {
           )}
 
           <Button
-            className="w-full"
+            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
             onClick={handleSearch}
             disabled={isSearching}
           >
@@ -313,12 +347,12 @@ export default function SearchJobs() {
 
       {/* Job Results */}
       {jobs.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-gray-900">
+        <div className="mt-6 space-y-4">
+          <h2 className="text-xl font-semibold text-gray-700">
             Search Results ({jobs.length} {jobs.length === 1 ? 'job' : 'jobs'})
           </h2>
           {jobs.map((job, index) => (
-            <Card key={index}>
+            <Card key={index} className="bg-white shadow-md hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="text-lg">{job.title}</CardTitle>
                 {job.date && (
