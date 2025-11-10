@@ -203,7 +203,7 @@ export default function SearchJobs() {
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto p-6">
+    <div className="max-w-[1400px] mx-auto md:p-6">
       {/* Show loader when user data is loading */}
       {isLoading && (
         <div className="flex items-center justify-center min-h-[400px]">
