@@ -5,7 +5,7 @@ RUN apt-get update -qq && \
 
 WORKDIR /backend
 
-COPY backend/ .
+COPY . .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
