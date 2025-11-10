@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { X, Search, ExternalLink, FileText, Loader2 } from 'lucide-react';
 import { getRequest, postRequest } from '@/utils/apis';
+import { useQuery } from '@tanstack/react-query';
+
 
 interface JobResult {
   title: string;
@@ -31,29 +33,36 @@ export default function SearchJobs() {
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [jobs, setJobs] = useState<JobResult[]>([]);
   const [error, setError] = useState<string>('');
-
-  // Load keywords from master resume
-  useEffect(() => {
-    const loadMasterResume = async () => {
-      try {
-        const url = `${import.meta.env.VITE_API_URL}/resumes/`;
-        const response = await getRequest(url);
-        
-        if (response.ok) {
-          const data = await response.json();
-          const masterResume = data.find((resume: any) => resume.is_master);
-          
-          if (masterResume && masterResume.keywords && Array.isArray(masterResume.keywords)) {
-            setKeywords(masterResume.keywords);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading master resume:', error);
+  
+  const fetchResumes = async () => {
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/resumes/`;
+      const response = await getRequest(url);      
+      if (response.ok) {
+        const data = await response.json();
+        console.log("data", data)
+        return data
       }
-    };
+      throw new Error('Failed to fetch resumes');
+    
+    } catch (error) {
+      console.error("Error fetching resumes:", error);
+      throw error;
+    }
+  }
 
-    loadMasterResume();
-  }, []);
+  const { data: resumeData, isLoading: isLoadingResume } = useQuery({
+    queryKey: ['resumes'],
+    queryFn: fetchResumes,
+    //initialData: [],
+  })
+ 
+  useEffect(() => {
+    if (resumeData) {
+      const masterResume = resumeData.find((res: any) => res.is_master)
+      setKeywords(masterResume?.keywords)
+    }
+  }, [resumeData]);
 
   const addKeyword = () => {
     if (keywordInput.trim() && !keywords.includes(keywordInput.trim())) {
@@ -114,11 +123,48 @@ export default function SearchJobs() {
     window.open(jobLink, '_blank', 'noopener,noreferrer');
   };
 
+  async function getDescription(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const html = await res.text();
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    let description = null;
+
+    const jsonLdTag = doc.querySelector('script[type="application/ld+json"]');
+    if (jsonLdTag) {
+      try {
+        const jobData = JSON.parse(jsonLdTag.textContent);
+        if (jobData.description) {
+          description = jobData.description;
+        }
+      } catch (e) {
+          console.warn('JSON-LD parse error:', e);
+        }
+      }
+      if (!description) {
+        const metaDesc = doc.querySelector('meta[property="og:description"]');
+        if (metaDesc && metaDesc.content) {
+          description = metaDesc.content;
+      }
+    }
+
+    if (!description && doc.body) {
+      description = doc.body.innerText.replace(/\s+/g, ' ').trim();
+    }
+
+    return description;
+  }
+
+
   const handleGenerateResume = async (jobLink: string) => {
     setIsGenerating(jobLink);
     try {
+      const jobDescription = await getDescription(jobLink)
       const url = `${import.meta.env.VITE_API_URL}/resume/generate/`;
-      const response = await postRequest(url, { job_link: jobLink });
+      const response = await postRequest(url, { job_description: jobDescription, job_link: jobLink });
       
       if (response.ok) {
         const data = await response.json();
@@ -196,7 +242,6 @@ export default function SearchJobs() {
                 <SelectValue placeholder="Select job type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any</SelectItem>
                 <SelectItem value="full-time">Full-time</SelectItem>
                 <SelectItem value="part-time">Part-time</SelectItem>
                 <SelectItem value="contract">Contract</SelectItem>

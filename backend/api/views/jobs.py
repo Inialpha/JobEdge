@@ -5,9 +5,17 @@ from django.db.models import Q
 from ..models import Job
 from ..serializers.job import JobSerializer 
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 import os
 from serpapi import GoogleSearch
+import requests
+
+
+ATS_SITES = [
+            "careers-page.com",
+            #"boards.greenhouse.io"
+]
 
 
 class CustomPagination(PageNumberPagination):
@@ -148,6 +156,7 @@ class SearchJobsAPIView(APIView):
     Handles job search using SerpAPI GoogleSearch.
     Saves search results to the user's current_job_search field.
     """
+    authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -159,40 +168,33 @@ class SearchJobsAPIView(APIView):
         max_jobs = request.query_params.get('max_jobs', '50')
         days_ago = request.query_params.get('days_ago', '2')
 
-        # Validate keywords
         if not keywords or len(keywords) == 0:
             return Response(
                 {"error": "Keywords parameter is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Process max_jobs
         try:
             max_jobs = int(max_jobs)
-            if max_jobs > 100:
-                max_jobs = 100
+            if max_jobs > 25:
+                max_jobs = 25
         except ValueError:
-            max_jobs = 50
+            max_jobs = 25
 
-        # Process days_ago
         try:
             days_ago = int(days_ago)
         except ValueError:
             days_ago = 2
 
-        # Build search query
         query_parts = []
         
-        # Add keywords with OR
         if keywords:
             keyword_query = " OR ".join([f'"{kw}"' if ' ' in kw else kw for kw in keywords])
             query_parts.append(f"({keyword_query})")
         
-        # Add remote filter
         if is_remote:
             query_parts.append("(Remote OR remote)")
         
-        # Add job type filter
         if job_type:
             query_parts.append(f'"{job_type}"')
         
@@ -207,69 +209,60 @@ class SearchJobsAPIView(APIView):
             )
 
         # Prepare search parameters
+
+        site_query = " OR ".join([f"site:{domain}" for domain in ATS_SITES])
         search_params = {
-            "engine": "google_jobs",
-            "q": search_query,
+            #"engine": "google",
+            "q": f"({site_query}) {search_query} (inurl:job OR inurl:jobs) AND -inurl:apply",
             "api_key": serpapi_key,
             "num": max_jobs,
         }
 
-        # Add location if provided
         if location:
             search_params["location"] = location
 
-        # Add date filter
         if days_ago:
-            search_params["chips"] = f"date_posted:today"  # SerpAPI uses chips for date filtering
+            search_params["tbs"] = f"qdr:d{days_ago}"
 
         try:
-            # Perform search
             search = GoogleSearch(search_params)
             results = search.get_dict()
 
-            # Extract jobs
             jobs_list = []
-            jobs_results = results.get("jobs_results", [])
-
+            jobs_results = results.get("organic_results", [])
+            other_pages = results.get("serpapi_pagination", {}).get("other_pages", {})
+            if len(jobs_results) < max_jobs and other_pages:
+                current_page = 1
+                while True:
+                    current_page += 1
+                    next_link = other_pages.get(str(current_page), "")
+                    if not next_link:
+                        break
+                    res = requests.get(f"{next_link}&api_key={serpapi_key}")
+                    data = res.json()
+                    jobs_results.extend(data.get("organic_results", []))
+                    if len(jobs_results) >= max_jobs:
+                        break
             for job in jobs_results[:max_jobs]:
                 job_data = {
                     "title": job.get("title", ""),
-                    "date": job.get("detected_extensions", {}).get("posted_at", ""),
-                    "link": job.get("share_url") or job.get("related_links", [{}])[0].get("link", ""),
-                    "snippet": job.get("description", ""),
+                    "date": job.get("date", ""),
+                    "link": job.get("link", ""),
+                    "snippet": job.get("snippet", ""),
                 }
                 jobs_list.append(job_data)
-
-            # Check if we need more results
-            if len(jobs_list) < max_jobs:
-                next_page_token = results.get("serpapi_pagination", {}).get("next_page_token")
-                if next_page_token:
-                    # Fetch next page
-                    search_params["next_page_token"] = next_page_token
-                    search = GoogleSearch(search_params)
-                    results = search.get_dict()
-                    
-                    for job in results.get("jobs_results", []):
-                        if len(jobs_list) >= max_jobs:
-                            break
-                        job_data = {
-                            "title": job.get("title", ""),
-                            "date": job.get("detected_extensions", {}).get("posted_at", ""),
-                            "link": job.get("share_url") or job.get("related_links", [{}])[0].get("link", ""),
-                            "snippet": job.get("description", ""),
-                        }
-                        jobs_list.append(job_data)
 
             # Save to user's current_job_search
             request.user.current_job_search = jobs_list
             request.user.save()
-
             return Response(
                 {"jobs": jobs_list, "count": len(jobs_list)},
                 status=status.HTTP_200_OK,
             )
 
         except Exception as e:
+            print(e)
+            raise e
             return Response(
                 {"error": f"Search failed: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,

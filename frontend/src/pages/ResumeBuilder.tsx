@@ -297,7 +297,8 @@ export default function ResumeBuilder() {
       
       const resumeData = {
         ...trimmedResume,
-        is_master: true
+        keywords: passedResume.keywords,
+        is_master: true,
       };
       
       const response = await postRequest(url, resumeData);

@@ -68,7 +68,7 @@ export default function ResumesComponent() {
   }
 
   const { data: resumeData, isLoading: isLoadingResume } = useQuery({
-    queryKey: ['userData'],
+    queryKey: ['resume'],
     queryFn: fetchResumes,
     //initialData: [],
   })
