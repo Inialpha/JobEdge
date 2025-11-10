@@ -1,7 +1,10 @@
 FROM python:3.10-slim
 
 RUN apt-get update -qq && \
-    apt-get install -y -qq tesseract-ocr
+    apt-get install -y -qq tesseract-ocr \
+    build-essential \
+    default-libmysqlclient-dev \
+    pkg-config
 
 WORKDIR /backend
 
