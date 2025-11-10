@@ -347,24 +347,25 @@ export default function SearchJobs() {
             Search Results ({jobs.length} {jobs.length === 1 ? 'job' : 'jobs'})
           </h2>
           {jobs.map((job, index) => (
-            <Card key={index} className="bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] hover:shadow-lg transition-shadow">
+            <Card key={index} className="bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] hover:shadow-[0_25px_70px_rgba(102,126,234,0.4)] transition-all duration-300 border-l-4 border-l-purple-600">
               <CardHeader>
-                <CardTitle className="text-lg">{job.title}</CardTitle>
+                <CardTitle className="text-lg bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">{job.title}</CardTitle>
                 {job.date && (
-                  <CardDescription>{job.date}</CardDescription>
+                  <CardDescription className="text-gray-600 font-medium">{job.date}</CardDescription>
                 )}
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm text-gray-700 line-clamp-3">{job.snippet}</p>
+                <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed">{job.snippet}</p>
                 <div className="flex gap-2">
                   <Button
-                    variant="outline"
+                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
                     onClick={() => handleApply(job.link)}
                   >
                     <ExternalLink className="mr-2 h-4 w-4" />
                     Apply
                   </Button>
                   <Button
+                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
                     onClick={() => handleGenerateResume(job.link)}
                     disabled={isGenerating === job.link}
                   >
