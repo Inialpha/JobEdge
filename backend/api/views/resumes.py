@@ -58,6 +58,10 @@ class ResumeAPIView(APIView):
             return Response({"details": "No user for user's id"}, status=status.HTTP_400_BAD_REQUEST)
 
         text = extract_text_safe(file_name)
+        print(len(text), "\n" * 9)
+        if len(text) < 5:
+            return Response({"error": "Failed to process this file. This can happen if the file contains images. Please upload another file or another format"}, status=status.HTTP_400_BAD_REQUEST)
+
         resume_data = ai(text)
         resume_data["text"] = text
         resume_data['user'] = user_id
@@ -79,7 +83,7 @@ class ResumeAPIView(APIView):
                 pass
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return Response({"error": "An error occured"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "An error occured. Please try again"}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk):
         """
