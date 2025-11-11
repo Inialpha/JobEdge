@@ -9,29 +9,8 @@ import chardet
 from docx import Document
 from io import BytesIO
 
-import fitz  # PyMuPDF
-from PIL import Image
-import pytesseract
 import io
 
-def extract_pdf_text(file):
-    file.seek(0)
-    pdf = fitz.open(stream=file.read(), filetype="pdf")
-    text = ""
-
-    for page_number, page in enumerate(pdf, start=1):
-        # Try to get normal text
-        page_text = page.get_text()
-        if page_text.strip():  # if there is text
-            text += page_text
-        else:
-            # Fallback to OCR if no text found
-            pix = page.get_pixmap()  # render page to image
-            img = Image.open(io.BytesIO(pix.tobytes()))
-            ocr_text = pytesseract.image_to_string(img)
-            text += ocr_text
-
-    return text
 
 def extract_text_safe(file):
     """Safely extract text with proper encoding handling"""
@@ -47,12 +26,10 @@ def extract_text_safe(file):
             return '\n'.join([p.text for p in doc.paragraphs])
 
         elif file_type == 'application/pdf':
-            print('application/pdf')
             file.seek(0)
             pdf = pymupdf.open(stream=file.read())
             file.seek(0)
             text = ""
-            return extract_pdf_text(file)
             for page in pdf:
                 text += page.get_text()
             print(text)

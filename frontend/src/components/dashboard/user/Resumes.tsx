@@ -85,19 +85,16 @@ export default function ResumesComponent() {
   };
 
   const handleDownload = (resume: Resume) => {
-    // Navigate to resume builder with download option
     navigate("/dashboard/resume-builder", { state: { resume, autoDownload: true, component: 'resume builder' } });
   };
 
   const handleCreateFromScratch = () => {
     setShowCreateDialog(false);
-    // Navigate to resume-builder without any resume data
     navigate('/dashboard/resume-builder', { state: { component: 'resume builder' } });
   };
 
   const handleUploadFile = () => {
     setShowCreateDialog(false);
-    // Trigger file input click
     const fileInput = document.getElementById('resume-upload-dialog');
     if (fileInput) {
       fileInput.click();
@@ -122,7 +119,8 @@ export default function ResumesComponent() {
             navigate('/dashboard/resume-builder', { state: { resume, component: 'resume builder' } });
           }, 1000);
         } else {
-          setFeedback({type: 'error', message: "There was an error uploading the file. Please try again."});
+          const jsonRes = await response.json()
+          setFeedback({type: 'error', message: jsonRes.error  || "There was an error uploading the file. Please try again."});
         }
       } catch (error) {
         console.error(error);
@@ -131,7 +129,7 @@ export default function ResumesComponent() {
         setIsUploading(false);
         setTimeout(() => {
           setFeedback(null);
-        }, 5000);
+        }, 8000);
       }
     }
   };
