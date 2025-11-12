@@ -213,7 +213,7 @@ export default function ResumeBuilder() {
     updateResume('awards', resume.awards.filter((_, i) => i !== index));
   }, [resume.awards, updateResume]);
 
-  const saveAsMasterResume = useCallback(async () => {
+  const saveResume = useCallback(async () => {
     // Validate required fields
     const errors: {[key: string]: string} = {};
     if (!resume.personalInformation.name.trim()) {
@@ -290,27 +290,53 @@ export default function ResumeBuilder() {
     setIsSaving(true);
     setSaveMessage(null);
     try {
-      const url = `${import.meta.env.VITE_API_URL}/resume/from-object/`;
-      
       // Trim all resume values and nested values to remove empty strings
       const trimmedResume: ResumeData = cleanData(resume)
       
       const resumeData = {
         ...trimmedResume,
-        keywords: passedResume.keywords,
-        is_master: true,
+        keywords: passedResume?.keywords || [],
+        is_master: passedResume?.is_master || false,
       };
       
-      const response = await postRequest(url, resumeData);
+      let url: string;
+      let response: Response;
+      
+      // Determine whether to POST (create) or PUT (update)
+      if (passedResume?.id) {
+        // Update existing resume
+        url = `${import.meta.env.VITE_API_URL}/resumes/${passedResume.id}/`;
+        response = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${document.cookie.split('token=')[1]?.split(';')[0]}`
+          },
+          body: JSON.stringify(resumeData)
+        });
+      } else {
+        // Create new resume
+        url = `${import.meta.env.VITE_API_URL}/resume/from-object/`;
+        response = await postRequest(url, resumeData);
+      }
       
       if (response.ok) {
         await response.json();
-        setSaveMessage({type: 'success', text: 'Resume saved as master resume successfully!'});
-        dispatch(
-          updateUserInfo({
-            hasMasterResume: true
-          })
-        )
+        const successMessage = passedResume?.is_master 
+          ? 'Profile saved successfully!' 
+          : passedResume?.id 
+            ? 'Resume updated successfully!' 
+            : 'Resume saved successfully!';
+        setSaveMessage({type: 'success', text: successMessage});
+        
+        if (passedResume?.is_master || resumeData.is_master) {
+          dispatch(
+            updateUserInfo({
+              hasMasterResume: true
+            })
+          )
+        }
+        
         setTimeout(() => {
           navigate('/dashboard', { state: { component: 'resumes' } });
         }, 1500);
@@ -326,7 +352,7 @@ export default function ResumeBuilder() {
       setIsSaving(false);
       saveTimeoutRef.current = setTimeout(() => setSaveMessage(null), 5000);
     }
-  }, [resume, navigate, dispatch]);
+  }, [resume, navigate, dispatch, passedResume]);
 
   const updateResponsibility = useCallback((expIndex: number, respIndex: number, value: string) => {
     const updated = [...resume.professionalExperience];
@@ -872,10 +898,10 @@ export default function ResumeBuilder() {
             <button 
               className="btn" 
               style={{background: '#17a2b8', color: 'white'}}
-              onClick={saveAsMasterResume}
+              onClick={saveResume}
               disabled={isSaving}
             >
-              {isSaving ? '💾 Saving...' : '💾 Save as Master Resume'}
+              {isSaving ? '💾 Saving...' : passedResume?.is_master ? '💾 Save Profile' : passedResume?.id ? '💾 Update Resume' : '💾 Save Resume'}
             </button>
           </div>
 
