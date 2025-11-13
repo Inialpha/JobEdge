@@ -14,7 +14,7 @@ export const postRequest = async (url: string, data: object, auth: boolean = tru
     return response;
 }
 
-export const putRequest = async (url: string, data: object) => {
+export const putRequest = async (url: string, data: object, usePut: boolean = false) => {
     const cookie = getCookie('token')
     const headers = new Headers({
         'Content-Type': 'application/json',
@@ -22,7 +22,7 @@ export const putRequest = async (url: string, data: object) => {
     })
     const response = await fetch(url, {
         body: JSON.stringify(data),
-        method: 'PATCH',
+        method: usePut ? 'PUT' : 'PATCH',
 	headers
     });
     return response;
