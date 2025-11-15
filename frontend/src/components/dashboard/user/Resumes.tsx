@@ -58,7 +58,7 @@ export default function ResumesComponent() {
         const data = await response.json();
         console.log("data", data)
         return data
-      }
+     }
       throw new Error('Failed to fetch resumes');
     
     } catch (error) {
@@ -68,7 +68,7 @@ export default function ResumesComponent() {
   }
 
   const { data: resumeData, isLoading: isLoadingResume } = useQuery({
-    queryKey: ['resume'],
+    queryKey: ['resumes'],
     queryFn: fetchResumes,
     //initialData: [],
   })

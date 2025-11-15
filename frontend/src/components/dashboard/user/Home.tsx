@@ -173,7 +173,7 @@ export default function HomeComponent() {
               className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Create New Profile
+              Create Your Profile
             </Button>
           )}
         </div>

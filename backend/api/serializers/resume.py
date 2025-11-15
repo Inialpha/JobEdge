@@ -8,7 +8,7 @@ import filetype
 
 class ResumeSerializer(serializers.Serializer):
     id = serializers.CharField(max_length=255, read_only=True)
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     is_master = serializers.BooleanField(default=False)
     keywords = serializers.ListField(
         child=serializers.CharField(max_length=255),

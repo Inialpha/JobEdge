@@ -5,7 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Menu, X, FileText, Settings, LogOut, FileEdit, Sparkles, Briefcase, ChevronDown, ChevronLeft, ChevronRight, Home, ClipboardList } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
-import { useView } from "@/hooks/useView";
+//import { useView } from "@/hooks/useView";
+import { useView } from "@/context/ViewContext";
 import { logout } from "@/store/userSlice";
 import { postRequest } from "@/utils/apis";
 import { deleteCookie } from "@/utils/cookieManager";
@@ -41,7 +42,8 @@ export default function UserDashboardLayout() {
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { activeView, setActiveView } = useView("resumes");
+  //const { activeView, setActiveView } = useView("resumes");
+  const { currentView, setCurrentView } = useView();
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const toggleSidebarCollapse = () => setSidebarCollapsed(!sidebarCollapsed);
@@ -57,7 +59,7 @@ export default function UserDashboardLayout() {
   ];
 
   const handleNavigation = (itemName: string, path: string) => {
-    setActiveView(itemName.toLowerCase());
+    setCurrentView(itemName.toLowerCase());
     navigate(path);
     if (sidebarOpen) {
       setSidebarOpen(false);
@@ -184,7 +186,7 @@ export default function UserDashboardLayout() {
                   <TooltipTrigger asChild>
                     <button
                       className={`flex items-center ${sidebarCollapsed ? 'justify-center px-3' : 'px-6'} py-3 text-gray-700 w-full rounded-lg transition-colors ${
-                        activeView === item.name.toLowerCase()
+                        currentView === item.name.toLowerCase()
                           ? "bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 font-semibold"
                           : "hover:bg-gray-100"
                       }`}

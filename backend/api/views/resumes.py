@@ -89,10 +89,13 @@ class ResumeAPIView(APIView):
         Update an existing resume.
         """
         resume = get_object_or_404(Resume, pk=pk)
-        serializer = ResumeSerializer(resume, data=request.data)
+        resume_data = request.data.copy()
+        normalized_resume = normalize_resume_payload(resume_data)
+        serializer = ResumeSerializer(resume, data=normalized_resume)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
@@ -184,7 +187,6 @@ class GenerateResumeFromJobDescription(APIView):
         data.pop("user", None)
         data.pop("text", None)
         
-        # Generate tailored resume using AI
         tailored_resume = generate_resume(job_description, data)
         
         if not tailored_resume:
@@ -192,16 +194,13 @@ class GenerateResumeFromJobDescription(APIView):
         
         tailored_resume["user"] = user_id
 
-        # Validate URL fields - preserve AI-generated values if valid
         url_fields = ["linkedin", "website"]
         url_validator = URLValidator()
         for url_field in url_fields:
             try:
                 url_validator(tailored_resume.get(url_field, ""))
-                # Keep the AI-generated URL as it's valid - no changes needed
                 pass
             except ValidationError as e:
-                # If invalid, set to None
                 tailored_resume[url_field] = None
         if not tailored_resume.get("summary") and tailored_resume.get("professionalSummary"):
             tailored_resume["summary"] = tailored_resume.get("professionalSummary")
@@ -229,79 +228,16 @@ class ResumeFromObjectAPIView(APIView):
         Create a resume from a resume object with optional is_master flag.
         """
         resume_data = request.data.copy()
-        user_id = request.user.id
+        user = request.user
         
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return Response({"details": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Set user in resume data
-        resume_data['user'] = user_id
         
         # Check if this should be a master resume
         is_master = resume_data.get('is_master', False)
         
-        if 'personalInformation' in resume_data:
-            resume_data['personal_information'] = resume_data['personalInformation']
-        # Convert professionalExperience to professional_experiences
-        if 'professionalExperience' in resume_data:
-            resume_data['professional_experiences'] = [
-                {
-                    'organization': exp.get('organization', ''),
-                    'role': exp.get('role', ''),
-                    'start_date': exp.get('startDate', ''),
-                    'end_date': exp.get('endDate', ''),
-                    'location': exp.get('location', ''),
-                    'responsibilities': exp.get('responsibilities', [])
-                }
-                for exp in resume_data['professionalExperience']
-            ]
-            del resume_data['professionalExperience']
-        
-        # Convert education to educations
-        if 'education' in resume_data:
-            resume_data['educations'] = [
-                {
-                    'institution': edu.get('institution', ''),
-                    'degree': edu.get('degree', ''),
-                    'field': edu.get('field', ''),
-                    'start_date': edu.get('startDate', ''),
-                    'end_date': edu.get('endDate', ''),
-                    'gpa': edu.get('gpa', '')
-                }
-                for edu in resume_data['education']
-            ]
-            del resume_data['education']
-        
-        # Validate URL fields only if they have values
-        url_fields = ["linkedin", "website"]
-        url_validator = URLValidator()
-        for url_field in url_fields:
-            url_value = resume_data.get(url_field, "")
-            if url_value:
-                try:
-                    url_validator(url_value)
-                except ValidationError:
-                    resume_data[url_field] = None
-            else:
-                resume_data[url_field] = None
-        
-        # Validate email only if it has a value
-        email_value = resume_data.get("email", "")
-        if email_value:
-            try:
-                validate_email(email_value)
-            except ValidationError:
-                resume_data['email'] = None
-        else:
-            resume_data['email'] = None
-        
-        serializer = ResumeSerializer(data=resume_data)
-        
+        normalized_resume = normalize_resume_payload(resume_data)
+        serializer = ResumeSerializer(data=normalized_resume)
         try:
             if serializer.is_valid():
-                # If this is a master resume, remove any previous master resume
                 if is_master:
                     try:
                         master_resume = Resume.objects.get(user=user, is_master=True)
@@ -312,7 +248,7 @@ class ResumeFromObjectAPIView(APIView):
                     user.has_master_resume = True
                     user.save()
                 
-                serializer.save()
+                serializer.save(user=user)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 print("Serializer errors:", serializer.errors)
@@ -320,3 +256,64 @@ class ResumeFromObjectAPIView(APIView):
         except Exception as e:
             print("Error creating resume:", e)
             return Response({"error": "An error occurred"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+def normalize_resume_payload(data):
+    out = dict(data)
+
+    if "personalInformation" in out:
+        out["personal_information"] = out.get("personalInformation")
+
+    if "professionalExperience" in out:
+        out["professional_experiences"] = [
+            {
+                "organization": item.get("organization", ""),
+                "role": item.get("role", ""),
+                "start_date": item.get("startDate", ""),
+                "end_date": item.get("endDate", ""),
+                "location": item.get("location", ""),
+                "responsibilities": item.get("responsibilities", []),
+            }
+            for item in out.get("professionalExperience", [])
+        ]
+        out.pop("professionalExperience", None)
+
+    if "education" in out:
+        out["educations"] = [
+            {
+                "institution": item.get("institution", ""),
+                "degree": item.get("degree", ""),
+                "field": item.get("field", ""),
+                "start_date": item.get("startDate", ""),
+                "end_date": item.get("endDate", ""),
+                "gpa": item.get("gpa", ""),
+            }
+            for item in out.get("education", [])
+        ]
+        out.pop("education", None)
+
+    validator = URLValidator()
+    info = out.get("personal_information", {})
+
+    for fld in ["linkedin", "website"]:
+        val = info.get(fld)
+        if val:
+            try:
+                validator(val)
+            except ValidationError:
+                info.pop(fld, None)
+        else:
+            info.pop(fld, None)
+
+    email_val = info.get("email")
+    if email_val:
+        try:
+            validate_email(email_val)
+        except ValidationError:
+            info.pop("email", None)
+    else:
+        info.pop("email", None)
+
+    out["personal_information"] = info
+    return out

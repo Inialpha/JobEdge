@@ -5,15 +5,16 @@ import { getEditableResume } from '@/utils/resumeUtils';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
 import { ResumePreview } from '@/components/ResumePreview';
 import { createRoot, Root } from 'react-dom/client';
-import { postRequest } from '@/utils/apis';
+import { postRequest, putRequest } from '@/utils/apis';
 import { useSelector } from "react-redux";
 import { RootState } from '@/store/store';
 import { useDispatch } from "react-redux"
 import { updateUserInfo } from "@/store/userSlice"
 import cleanData from "@/utils/cleanData"
-
+import { useView } from "@/context/ViewContext";
 
 export default function ResumeBuilder() {
+  const { setCurrentView } = useView();
   const dispatch = useDispatch()
   const location = useLocation();
   const navigate = useNavigate();
@@ -29,6 +30,10 @@ export default function ResumeBuilder() {
   const [saveMessage, setSaveMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setCurrentView("Resume Builder");
+  }, [setCurrentView]);
 
   const [newExperience, setNewExperience] = useState<ProfessionalExperience>({
     organization: '',
@@ -216,7 +221,7 @@ export default function ResumeBuilder() {
   const saveResume = useCallback(async () => {
     // Validate required fields
     const errors: {[key: string]: string} = {};
-    if (!resume.personalInformation.name.trim()) {
+    if (!resume.personalInformation?.name?.trim()) {
       errors['personalInformation.name'] = 'Name is required';
     }
     if (!resume.personalInformation.profession?.trim()) {
@@ -224,7 +229,7 @@ export default function ResumeBuilder() {
     }
     
     // Validate professional summary
-    if (!resume.summary.trim()) {
+    if (!resume.summary?.trim()) {
       errors['summary'] = 'Professional summary is required';
     }
     
@@ -306,14 +311,7 @@ export default function ResumeBuilder() {
       if (passedResume?.id) {
         // Update existing resume
         url = `${import.meta.env.VITE_API_URL}/resumes/${passedResume.id}/`;
-        response = await fetch(url, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Token ${document.cookie.split('token=')[1]?.split(';')[0]}`
-          },
-          body: JSON.stringify(resumeData)
-        });
+        response = await putRequest(url, resumeData, true)
       } else {
         // Create new resume
         url = `${import.meta.env.VITE_API_URL}/resume/from-object/`;

@@ -17,6 +17,8 @@ import ApplicationsComponent from "@/components/dashboard/user/Applications";
 import { AuthMiddleware, AdminMiddleware } from "@/utils/middleware";
 import VerifyEmail from "@/pages/VerifyEmail"
 import NotFound from "@/pages/NotFound"
+import { ViewProvider } from "@/context/ViewContext";
+
 
 const routes = createBrowserRouter(
   createRoutesFromElements(
@@ -31,7 +33,11 @@ const routes = createBrowserRouter(
       {/* Protected routes with authentication */}
       <Route element={<AuthMiddleware />}>
         {/* User Dashboard with nested routes */}
-        <Route path="dashboard" element={<UserDashboardLayout />}>
+        <Route path="dashboard" element={
+          <ViewProvider>
+            <UserDashboardLayout />
+          </ViewProvider>
+        }>
           <Route index element={<HomeComponent />} />
           <Route path="home" element={<HomeComponent />} />
           <Route path="resumes" element={<ResumesComponent />} />
