@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { postRequest } from "@/utils/apis";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { useView } from "@/context/ViewContext";
 
 
 interface ContactInfo {
@@ -64,12 +65,18 @@ interface GeneratedResume {
 
 export default function TailorResumePage() {
   const user = useSelector((state: RootState) => state.user);
+  const { setCurrentView } = useView();
   const [jobDescription, setJobDescription] = useState('');
   const [generatedResume, setGeneratedResume] = useState<GeneratedResume | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
   const navigate = useNavigate();
+
+  // Set current view when component mounts
+  useEffect(() => {
+    setCurrentView("tailor resume");
+  }, [setCurrentView]);
 
   const handleGenerateResume = async () => {
     if (!jobDescription.trim()) {

@@ -16,6 +16,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Home,
+  ClipboardList,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -58,12 +60,14 @@ export default function AdminDashboard() {
   const toggleSidebarCollapse = () => setSidebarCollapsed(!sidebarCollapsed)
 
   const sidebarItems = [
+    { name: "Home", icon: Home, component: DashboardHome },
     { name: "Dashboard", icon: Layout, component: DashboardHome },
     { name: "Analytics", icon: BarChart, component: AnalyticsComponent },
     { name: "Users", icon: Users, component: UsersComponent },
     { name: "Resumes", icon: FileText, component: ResumeComponent },
     { name: "Resume Builder", icon: FileEdit, path: "/dashboard/resume-builder" },
     { name: "Tailor Resume", icon: Sparkles, path: "/dashboard/tailor-resume" },
+    { name: "Applications", icon: ClipboardList, path: "/dashboard/applications" },
     { name: "Jobs", icon: Briefcase, path: "/dashboard/jobs" },
     { name: "Settings", icon: Settings, component: SettingsComponent },
   ]

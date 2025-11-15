@@ -131,3 +131,5 @@ node_modules/
 package-lock.json
 backend/requirements.txt.backup
 frontend/src/utils/resumeDownload.old.ts
+
+start.sh

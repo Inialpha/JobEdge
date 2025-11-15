@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getRequest, postFormData, deleteRequest } from "@/utils/apis";
-import { FileText, Download, Edit, UploadCloud, Trash2 } from "lucide-react";
+import { FileText, Download, Edit, UploadCloud, Trash2, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,7 @@ import {
 import { useDispatch } from "react-redux"
 import { updateUserInfo } from "@/store/userSlice"
 import { useQuery } from '@tanstack/react-query';
+import { useView } from "@/context/ViewContext";
 
 
 interface Resume {
@@ -40,14 +41,19 @@ interface Resume {
 
 export default function ResumesComponent() {
   const dispatch = useDispatch()
+  const { setCurrentView } = useView();
   const [resumes, setResumes] = useState<Resume[]>([]);
-  //const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [resumeToDelete, setResumeToDelete] = useState<Resume | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const navigate = useNavigate();
+
+  // Set current view when component mounts
+  useEffect(() => {
+    setCurrentView("resumes");
+  }, [setCurrentView]);
 
 
   const fetchResumes = async () => {
@@ -58,7 +64,7 @@ export default function ResumesComponent() {
         const data = await response.json();
         console.log("data", data)
         return data
-      }
+     }
       throw new Error('Failed to fetch resumes');
     
     } catch (error) {
@@ -68,7 +74,7 @@ export default function ResumesComponent() {
   }
 
   const { data: resumeData, isLoading: isLoadingResume } = useQuery({
-    queryKey: ['resume'],
+    queryKey: ['resumes'],
     queryFn: fetchResumes,
     //initialData: [],
   })
@@ -171,8 +177,8 @@ export default function ResumesComponent() {
 
   if (isLoadingResume) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500">Loading resumes...</p>
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
       </div>
     );
   }
