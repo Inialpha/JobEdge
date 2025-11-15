@@ -11,6 +11,7 @@ import { X, Search, ExternalLink, FileText, Loader2 } from 'lucide-react';
 import { getRequest, postRequest } from '@/utils/apis';
 import { useQuery } from '@tanstack/react-query';
 import CircularLoader from '@/components/ui/circularLoader';
+import { useView } from '@/context/ViewContext';
 
 
 interface JobResult {
@@ -39,6 +40,7 @@ interface User {
 
 export default function SearchJobs() {
   const navigate = useNavigate();
+  const { setCurrentView } = useView();
   
   const [keywords, setKeywords] = useState<string[]>([]);
   const [keywordInput, setKeywordInput] = useState('');
@@ -51,6 +53,11 @@ export default function SearchJobs() {
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [jobs, setJobs] = useState<JobResult[]>([]);
   const [error, setError] = useState<string>('');
+
+  // Set current view when component mounts
+  useEffect(() => {
+    setCurrentView("jobs");
+  }, [setCurrentView]);
   
   const fetchUser = async () => {
     try {
@@ -179,24 +186,27 @@ export default function SearchJobs() {
   }
 
 
-  const handleGenerateResume = async (jobLink: string) => {
+  const handleGenerateApplication = async (jobLink: string) => {
     setIsGenerating(jobLink);
     try {
       const jobDescription = await getDescription(jobLink)
-      const url = `${import.meta.env.VITE_API_URL}/resume/generate/`;
-      const response = await postRequest(url, { job_description: jobDescription, job_link: jobLink });
+      const url = `${import.meta.env.VITE_API_URL}/applications/`;
+      const response = await postRequest(url, { 
+        job_description: jobDescription, 
+        job_link: jobLink 
+      }, true);
       
       if (response.ok) {
-        const data = await response.json();
-        // Navigate to ResumeBuilder with the generated resume
-        navigate('/dashboard/resume-builder', { state: { resume: data } });
+        await response.json();
+        // Navigate to Applications page
+        navigate('/dashboard/applications');
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Failed to generate resume. Please try again.');
+        setError(errorData.error || 'Failed to generate application. Please try again.');
       }
     } catch (error: any) {
-      setError('Failed to generate resume. Please try again.');
-      console.error('Error generating resume:', error);
+      setError('Failed to generate application. Please try again.');
+      console.error('Error generating application:', error);
     } finally {
       setIsGenerating(null);
     }
@@ -366,7 +376,7 @@ export default function SearchJobs() {
                   </Button>
                   <Button
                     className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
-                    onClick={() => handleGenerateResume(job.link)}
+                    onClick={() => handleGenerateApplication(job.link)}
                     disabled={isGenerating === job.link}
                   >
                     {isGenerating === job.link ? (
@@ -377,7 +387,7 @@ export default function SearchJobs() {
                     ) : (
                       <>
                         <FileText className="mr-2 h-4 w-4" />
-                        Generate Resume
+                        Generate Application
                       </>
                     )}
                   </Button>

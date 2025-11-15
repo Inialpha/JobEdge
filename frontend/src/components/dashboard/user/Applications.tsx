@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { useView } from "@/context/ViewContext";
+import { useQuery } from '@tanstack/react-query';
+import CircularLoader from "@/components/ui/circularLoader";
 
 interface Application {
   id: string;
@@ -31,8 +34,8 @@ interface Application {
 }
 
 export default function Applications() {
+  const { setCurrentView } = useView();
   const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showNewApplication, setShowNewApplication] = useState(false);
   const [showCoverLetter, setShowCoverLetter] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
@@ -48,9 +51,10 @@ export default function Applications() {
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.user);
 
+  // Set current view when component mounts
   useEffect(() => {
-    fetchApplications();
-  }, []);
+    setCurrentView("applications");
+  }, [setCurrentView]);
 
   const fetchApplications = async () => {
     try {
@@ -58,16 +62,25 @@ export default function Applications() {
       const response = await getRequest(url);
       if (response.ok) {
         const data = await response.json();
-        setApplications(data);
-      } else {
-        console.error("Failed to fetch applications");
+        return data;
       }
+      throw new Error('Failed to fetch applications');
     } catch (error) {
       console.error("Error fetching applications:", error);
-    } finally {
-      setLoading(false);
+      throw error;
     }
   };
+
+  const { data: applicationsData, isLoading, refetch } = useQuery({
+    queryKey: ['applications'],
+    queryFn: fetchApplications,
+  });
+
+  useEffect(() => {
+    if (applicationsData) {
+      setApplications(applicationsData);
+    }
+  }, [applicationsData]);
 
   const handleStartNewApplication = () => {
     setShowNewApplication(true);
@@ -99,9 +112,9 @@ export default function Applications() {
       const response = await postRequest(url, data, true);
 
       if (response.ok) {
-        const result = await response.json();
+        await response.json();
         // Refresh applications list
-        await fetchApplications();
+        await refetch();
         setShowNewApplication(false);
         setJobDescription('');
         setJobLink('');
@@ -185,9 +198,9 @@ export default function Applications() {
         </Button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <CircularLoader size="large" />
         </div>
       ) : applications.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">
