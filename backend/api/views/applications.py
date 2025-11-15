@@ -11,7 +11,7 @@ from ai_services.resume_extractor import generate_resume
 from ai_services.cover_letters import generate_cover_letter
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-
+from ..utils.normalize_resume_payload import normalize_resume_payload
 
 class ApplicationAPIView(APIView):
     """
@@ -52,7 +52,7 @@ class ApplicationAPIView(APIView):
         """
         job_description = request.data.get("job_description")
         job_link = request.data.get("job_link", "")
-        user_id = request.user.id
+        user = request.user
         
         if not job_description:
             return Response({
@@ -60,12 +60,7 @@ class ApplicationAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            user = User.objects.get(id=user_id)
             master_resume = Resume.objects.get(user=user, is_master=True)
-        except User.DoesNotExist:
-            return Response({
-                "details": "User not found"
-            }, status=status.HTTP_400_BAD_REQUEST)
         except Resume.DoesNotExist:
             return Response({
                 "details": "No master resume found. Please create a master resume first."
@@ -85,25 +80,13 @@ class ApplicationAPIView(APIView):
             return Response({
                 "details": "Failed to generate resume"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        tailored_resume_data["user"] = user_id
+
         tailored_resume_data["is_master"] = False
+        normalized_resume = normalize_resume_payload(tailored_resume_data)
         
-        # Validate URL fields
-        url_fields = ["linkedin", "website"]
-        url_validator = URLValidator()
-        for url_field in url_fields:
-            try:
-                url_validator(tailored_resume_data.get(url_field, ""))
-            except ValidationError:
-                tailored_resume_data[url_field] = None
-        
-        # Handle summary field
-        if not tailored_resume_data.get("summary") and tailored_resume_data.get("professionalSummary"):
-            tailored_resume_data["summary"] = tailored_resume_data.get("professionalSummary")
-        
-        # Create the tailored resume
-        resume_serializer = ResumeSerializer(data=tailored_resume_data)
+        if not normalized_resume.get("summary") and normalized_resume.get("professionalSummary"):
+            normalized_resume["summary"] = normalized_resume.get("professionalSummary")
+        resume_serializer = ResumeSerializer(data=normalized_resume)
         if not resume_serializer.is_valid():
             print("Resume serializer errors:", resume_serializer.errors)
             return Response({
@@ -111,26 +94,18 @@ class ApplicationAPIView(APIView):
                 "errors": resume_serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        resume_serializer.save()
+        resume_serializer.save(user=user)
         created_resume = resume_serializer.instance
         
         # Generate cover letter using the tailored resume and job description
-        cover_letter_text = generate_cover_letter(tailored_resume_data, job_description)
+        cover_letter_text = generate_cover_letter(normalized_resume, job_description)
         
         if not cover_letter_text:
-            # If cover letter generation fails, still create application with a default message
             cover_letter_text = "Cover letter generation failed. Please write your own cover letter."
-        
-        # Validate job_link if provided
-        if job_link:
-            try:
-                url_validator(job_link)
-            except ValidationError:
-                job_link = None
         
         # Create the application
         application_data = {
-            "user": user_id,
+            "user": user.id,
             "job_description": job_description,
             "resume": created_resume.id,
             "cover_letter": cover_letter_text,
