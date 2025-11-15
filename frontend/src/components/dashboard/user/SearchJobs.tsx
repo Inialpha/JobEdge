@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { X, Search, ExternalLink, FileText, Loader2 } from 'lucide-react';
 import { getRequest, postRequest } from '@/utils/apis';
 import { useQuery } from '@tanstack/react-query';
-import CircularLoader from '@/components/ui/circularLoader';
 import { useView } from '@/context/ViewContext';
 
 
@@ -216,8 +215,8 @@ export default function SearchJobs() {
     <div className="max-w-[1400px] mx-auto md:p-6">
       {/* Show loader when user data is loading */}
       {isLoading && (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <CircularLoader size="large" />
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
         </div>
       )}
       
