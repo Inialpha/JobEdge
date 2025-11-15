@@ -3,10 +3,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Search, Trash2 } from 'lucide-react'
+import { Search, Trash2, Loader2 } from 'lucide-react'
 import { getRequest, deleteRequest } from '@/utils/apis';
 import toCamelCaseKeys from '@/utils/toCamelCase';
-import CircularLoader from '@/components/ui/circularLoader';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -99,8 +98,8 @@ export default function UserComponent() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <CircularLoader size="large" />
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
       </div>
     )
   }

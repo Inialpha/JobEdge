@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, ExternalLink, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, FileText, ExternalLink, Loader2, CheckCircle, AlertCircle, Download } from 'lucide-react';
 import { getRequest, putRequest, postRequest } from "@/utils/apis";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useView } from "@/context/ViewContext";
 import { useQuery } from '@tanstack/react-query';
-import CircularLoader from "@/components/ui/circularLoader";
+import { coverLetterPdf } from "@/utils/coverLetterPdf";
 
 interface Application {
   id: string;
@@ -175,6 +175,13 @@ export default function Applications() {
     setEditedCoverLetter('');
   };
 
+  const handleExportCoverLetterPdf = () => {
+    if (!selectedApplication) return;
+    
+    const fileName = `cover_letter_${selectedApplication.resume.personal_information?.name?.replace(/\s+/g, '_') || 'document'}.pdf`;
+    coverLetterPdf(editedCoverLetter, fileName);
+  };
+
   const getJobDescriptionSnippet = (description: string) => {
     if (!description) return '';
     return description.length > 100 
@@ -199,8 +206,8 @@ export default function Applications() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <CircularLoader size="large" />
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
         </div>
       ) : applications.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">
@@ -375,6 +382,14 @@ export default function Applications() {
               placeholder="Your cover letter..."
             />
             <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={handleExportCoverLetterPdf}
+                disabled={isSaving}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export as PDF
+              </Button>
               <Button
                 variant="outline"
                 onClick={handleCancelCoverLetter}

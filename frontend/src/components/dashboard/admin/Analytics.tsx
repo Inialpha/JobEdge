@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 //import { useSelector } from 'react-redux';
 import { getRequest } from '@/utils/apis';
 
-import { Users, Calendar, Activity, ThumbsUp } from 'lucide-react';
-import CircularLoader from '@/components/ui/circularLoader';
+import { Users, Calendar, Activity, ThumbsUp, Loader2 } from 'lucide-react';
 
 type Stat = {
   title: string;
@@ -53,8 +52,8 @@ export default function AnalyticsComponent() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <CircularLoader size="large" />
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
       </div>
     )
   }

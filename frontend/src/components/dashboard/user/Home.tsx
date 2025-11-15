@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getRequest, postFormData } from "@/utils/apis";
-import { FileText, Edit, UploadCloud, UserCircle, Plus } from "lucide-react";
+import { FileText, Edit, UploadCloud, UserCircle, Plus, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,6 @@ import { updateUserInfo } from "@/store/userSlice";
 import { RootState } from "@/store/store";
 import { useView } from "@/context/ViewContext";
 import { useQuery } from '@tanstack/react-query';
-import CircularLoader from "@/components/ui/circularLoader";
 
 interface Resume {
   id: string;
@@ -136,8 +135,8 @@ export default function HomeComponent() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <CircularLoader size="large" />
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
       </div>
     );
   }
