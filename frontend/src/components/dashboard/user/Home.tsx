@@ -14,6 +14,9 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { updateUserInfo } from "@/store/userSlice";
 import { RootState } from "@/store/store";
+import { useView } from "@/context/ViewContext";
+import { useQuery } from '@tanstack/react-query';
+import CircularLoader from "@/components/ui/circularLoader";
 
 interface Resume {
   id: string;
@@ -30,32 +33,44 @@ interface Resume {
 export default function HomeComponent() {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.user);
+  const { setCurrentView } = useView();
   const [masterResume, setMasterResume] = useState<Resume | null>(null);
-  const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const navigate = useNavigate();
 
+  // Set current view when component mounts
   useEffect(() => {
-    fetchMasterResume();
-  }, []);
+    setCurrentView("home");
+  }, [setCurrentView]);
 
-  const fetchMasterResume = async () => {
+  const fetchResumes = async () => {
     try {
       const url = `${import.meta.env.VITE_API_URL}/resumes/`;
       const response = await getRequest(url);
       if (response.ok) {
         const data = await response.json();
-        const master = data.find((resume: Resume) => resume.is_master);
-        setMasterResume(master || null);
+        return data;
       }
+      throw new Error('Failed to fetch resumes');
     } catch (error) {
-      console.error("Error fetching master resume:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error fetching resumes:", error);
+      throw error;
     }
   };
+
+  const { data: resumesData, isLoading } = useQuery({
+    queryKey: ['resumes'],
+    queryFn: fetchResumes,
+  });
+
+  useEffect(() => {
+    if (resumesData) {
+      const master = resumesData.find((resume: Resume) => resume.is_master);
+      setMasterResume(master || null);
+    }
+  }, [resumesData]);
 
   const handleCreateProfile = () => {
     setShowCreateDialog(true);
@@ -119,10 +134,10 @@ export default function HomeComponent() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500">Loading...</p>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <CircularLoader size="large" />
       </div>
     );
   }

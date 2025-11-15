@@ -1,16 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { useView } from "@/context/ViewContext";
 
 export default function SettingsComponent() {
   const user = useSelector((state: RootState) => state.user);
+  const { setCurrentView } = useView();
   const [formData, setFormData] = useState({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
     phone: "",
   });
+
+  // Set current view when component mounts
+  useEffect(() => {
+    setCurrentView("settings");
+  }, [setCurrentView]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({

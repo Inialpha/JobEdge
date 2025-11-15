@@ -32,7 +32,7 @@ export default function ResumeBuilder() {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    setCurrentView("Resume Builder");
+    setCurrentView("resume builder");
   }, [setCurrentView]);
 
   const [newExperience, setNewExperience] = useState<ProfessionalExperience>({

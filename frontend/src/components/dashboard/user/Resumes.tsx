@@ -24,6 +24,8 @@ import {
 import { useDispatch } from "react-redux"
 import { updateUserInfo } from "@/store/userSlice"
 import { useQuery } from '@tanstack/react-query';
+import { useView } from "@/context/ViewContext";
+import CircularLoader from "@/components/ui/circularLoader";
 
 
 interface Resume {
@@ -40,14 +42,19 @@ interface Resume {
 
 export default function ResumesComponent() {
   const dispatch = useDispatch()
+  const { setCurrentView } = useView();
   const [resumes, setResumes] = useState<Resume[]>([]);
-  //const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [resumeToDelete, setResumeToDelete] = useState<Resume | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const navigate = useNavigate();
+
+  // Set current view when component mounts
+  useEffect(() => {
+    setCurrentView("resumes");
+  }, [setCurrentView]);
 
 
   const fetchResumes = async () => {
@@ -171,8 +178,8 @@ export default function ResumesComponent() {
 
   if (isLoadingResume) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500">Loading resumes...</p>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <CircularLoader size="large" />
       </div>
     );
   }

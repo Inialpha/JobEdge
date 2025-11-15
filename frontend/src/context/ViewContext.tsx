@@ -1,9 +1,14 @@
-// ViewContext.jsx
-import { createContext, useContext, useState } from "react";
+// ViewContext.tsx
+import { createContext, useContext, useState, ReactNode } from "react";
 
-const ViewContext = createContext();
+interface ViewContextType {
+  currentView: string;
+  setCurrentView: (view: string) => void;
+}
 
-export function ViewProvider({ children }) {
+const ViewContext = createContext<ViewContextType | undefined>(undefined);
+
+export function ViewProvider({ children }: { children: ReactNode }) {
   const [currentView, setCurrentView] = useState("home");
 
   return (
@@ -14,5 +19,9 @@ export function ViewProvider({ children }) {
 }
 
 export function useView() {
-  return useContext(ViewContext);
+  const context = useContext(ViewContext);
+  if (context === undefined) {
+    throw new Error('useView must be used within a ViewProvider');
+  }
+  return context;
 }
