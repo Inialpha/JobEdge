@@ -120,7 +120,11 @@ export default function Applications() {
         setJobLink('');
       } else {
         const errorData = await response.json();
-        setError(errorData.details || 'Failed to generate application documents. Please try again.');
+        if (response.status === 429) {
+          setError('Our service is currently handling a high volume of requests. Please try again shortly.');
+        } else {
+          setError(errorData.details || 'Failed to generate application documents. Please try again.');
+        }
       }
     } catch (err) {
       console.error('Error generating application:', err);

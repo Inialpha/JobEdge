@@ -1,4 +1,5 @@
 from groq import Groq
+import groq
 import json
 
 
@@ -80,6 +81,9 @@ Return ONLY the cover letter text, no additional commentary or formatting marker
         
         return cover_letter
 
+    except (groq.RateLimitError, groq.GroqException) as e:
+        print(f"❌ Groq API error in generate_cover_letter(): {e}")
+        return None
     except Exception as e:
         print("❌ Error in generate_cover_letter():", e)
         return None

@@ -110,7 +110,11 @@ export default function TailorResumePage() {
       } else {
         const errorData = await response.json();
         console.log("errorData", errorData)
-        setError(errorData.details || 'Failed to generate resume. Please try again.');
+        if (response.status === 429) {
+          setError('Our service is currently handling a high volume of requests. Please try again shortly.');
+        } else {
+          setError(errorData.details || errorData.error || 'Failed to generate resume. Please try again.');
+        }
       }
     } catch (err) {
       console.error('Error generating resume:', err);
