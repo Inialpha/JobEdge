@@ -1,5 +1,5 @@
 from groq import Groq
-from groq import RateLimitError, GroqError
+import groq
 import json
 from typing import Optional, List
 from pydantic import BaseModel, Field
@@ -122,7 +122,7 @@ Return the extracted information as a JSON object following this structure.
             print("⚠️ AI output was not valid JSON. Returning raw text.")
             return None
 
-    except (RateLimitError, GroqError) as e:
+    except (groq.RateLimitError, groq.GroqException) as e:
         print(f"❌ Groq API error in ai(): {e}")
         return None
     except Exception as e:
@@ -228,7 +228,7 @@ Return the extracted information as a JSON object following this structure.
             print("⚠️ AI output was not valid JSON. Returning raw text.")
             return None
 
-    except (RateLimitError, GroqError) as e:
+    except (groq.RateLimitError, groq.GroqException) as e:
         print(f"❌ Groq API error in generate_resume(): {e}")
         return None
     except Exception as e:
