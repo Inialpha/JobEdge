@@ -203,7 +203,7 @@ export default function HomeComponent() {
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-sm font-medium text-gray-600">Resumes</h3>
-          <p className="text-2xl font-bold text-gray-900 mt-2">-</p>
+          <p className="text-2xl font-bold text-gray-900 mt-2">{resumesData.length}</p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-sm font-medium text-gray-600">Applications</h3>

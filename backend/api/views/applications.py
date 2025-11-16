@@ -78,8 +78,8 @@ class ApplicationAPIView(APIView):
         
         if not tailored_resume_data:
             return Response({
-                "details": "Failed to generate resume"
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                "details": "Our service is currently handling a high volume of requests. Please try again shortly."
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
         tailored_resume_data["is_master"] = False
         normalized_resume = normalize_resume_payload(tailored_resume_data)
@@ -101,7 +101,12 @@ class ApplicationAPIView(APIView):
         cover_letter_text = generate_cover_letter(normalized_resume, job_description)
         
         if not cover_letter_text:
-            cover_letter_text = "Cover letter generation failed. Please write your own cover letter."
+            # If cover letter generation failed due to rate limit or error, return 429
+            # Delete the created resume since we can't complete the application
+            created_resume.delete()
+            return Response({
+                "details": "Our service is currently handling a high volume of requests. Please try again shortly."
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
         
         # Create the application
         application_data = {

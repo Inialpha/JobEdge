@@ -62,6 +62,8 @@ class ResumeAPIView(APIView):
             return Response({"error": "Failed to process this file. This can happen if the file contains images. Please upload another file or another format"}, status=status.HTTP_400_BAD_REQUEST)
 
         resume_data = ai(text)
+        if resume_data is None:
+            return Response({"error": "Our service is currently handling a high volume of requests. Please try again shortly."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
         resume_data["text"] = text
         resume_data['user'] = user_id
         resume_data["is_master"] = True
@@ -129,6 +131,8 @@ class GenerateResume(APIView):
         job_serializer = JobSerializer(job)
         tailored_resume = generate_resume(job_serializer.data["job_description"],
                 resume_serializer.data["text"])
+        if tailored_resume is None:
+            return Response({"details": "Our service is currently handling a high volume of requests. Please try again shortly."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
         tailored_resume["user"] = user_id
 
         url_fields = ["linkedin", "website"]
@@ -190,7 +194,7 @@ class GenerateResumeFromJobDescription(APIView):
         tailored_resume = generate_resume(job_description, data)
         
         if not tailored_resume:
-            return Response({"details": "Failed to generate resume"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"details": "Our service is currently handling a high volume of requests. Please try again shortly."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
         
         tailored_resume["user"] = user_id
 
