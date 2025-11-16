@@ -6,7 +6,7 @@ from django.core.validators import URLValidator, validate_email
 from django.core.exceptions import ValidationError
 from ..models import Resume, Job, User
 from ..serializers.resume import ResumeSerializer
-from file_reader import File
+from file_reader import File, extract_text_safe
 from ai_services.resume_extractor import ai, generate_resume
 from django.db.models import Q
 from ..serializers.job import JobSerializer 
@@ -57,9 +57,14 @@ class ResumeAPIView(APIView):
             print("No user for user's id")
             return Response({"details": "No user for user's id"}, status=status.HTTP_400_BAD_REQUEST)
 
-        file = File(file_name)
-        resume_data = ai(file.text)
-        resume_data["text"] = file.text
+        text = extract_text_safe(file_name)
+        if len(text) < 5:
+            return Response({"error": "Failed to process this file. This can happen if the file contains images. Please upload another file or another format"}, status=status.HTTP_400_BAD_REQUEST)
+
+        resume_data = ai(text)
+        if resume_data is None:
+            return Response({"error": "Our service is currently handling a high volume of requests. Please try again shortly."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        resume_data["text"] = text
         resume_data['user'] = user_id
         resume_data["is_master"] = True
         
@@ -77,22 +82,22 @@ class ResumeAPIView(APIView):
             serializer = ResumeSerializer(data=resume_data)
             if not serializer.is_valid():
                 pass
-            print(resume_data, "\n\n\n\n")
-            print(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
-            print(e)
-            return Response({"error": "An error occured"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "An error occured. Please try again"}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk):
         """
         Update an existing resume.
         """
         resume = get_object_or_404(Resume, pk=pk)
-        serializer = ResumeSerializer(resume, data=request.data)
+        resume_data = request.data.copy()
+        normalized_resume = normalize_resume_payload(resume_data)
+        serializer = ResumeSerializer(resume, data=normalized_resume)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
@@ -101,7 +106,6 @@ class ResumeAPIView(APIView):
         """
         resume = get_object_or_404(Resume, pk=pk)
         user = request.user
-        print(user)
         if resume.is_master:
             user.has_master_resume = False
             user.save()
@@ -127,6 +131,8 @@ class GenerateResume(APIView):
         job_serializer = JobSerializer(job)
         tailored_resume = generate_resume(job_serializer.data["job_description"],
                 resume_serializer.data["text"])
+        if tailored_resume is None:
+            return Response({"details": "Our service is currently handling a high volume of requests. Please try again shortly."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
         tailored_resume["user"] = user_id
 
         url_fields = ["linkedin", "website"]
@@ -185,24 +191,20 @@ class GenerateResumeFromJobDescription(APIView):
         data.pop("user", None)
         data.pop("text", None)
         
-        # Generate tailored resume using AI
         tailored_resume = generate_resume(job_description, data)
         
         if not tailored_resume:
-            return Response({"details": "Failed to generate resume"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"details": "Our service is currently handling a high volume of requests. Please try again shortly."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
         
         tailored_resume["user"] = user_id
 
-        # Validate URL fields - preserve AI-generated values if valid
         url_fields = ["linkedin", "website"]
         url_validator = URLValidator()
         for url_field in url_fields:
             try:
                 url_validator(tailored_resume.get(url_field, ""))
-                # Keep the AI-generated URL as it's valid - no changes needed
                 pass
             except ValidationError as e:
-                # If invalid, set to None
                 tailored_resume[url_field] = None
         if not tailored_resume.get("summary") and tailored_resume.get("professionalSummary"):
             tailored_resume["summary"] = tailored_resume.get("professionalSummary")
@@ -230,79 +232,16 @@ class ResumeFromObjectAPIView(APIView):
         Create a resume from a resume object with optional is_master flag.
         """
         resume_data = request.data.copy()
-        user_id = request.user.id
+        user = request.user
         
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return Response({"details": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Set user in resume data
-        resume_data['user'] = user_id
         
         # Check if this should be a master resume
         is_master = resume_data.get('is_master', False)
         
-        if 'personalInformation' in resume_data:
-            resume_data['personal_information'] = resume_data['personalInformation']
-        # Convert professionalExperience to professional_experiences
-        if 'professionalExperience' in resume_data:
-            resume_data['professional_experiences'] = [
-                {
-                    'organization': exp.get('organization', ''),
-                    'role': exp.get('role', ''),
-                    'start_date': exp.get('startDate', ''),
-                    'end_date': exp.get('endDate', ''),
-                    'location': exp.get('location', ''),
-                    'responsibilities': exp.get('responsibilities', [])
-                }
-                for exp in resume_data['professionalExperience']
-            ]
-            del resume_data['professionalExperience']
-        
-        # Convert education to educations
-        if 'education' in resume_data:
-            resume_data['educations'] = [
-                {
-                    'institution': edu.get('institution', ''),
-                    'degree': edu.get('degree', ''),
-                    'field': edu.get('field', ''),
-                    'start_date': edu.get('startDate', ''),
-                    'end_date': edu.get('endDate', ''),
-                    'gpa': edu.get('gpa', '')
-                }
-                for edu in resume_data['education']
-            ]
-            del resume_data['education']
-        
-        # Validate URL fields only if they have values
-        url_fields = ["linkedin", "website"]
-        url_validator = URLValidator()
-        for url_field in url_fields:
-            url_value = resume_data.get(url_field, "")
-            if url_value:  # Only validate non-empty URLs
-                try:
-                    url_validator(url_value)
-                except ValidationError:
-                    resume_data[url_field] = None
-            else:
-                resume_data[url_field] = None
-        
-        # Validate email only if it has a value
-        email_value = resume_data.get("email", "")
-        if email_value:  # Only validate non-empty email
-            try:
-                validate_email(email_value)
-            except ValidationError:
-                resume_data['email'] = None
-        else:
-            resume_data['email'] = None
-        
-        serializer = ResumeSerializer(data=resume_data)
-        
+        normalized_resume = normalize_resume_payload(resume_data)
+        serializer = ResumeSerializer(data=normalized_resume)
         try:
             if serializer.is_valid():
-                # If this is a master resume, remove any previous master resume
                 if is_master:
                     try:
                         master_resume = Resume.objects.get(user=user, is_master=True)
@@ -313,7 +252,7 @@ class ResumeFromObjectAPIView(APIView):
                     user.has_master_resume = True
                     user.save()
                 
-                serializer.save()
+                serializer.save(user=user)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 print("Serializer errors:", serializer.errors)
@@ -323,97 +262,62 @@ class ResumeFromObjectAPIView(APIView):
             return Response({"error": "An error occurred"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ConvertPdfToDocxAPIView(APIView):
-    """
-    API View for converting PDF to DOCX format using pdf2docx library.
-    """
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        """
-        Receive a PDF file, convert it to DOCX, and return the DOCX file.
-        """
-        print(request)
-        import os
-        import tempfile
-        from pdf2docx import Converter
-        from django.http import FileResponse
-        print("after imports")
-        
-        # Get the uploaded PDF file
-        pdf_file = request.FILES.get('pdf_file')
-        
-        if not pdf_file:
-            print("{error: No PDF file provided,")
-            return Response(
-                {"error": "No PDF file provided"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Validate that the uploaded file is a PDF
-        if not pdf_file.name.endswith('.pdf'):
-            print("pdf_file.name.endswith(")
-            return Response(
-                {"error": "File must be a PDF"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        try:
-            # Create temporary files for PDF input and DOCX output
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_pdf:
-                # Write uploaded PDF to temporary file
-                for chunk in pdf_file.chunks():
-                    temp_pdf.write(chunk)
-                temp_pdf_path = temp_pdf.name
-            
-            # Create temporary DOCX file path
-            temp_docx_path = temp_pdf_path.replace('.pdf', '.docx')
-            
-            # Convert PDF to DOCX
-            cv = Converter(temp_pdf_path)
-            cv.convert(temp_docx_path)
-            cv.close()
-            
-            # Open the converted DOCX file for response
-            docx_file = open(temp_docx_path, 'rb')
-            
-            # Create response with DOCX file
-            response = FileResponse(
-                docx_file,
-                content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            )
-            response['Content-Disposition'] = f'attachment; filename="resume.docx"'
-            
-            # Clean up temporary PDF file immediately
-            os.unlink(temp_pdf_path)
-            
-            # Schedule DOCX cleanup after response is sent
-            # Note: The file will be deleted after the response is fully sent
-            def cleanup_docx():
-                try:
-                    os.unlink(temp_docx_path)
-                except Exception:
-                    pass
-            
-            # Register cleanup callback
-            import atexit
-            atexit.register(cleanup_docx)
-            
-            return response
-            
-        except Exception as e:
-            # Clean up temporary files in case of error
+def normalize_resume_payload(data):
+    out = dict(data)
+
+    if "personalInformation" in out:
+        out["personal_information"] = out.get("personalInformation")
+
+    if "professionalExperience" in out:
+        out["professional_experiences"] = [
+            {
+                "organization": item.get("organization", ""),
+                "role": item.get("role", ""),
+                "start_date": item.get("startDate", ""),
+                "end_date": item.get("endDate", ""),
+                "location": item.get("location", ""),
+                "responsibilities": item.get("responsibilities", []),
+            }
+            for item in out.get("professionalExperience", [])
+        ]
+        out.pop("professionalExperience", None)
+
+    if "education" in out:
+        out["educations"] = [
+            {
+                "institution": item.get("institution", ""),
+                "degree": item.get("degree", ""),
+                "field": item.get("field", ""),
+                "start_date": item.get("startDate", ""),
+                "end_date": item.get("endDate", ""),
+                "gpa": item.get("gpa", ""),
+            }
+            for item in out.get("education", [])
+        ]
+        out.pop("education", None)
+
+    validator = URLValidator()
+    info = out.get("personal_information", {})
+
+    for fld in ["linkedin", "website"]:
+        val = info.get(fld)
+        if val:
             try:
-                if 'temp_pdf_path' in locals():
-                    os.unlink(temp_pdf_path)
-                if 'temp_docx_path' in locals() and os.path.exists(temp_docx_path):
-                    os.unlink(temp_docx_path)
-            except Exception:
-                pass
-            
-            print(f"Error converting PDF to DOCX: {e}")
-            return Response(
-                {"error": "Failed to convert PDF to DOCX"}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+                validator(val)
+            except ValidationError:
+                info.pop(fld, None)
+        else:
+            info.pop(fld, None)
+
+    email_val = info.get("email")
+    if email_val:
+        try:
+            validate_email(email_val)
+        except ValidationError:
+            info.pop("email", None)
+    else:
+        info.pop("email", None)
+
+    out["personal_information"] = info
+    return out

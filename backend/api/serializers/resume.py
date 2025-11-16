@@ -4,11 +4,11 @@ from django.conf import settings
 import uuid
 import os
 import filetype
-from .user import UserSerializer
+#from .user import UserSerializer
 
 class ResumeSerializer(serializers.Serializer):
     id = serializers.CharField(max_length=255, read_only=True)
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     is_master = serializers.BooleanField(default=False)
     keywords = serializers.ListField(
         child=serializers.CharField(max_length=255),
@@ -58,6 +58,8 @@ class ResumeSerializer(serializers.Serializer):
         default=[],
         help_text="Languages spoken by the user"
     )
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
 
     def create(self, validated_data):
         """

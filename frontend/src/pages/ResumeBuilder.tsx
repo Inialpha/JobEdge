@@ -5,22 +5,24 @@ import { getEditableResume } from '@/utils/resumeUtils';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
 import { ResumePreview } from '@/components/ResumePreview';
 import { createRoot, Root } from 'react-dom/client';
-import { postRequest } from '@/utils/apis';
+import { postRequest, putRequest } from '@/utils/apis';
 import { useSelector } from "react-redux";
 import { RootState } from '@/store/store';
 import { useDispatch } from "react-redux"
 import { updateUserInfo } from "@/store/userSlice"
+import cleanData from "@/utils/cleanData"
+import { useView } from "@/context/ViewContext";
 
 export default function ResumeBuilder() {
+  const { setCurrentView } = useView();
   const dispatch = useDispatch()
   const location = useLocation();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.user);
   const passedResume = location.state?.resume;
-  const passedTemplate = location.state?.template || 'classic';
   const rootRef = useRef<Root | null>(null);
   
-  const [currentTemplate, setCurrentTemplate] = useState<Template>(passedTemplate);
+  const [currentTemplate, setCurrentTemplate] = useState<Template>("classic");
   const [resume, setResume] = useState<ResumeData>(() => getEditableResume(passedResume));
   const [isSaving, setIsSaving] = useState(false);
   const [isPdfDownloading, setIsPdfDownloading] = useState(false);
@@ -28,6 +30,10 @@ export default function ResumeBuilder() {
   const [saveMessage, setSaveMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setCurrentView("resume builder");
+  }, [setCurrentView]);
 
   const [newExperience, setNewExperience] = useState<ProfessionalExperience>({
     organization: '',
@@ -212,14 +218,19 @@ export default function ResumeBuilder() {
     updateResume('awards', resume.awards.filter((_, i) => i !== index));
   }, [resume.awards, updateResume]);
 
-  const saveAsMasterResume = useCallback(async () => {
+  const saveResume = useCallback(async () => {
     // Validate required fields
     const errors: {[key: string]: string} = {};
-    if (!resume.personalInformation.name.trim()) {
+    if (!resume.personalInformation?.name?.trim()) {
       errors['personalInformation.name'] = 'Name is required';
     }
     if (!resume.personalInformation.profession?.trim()) {
       errors['personalInformation.profession'] = 'Profession is required';
+    }
+    
+    // Validate professional summary
+    if (!resume.summary?.trim()) {
+      errors['summary'] = 'Professional summary is required';
     }
     
     // Validate education
@@ -284,22 +295,46 @@ export default function ResumeBuilder() {
     setIsSaving(true);
     setSaveMessage(null);
     try {
-      const url = `${import.meta.env.VITE_API_URL}/resume/from-object/`;
+      // Trim all resume values and nested values to remove empty strings
+      const trimmedResume: ResumeData = cleanData(resume)
+      
       const resumeData = {
-        ...resume,
-        is_master: true
+        ...trimmedResume,
+        keywords: passedResume?.keywords || [],
+        is_master: passedResume?.is_master || false,
       };
       
-      const response = await postRequest(url, resumeData);
+      let url: string;
+      let response: Response;
+      
+      // Determine whether to POST (create) or PUT (update)
+      if (passedResume?.id) {
+        // Update existing resume
+        url = `${import.meta.env.VITE_API_URL}/resumes/${passedResume.id}/`;
+        response = await putRequest(url, resumeData, true)
+      } else {
+        // Create new resume
+        url = `${import.meta.env.VITE_API_URL}/resume/from-object/`;
+        response = await postRequest(url, resumeData);
+      }
       
       if (response.ok) {
         await response.json();
-        setSaveMessage({type: 'success', text: 'Resume saved as master resume successfully!'});
-        dispatch(
-          updateUserInfo({
-            hasMasterResume: true
-          })
-        )
+        const successMessage = passedResume?.is_master 
+          ? 'Profile saved successfully!' 
+          : passedResume?.id 
+            ? 'Resume updated successfully!' 
+            : 'Resume saved successfully!';
+        setSaveMessage({type: 'success', text: successMessage});
+        
+        if (passedResume?.is_master || resumeData.is_master) {
+          dispatch(
+            updateUserInfo({
+              hasMasterResume: true
+            })
+          )
+        }
+        
         setTimeout(() => {
           navigate('/dashboard', { state: { component: 'resumes' } });
         }, 1500);
@@ -315,7 +350,7 @@ export default function ResumeBuilder() {
       setIsSaving(false);
       saveTimeoutRef.current = setTimeout(() => setSaveMessage(null), 5000);
     }
-  }, [resume, navigate]);
+  }, [resume, navigate, dispatch, passedResume]);
 
   const updateResponsibility = useCallback((expIndex: number, respIndex: number, value: string) => {
     const updated = [...resume.professionalExperience];
@@ -344,10 +379,6 @@ export default function ResumeBuilder() {
   }, [user]);
 
   const handleDocxDownload = useCallback(async () => {
-    //setSaveMessage({type: 'error', text: 'Docx is not available for this template'});
-    //setTimeout(() => setSaveMessage(null), 3000);
-    //return
-    
     setIsDocxDownloading(true);
     try {
       await downloadDocx(resume, user, currentTemplate);
@@ -391,18 +422,7 @@ export default function ResumeBuilder() {
   return (
     <>
       <style>{`
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-        body {
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          min-height: 100vh;
-          padding: 20px;
-        }
-        .container {
+        .icontainer {
           max-width: 1400px;
           margin: 0 auto;
           display: grid;
@@ -413,7 +433,7 @@ export default function ResumeBuilder() {
           background: white;
           border-radius: 10px;
           box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-          height: fit-content;
+          iheight: fit-content;
           max-height: calc(100vh - 40px);
           overflow-y: auto;
         }
@@ -430,7 +450,7 @@ export default function ResumeBuilder() {
           text-align: center;
           position: sticky;
           top: 0;
-          z-index: 10;
+          z-index: 2;
         }
         .header h1 {
           font-size: 22px;
@@ -814,9 +834,9 @@ export default function ResumeBuilder() {
         }
       `}</style>
       
-      <div className="container">
+      <div className="max-w-[1400px] mx-auto grid gap-5 grid-cols-1 lg:grid-cols-[350px_1fr]">
         {/* Editor Panel */}
-        <div className="editor-panel">
+        <div className="bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] h-fit max-h-[50vh] overflow-y-auto">
           <div className="header">
             <h1>Resume Builder</h1>
             <p>Edit & Download as PDF/DOCX</p>
@@ -876,10 +896,10 @@ export default function ResumeBuilder() {
             <button 
               className="btn" 
               style={{background: '#17a2b8', color: 'white'}}
-              onClick={saveAsMasterResume}
+              onClick={saveResume}
               disabled={isSaving}
             >
-              {isSaving ? '💾 Saving...' : '💾 Save as Master Resume'}
+              {isSaving ? '💾 Saving...' : passedResume?.is_master ? '💾 Save Profile' : passedResume?.id ? '💾 Update Resume' : '💾 Save Resume'}
             </button>
           </div>
 
@@ -972,7 +992,16 @@ export default function ResumeBuilder() {
             {/* Professional Summary */}
             <div className="section">
               <div className="section-title">Professional Summary</div>
-              <textarea value={resume.summary} onChange={(e) => updateResume('summary', e.target.value)} />
+              <textarea 
+                value={resume.summary} 
+                onChange={(e) => updateResume('summary', e.target.value)}
+                style={{borderColor: validationErrors['summary'] ? '#dc3545' : undefined}}
+              />
+              {validationErrors['summary'] && (
+                <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                  {validationErrors['summary']}
+                </div>
+              )}
             </div>
 
             {/* Skills */}
@@ -1327,12 +1356,6 @@ export default function ResumeBuilder() {
                     value={proj.technologies}
                     onChange={(e) => updateProjectItem(index, 'technologies', e.target.value)}
                   />
-                  <input 
-                    type="text" 
-                    placeholder="Project Link (optional)" 
-                    value={proj.link}
-                    onChange={(e) => updateProjectItem(index, 'link', e.target.value)}
-                  />
                   <button className="remove-btn" onClick={() => removeProject(index)}>Remove</button>
                 </div>
               ))}
@@ -1356,12 +1379,6 @@ export default function ResumeBuilder() {
                   placeholder="Technologies Used" 
                   value={newProject.technologies}
                   onChange={(e) => setNewProject({...newProject, technologies: e.target.value})}
-                />
-                <input 
-                  type="text" 
-                  placeholder="Project Link (optional)" 
-                  value={newProject.link}
-                  onChange={(e) => setNewProject({...newProject, link: e.target.value})}
                 />
                 <button className="add-btn" onClick={addProjectItem}>Add Project</button>
               </div>
@@ -1422,7 +1439,7 @@ export default function ResumeBuilder() {
         </div>
 
         {/* Preview Panel */}
-        <div className="preview-panel">
+        <div className="bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] p-6">
           <div id="resumePreview" className="resume-preview classic-template"></div>
         </div>
       </div>

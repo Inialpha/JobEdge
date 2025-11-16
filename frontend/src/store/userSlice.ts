@@ -5,6 +5,7 @@ interface UserState {
   id: string;
   firstName: string;
   lastName: string;
+  email: string;
   isStaff: boolean;
   hasMasterResume: boolean;
 }
@@ -13,6 +14,7 @@ const initialState: UserState = {
   id: "",
   firstName: "",
   lastName: "",
+  email: "",
   isStaff: false,
   hasMasterResume: false,
 };
@@ -27,6 +29,7 @@ const userSlice = createSlice({
         id: string;
         firstName: string;
         lastName: string;
+        email: string;
         isStaff: boolean;
 	hasMasterResume: boolean;
       }>
@@ -35,6 +38,7 @@ const userSlice = createSlice({
         id,
         firstName,
         lastName,
+        email,
         isStaff,
 	hasMasterResume,
       } = action.payload;
@@ -42,6 +46,7 @@ const userSlice = createSlice({
       currentState.id = id;
       currentState.firstName = firstName;
       currentState.lastName = lastName;
+      currentState.email = email;
       currentState.isStaff = isStaff;
       currentState.hasMasterResume = hasMasterResume;
     },
@@ -53,13 +58,15 @@ const userSlice = createSlice({
       action: PayloadAction<{
         firstName?: string;
         lastName?: string;
+        email?: string;
 	isStaff?: boolean;
 	hasMasterResume?: boolean;
       }>
     ) => {
-      const { firstName, lastName, isStaff, hasMasterResume } = action.payload;
+      const { firstName, lastName, email, isStaff, hasMasterResume } = action.payload;
       if (firstName) currentState.firstName = firstName;
       if (lastName) currentState.lastName = lastName;
+      if (email) currentState.email = email;
       if (isStaff !== undefined) currentState.isStaff = isStaff;
       if (hasMasterResume !== undefined) currentState.hasMasterResume = hasMasterResume;
     },

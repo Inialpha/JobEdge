@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getRequest, postFormData, deleteRequest } from "@/utils/apis";
-import { FileText, Download, Edit, UploadCloud, Trash2 } from "lucide-react";
+import { FileText, Download, Edit, UploadCloud, Trash2, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useDispatch } from "react-redux"
 import { updateUserInfo } from "@/store/userSlice"
+import { useQuery } from '@tanstack/react-query';
+import { useView } from "@/context/ViewContext";
 
 
 interface Resume {
@@ -31,12 +33,16 @@ interface Resume {
   profession?: string;
   is_master: boolean;
   updated_at: string;
+  personal_information: {
+    name: string;
+    profession?: string;
+  };
 }
 
 export default function ResumesComponent() {
   const dispatch = useDispatch()
+  const { setCurrentView } = useView();
   const [resumes, setResumes] = useState<Resume[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [resumeToDelete, setResumeToDelete] = useState<Resume | null>(null);
@@ -44,44 +50,57 @@ export default function ResumesComponent() {
   const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const navigate = useNavigate();
 
+  // Set current view when component mounts
   useEffect(() => {
-    fetchResumes();
-  }, []);
+    setCurrentView("resumes");
+  }, [setCurrentView]);
+
 
   const fetchResumes = async () => {
     try {
       const url = `${import.meta.env.VITE_API_URL}/resumes/`;
-      const response = await getRequest(url);
-      
+      const response = await getRequest(url);      
       if (response.ok) {
         const data = await response.json();
-        setResumes(data);
-      }
+        console.log("data", data)
+        return data
+     }
+      throw new Error('Failed to fetch resumes');
+    
     } catch (error) {
       console.error("Error fetching resumes:", error);
-    } finally {
-      setLoading(false);
+      throw error;
     }
-  };
+  }
+
+  const { data: resumeData, isLoading: isLoadingResume } = useQuery({
+    queryKey: ['resumes'],
+    queryFn: fetchResumes,
+    //initialData: [],
+  })
+
+  useEffect(() => {
+    if (resumeData) {
+      console.log("(resumeData)", resumeData)
+      setResumes(resumeData || []);
+    }
+  }, [resumeData]);
 
   const handleEdit = (resume: Resume) => {
-    navigate("/resume-builder", { state: { resume } });
+    navigate("/dashboard/resume-builder", { state: { resume, component: 'resume builder' } });
   };
 
   const handleDownload = (resume: Resume) => {
-    // Navigate to resume builder with download option
-    navigate("/resume-builder", { state: { resume, autoDownload: true } });
+    navigate("/dashboard/resume-builder", { state: { resume, autoDownload: true, component: 'resume builder' } });
   };
 
   const handleCreateFromScratch = () => {
     setShowCreateDialog(false);
-    // Navigate to resume-builder without any resume data
-    navigate('/resume-builder');
+    navigate('/dashboard/resume-builder', { state: { component: 'resume builder' } });
   };
 
   const handleUploadFile = () => {
     setShowCreateDialog(false);
-    // Trigger file input click
     const fileInput = document.getElementById('resume-upload-dialog');
     if (fileInput) {
       fileInput.click();
@@ -103,10 +122,11 @@ export default function ResumesComponent() {
           setFeedback({type: 'success', message: "Resume uploaded successfully. Redirecting to editor..."});
           // Navigate to resume-builder with the parsed resume
           setTimeout(() => {
-            navigate('/resume-builder', { state: { resume } });
+            navigate('/dashboard/resume-builder', { state: { resume, component: 'resume builder' } });
           }, 1000);
         } else {
-          setFeedback({type: 'error', message: "There was an error uploading the file. Please try again."});
+          const jsonRes = await response.json()
+          setFeedback({type: 'error', message: jsonRes.error  || "There was an error uploading the file. Please try again."});
         }
       } catch (error) {
         console.error(error);
@@ -115,7 +135,7 @@ export default function ResumesComponent() {
         setIsUploading(false);
         setTimeout(() => {
           setFeedback(null);
-        }, 5000);
+        }, 8000);
       }
     }
   };
@@ -155,10 +175,10 @@ export default function ResumesComponent() {
     }
   };
 
-  if (loading) {
+  if (isLoadingResume) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500">Loading resumes...</p>
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
       </div>
     );
   }
@@ -259,7 +279,7 @@ export default function ResumesComponent() {
           <h3 className="text-lg font-semibold text-gray-700 mb-2">No resumes yet</h3>
           <p className="text-gray-500 mb-4">Create your first resume to get started</p>
           <Button 
-            onClick={() => navigate("/resume-builder")}
+            onClick={() => navigate("/dashboard/resume-builder", { state: { component: 'resume builder' } })}
             className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
           >
             Create Resume
@@ -275,10 +295,10 @@ export default function ResumesComponent() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-800 mb-1">
-                    {resume.name || "Untitled Resume"}
+                    {resume.personal_information.name || "Untitled Resume"}
                   </h3>
-                  {resume.profession && (
-                    <p className="text-sm text-gray-600">{resume.profession}</p>
+                  {resume.personal_information.profession && (
+                    <p className="text-sm text-gray-600">{resume.personal_information.profession}</p>
                   )}
                   {resume.is_master && (
                     <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold text-purple-700 bg-purple-100 rounded">

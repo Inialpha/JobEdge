@@ -21,7 +21,7 @@ export const ResumePreview = ({ resume, template }: ResumePreviewProps) => {
   }
 
   return (
-    <div className="">
+    <div className="w-full">
       {renderTemplate()}
     </div>
   )

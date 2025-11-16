@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { postRequest } from "@/utils/apis";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { useView } from "@/context/ViewContext";
 
 
 interface ContactInfo {
@@ -64,12 +65,18 @@ interface GeneratedResume {
 
 export default function TailorResumePage() {
   const user = useSelector((state: RootState) => state.user);
+  const { setCurrentView } = useView();
   const [jobDescription, setJobDescription] = useState('');
   const [generatedResume, setGeneratedResume] = useState<GeneratedResume | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
   const navigate = useNavigate();
+
+  // Set current view when component mounts
+  useEffect(() => {
+    setCurrentView("tailor resume");
+  }, [setCurrentView]);
 
   const handleGenerateResume = async () => {
     if (!jobDescription.trim()) {
@@ -96,14 +103,18 @@ export default function TailorResumePage() {
       if (response.ok) {
         const result = await response.json();
         setGeneratedResume(result);
-        navigate("/resume-builder", {
-          state: {resume: result}
+        navigate("/dashboard/resume-builder", {
+          state: {resume: result, component: 'resume builder'}
         });
         setError('');
       } else {
         const errorData = await response.json();
         console.log("errorData", errorData)
-        setError(errorData.details || 'Failed to generate resume. Please try again.');
+        if (response.status === 429) {
+          setError('Our service is currently handling a high volume of requests. Please try again shortly.');
+        } else {
+          setError(errorData.details || errorData.error || 'Failed to generate resume. Please try again.');
+        }
       }
     } catch (err) {
       console.error('Error generating resume:', err);
@@ -135,7 +146,7 @@ export default function TailorResumePage() {
         .tailor-container {
           max-width: 800px;
           margin: 0 auto;
-          padding: 20px;
+          padding: 10px;
         }
         .tailor-card {
           background: white;
@@ -265,7 +276,7 @@ export default function TailorResumePage() {
         }
       `}</style>
       
-      <div className="tailor-container">
+      <div className="max-w-[800px] mx-auto md:p-[20px]">
         <div className="tailor-card">
           <div className="tailor-header">
             <h1>Tailor Your Resume</h1>
