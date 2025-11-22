@@ -20,9 +20,6 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Ensure logs directory exists
-os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -173,6 +170,9 @@ EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
 
 # Logging configuration
+# Maximum length of response data to include in logs
+LOGGING_RESPONSE_DATA_MAX_LENGTH = 200
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

@@ -1,6 +1,7 @@
 import logging
 import json
 from django.utils.deprecation import MiddlewareMixin
+from django.conf import settings
 
 logger = logging.getLogger('api')
 
@@ -13,6 +14,15 @@ class RequestResponseLoggingMiddleware(MiddlewareMixin):
     Middleware to log all API requests and responses.
     Logs both successful and failed responses before they are sent to the client.
     """
+
+    def __init__(self, get_response):
+        super().__init__(get_response)
+        # Ensure logs directory exists on first middleware initialization
+        import os
+        logs_dir = os.path.join(settings.BASE_DIR, 'logs')
+        os.makedirs(logs_dir, exist_ok=True)
+        # Get max length from settings, default to 200
+        self.max_response_length = getattr(settings, 'LOGGING_RESPONSE_DATA_MAX_LENGTH', 200)
 
     def process_request(self, request):
         """
@@ -55,9 +65,9 @@ class RequestResponseLoggingMiddleware(MiddlewareMixin):
             # DRF Response object
             try:
                 sanitized_data = self._sanitize_data(response.data)
-                response_data = json.dumps(sanitized_data)[:200]  # Limit to 200 chars
+                response_data = json.dumps(sanitized_data)[:self.max_response_length]
             except (TypeError, ValueError):
-                response_data = str(response.data)[:200]
+                response_data = str(response.data)[:self.max_response_length]
         elif hasattr(response, 'content') and hasattr(response, 'headers'):
             # Regular Django JsonResponse - check Content-Type header
             content_type = response.headers.get('Content-Type', '')
@@ -65,7 +75,7 @@ class RequestResponseLoggingMiddleware(MiddlewareMixin):
                 try:
                     content = json.loads(response.content.decode('utf-8'))
                     sanitized_data = self._sanitize_data(content)
-                    response_data = json.dumps(sanitized_data)[:200]
+                    response_data = json.dumps(sanitized_data)[:self.max_response_length]
                 except (ValueError, UnicodeDecodeError):
                     response_data = ""
         
