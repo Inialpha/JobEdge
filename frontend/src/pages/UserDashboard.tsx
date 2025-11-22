@@ -42,7 +42,6 @@ export default function UserDashboardLayout() {
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  //const { activeView, setActiveView } = useView("resumes");
   const { currentView, setCurrentView } = useView();
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
