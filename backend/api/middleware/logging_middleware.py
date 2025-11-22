@@ -4,6 +4,9 @@ from django.utils.deprecation import MiddlewareMixin
 
 logger = logging.getLogger('api')
 
+# Sensitive fields that should be excluded from logs
+SENSITIVE_FIELDS = {'password', 'token', 'api_key', 'secret', 'authorization', 'auth'}
+
 
 class RequestResponseLoggingMiddleware(MiddlewareMixin):
     """
@@ -17,6 +20,19 @@ class RequestResponseLoggingMiddleware(MiddlewareMixin):
         """
         logger.info(f"Request: {request.method} {request.path}")
         return None
+
+    def _sanitize_data(self, data):
+        """
+        Remove sensitive information from data before logging.
+        """
+        if isinstance(data, dict):
+            return {
+                key: '***REDACTED***' if any(s in key.lower() for s in SENSITIVE_FIELDS) else self._sanitize_data(value)
+                for key, value in data.items()
+            }
+        elif isinstance(data, list):
+            return [self._sanitize_data(item) for item in data]
+        return data
 
     def process_response(self, request, response):
         """
@@ -36,10 +52,20 @@ class RequestResponseLoggingMiddleware(MiddlewareMixin):
         # Get response data if available
         response_data = ""
         if hasattr(response, 'data'):
+            # DRF Response object
             try:
-                response_data = json.dumps(response.data)[:200]  # Limit to 200 chars
+                sanitized_data = self._sanitize_data(response.data)
+                response_data = json.dumps(sanitized_data)[:200]  # Limit to 200 chars
             except (TypeError, ValueError):
                 response_data = str(response.data)[:200]
+        elif hasattr(response, 'content') and response.get('Content-Type', '').startswith('application/json'):
+            # Regular Django JsonResponse
+            try:
+                content = json.loads(response.content.decode('utf-8'))
+                sanitized_data = self._sanitize_data(content)
+                response_data = json.dumps(sanitized_data)[:200]
+            except (ValueError, UnicodeDecodeError):
+                response_data = ""
         
         # Log the response
         logger.log(
