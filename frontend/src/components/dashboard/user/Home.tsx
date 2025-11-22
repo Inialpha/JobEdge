@@ -174,6 +174,7 @@ export default function HomeComponent() {
           {masterResume ? (
             <>
               <Button
+                id="update-profile-btn"
                 onClick={handleUpdateProfile}
                 className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
               >
@@ -183,6 +184,7 @@ export default function HomeComponent() {
             </>
           ) : (
             <Button
+              id="create-profile-btn"
               onClick={handleCreateProfile}
               className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
             >

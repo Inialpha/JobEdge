@@ -19,7 +19,9 @@ import VerifyEmail from "@/pages/VerifyEmail"
 import NotFound from "@/pages/NotFound"
 import { ViewProvider } from "@/context/ViewContext";
 import { Analytics } from '@vercel/analytics/react';
- 
+import Joyride from "react-joyride";
+import { useEffect, useState } from "react"; 
+
 
 const routes = createBrowserRouter(
   createRoutesFromElements(
@@ -60,10 +62,21 @@ const routes = createBrowserRouter(
 )
 
 function App() {
-
+  const steps = [
+    {
+      target: "#create-profile-btn",
+      content: "Create your account here",
+    },
+    {
+      target: "#update-profile-btn",
+      content: "Update your profile",
+    },
+  ];
   return (
     <>
       <RouterProvider router={routes} />
+      <Joyride steps={steps} run={true} continuous
+ scrollToFirstStep />
       <Analytics />
     </>
   );

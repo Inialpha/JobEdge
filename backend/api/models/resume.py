@@ -26,5 +26,5 @@ class Resume(BaseModel):
     updated_at = models.DateTimeField(auto_now=True, help_text="Timestamp when the resume was last updated")
 
     def __str__(self):
-        return f"{self.name}'s Resume ({'Master' if self.is_master else 'Draft'})"
+        return f"{self.personal_information.get('name', '')}'s Resume ({'Master' if self.is_master else 'Draft'})"
 
