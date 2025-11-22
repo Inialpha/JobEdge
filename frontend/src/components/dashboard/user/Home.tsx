@@ -128,7 +128,9 @@ export default function HomeComponent() {
           });
         }, 1000);
       } else {
-        setFeedback({type: 'error', message: "There was an error uploading your resume. Please try again."});
+        const jsonRes = await response.json()
+        setFeedback({type: 'error', message: jsonRes.error  || "There was an error uploading the file. Please try again."});
+        //setFeedback({type: 'error', message: "There was an error uploading your resume. Please try again."});
       }
     } catch (error) {
       console.error(error);

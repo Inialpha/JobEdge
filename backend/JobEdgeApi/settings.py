@@ -21,6 +21,12 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+
+LOGS_DIR = BASE_DIR / 'logs'
+
+if not LOGS_DIR.exists():
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -193,7 +199,7 @@ LOGGING = {
         },
         'file': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'app.log'),
+            'filename': LOGS_DIR / 'app.log',
             'maxBytes': 10485760,  # 10MB
             'backupCount': 5,
             'formatter': 'verbose',

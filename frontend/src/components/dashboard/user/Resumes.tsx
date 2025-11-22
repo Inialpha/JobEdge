@@ -120,7 +120,6 @@ export default function ResumesComponent() {
         if (response.ok) {
           const resume = await response.json();
           setFeedback({type: 'success', message: "Resume uploaded successfully. Redirecting to editor..."});
-          // Navigate to resume-builder with the parsed resume
           setTimeout(() => {
             navigate('/dashboard/resume-builder', { state: { resume, component: 'resume builder' } });
           }, 1000);
