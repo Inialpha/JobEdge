@@ -21,8 +21,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Ensure logs directory exists
-LOGS_DIR = os.path.join(BASE_DIR, 'logs')
-os.makedirs(LOGS_DIR, exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
 
 
 # Quick-start development settings - unsuitable for production

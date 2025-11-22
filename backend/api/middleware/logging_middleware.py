@@ -58,14 +58,16 @@ class RequestResponseLoggingMiddleware(MiddlewareMixin):
                 response_data = json.dumps(sanitized_data)[:200]  # Limit to 200 chars
             except (TypeError, ValueError):
                 response_data = str(response.data)[:200]
-        elif hasattr(response, 'content') and response.get('Content-Type', '').startswith('application/json'):
-            # Regular Django JsonResponse
-            try:
-                content = json.loads(response.content.decode('utf-8'))
-                sanitized_data = self._sanitize_data(content)
-                response_data = json.dumps(sanitized_data)[:200]
-            except (ValueError, UnicodeDecodeError):
-                response_data = ""
+        elif hasattr(response, 'content') and hasattr(response, 'headers'):
+            # Regular Django JsonResponse - check Content-Type header
+            content_type = response.headers.get('Content-Type', '')
+            if content_type.startswith('application/json'):
+                try:
+                    content = json.loads(response.content.decode('utf-8'))
+                    sanitized_data = self._sanitize_data(content)
+                    response_data = json.dumps(sanitized_data)[:200]
+                except (ValueError, UnicodeDecodeError):
+                    response_data = ""
         
         # Log the response
         logger.log(
