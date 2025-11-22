@@ -1,11 +1,12 @@
 import logging
 import json
+import os
 from django.utils.deprecation import MiddlewareMixin
 from django.conf import settings
 
 logger = logging.getLogger('api')
 
-# Sensitive fields that should be excluded from logs
+# Sensitive fields that should be excluded from logs (pre-lowercased for efficiency)
 SENSITIVE_FIELDS = {'password', 'token', 'api_key', 'secret', 'authorization', 'auth'}
 
 
@@ -18,7 +19,6 @@ class RequestResponseLoggingMiddleware(MiddlewareMixin):
     def __init__(self, get_response):
         super().__init__(get_response)
         # Ensure logs directory exists on first middleware initialization
-        import os
         logs_dir = os.path.join(settings.BASE_DIR, 'logs')
         os.makedirs(logs_dir, exist_ok=True)
         # Get max length from settings, default to 200
@@ -37,7 +37,7 @@ class RequestResponseLoggingMiddleware(MiddlewareMixin):
         """
         if isinstance(data, dict):
             return {
-                key: '***REDACTED***' if any(s in key.lower() for s in SENSITIVE_FIELDS) else self._sanitize_data(value)
+                key: '***REDACTED***' if key.lower() in SENSITIVE_FIELDS else self._sanitize_data(value)
                 for key, value in data.items()
             }
         elif isinstance(data, list):
