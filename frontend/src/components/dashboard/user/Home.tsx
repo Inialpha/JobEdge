@@ -16,6 +16,9 @@ import { updateUserInfo } from "@/store/userSlice";
 import { RootState } from "@/store/store";
 import { useView } from "@/context/ViewContext";
 import { useQuery } from '@tanstack/react-query';
+import Joyride, { CallBackProps, STATUS, EVENTS } from 'react-joyride';
+import { useTour } from "@/context/TourContext";
+import { homeTourSteps, tourStyles, tourLocale } from "@/utils/tourConfig";
 
 interface Resume {
   id: string;
@@ -33,10 +36,12 @@ export default function HomeComponent() {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.user);
   const { setCurrentView } = useView();
+  const { run, stopTour, stepIndex, setStepIndex } = useTour();
   const [masterResume, setMasterResume] = useState<Resume | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
+  const [componentLoaded, setComponentLoaded] = useState(false);
   const navigate = useNavigate();
 
   // Set current view when component mounts
@@ -68,6 +73,9 @@ export default function HomeComponent() {
     if (resumesData) {
       const master = resumesData.find((resume: Resume) => resume.is_master);
       setMasterResume(master || null);
+      
+      // Mark component as loaded after data is fetched and state is set
+      setComponentLoaded(true);
     }
   }, [resumesData]);
 
@@ -133,6 +141,17 @@ export default function HomeComponent() {
     }
   };
 
+  // Handle tour callback
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { status, index, type } = data;
+    
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      stopTour();
+    } else if (type === EVENTS.STEP_AFTER) {
+      setStepIndex(index + 1);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -143,7 +162,22 @@ export default function HomeComponent() {
 
   return (
     <div className="space-y-6">
-      <div>
+      {/* Joyride Tour - only runs when component is loaded */}
+      {componentLoaded && (
+        <Joyride
+          steps={homeTourSteps}
+          run={run}
+          stepIndex={stepIndex}
+          continuous
+          showSkipButton
+          showProgress
+          callback={handleJoyrideCallback}
+          styles={tourStyles}
+          locale={tourLocale}
+        />
+      )}
+      
+      <div className="home-welcome-section">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-gray-600 mt-1">Welcome back, {user?.firstName}!</p>
       </div>

@@ -19,8 +19,7 @@ import VerifyEmail from "@/pages/VerifyEmail"
 import NotFound from "@/pages/NotFound"
 import { ViewProvider } from "@/context/ViewContext";
 import { Analytics } from '@vercel/analytics/react';
-import Joyride from "react-joyride";
-import { useEffect, useState } from "react"; 
+import { TourProvider } from "@/context/TourContext"; 
 
 
 const routes = createBrowserRouter(
@@ -38,7 +37,9 @@ const routes = createBrowserRouter(
         {/* User Dashboard with nested routes */}
         <Route path="dashboard" element={
           <ViewProvider>
-            <UserDashboardLayout />
+            <TourProvider>
+              <UserDashboardLayout />
+            </TourProvider>
           </ViewProvider>
         }>
           <Route index element={<HomeComponent />} />
@@ -62,21 +63,9 @@ const routes = createBrowserRouter(
 )
 
 function App() {
-  const steps = [
-    {
-      target: "#create-profile-btn",
-      content: "Create your account here",
-    },
-    {
-      target: "#update-profile-btn",
-      content: "Update your profile",
-    },
-  ];
   return (
     <>
       <RouterProvider router={routes} />
-      <Joyride steps={steps} run={true} continuous
- scrollToFirstStep />
       <Analytics />
     </>
   );

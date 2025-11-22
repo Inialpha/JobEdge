@@ -17,6 +17,9 @@ import { Input } from "@/components/ui/input";
 import { useView } from "@/context/ViewContext";
 import { useQuery } from '@tanstack/react-query';
 import { coverLetterPdf } from "@/utils/coverLetterPdf";
+import Joyride, { CallBackProps, STATUS, EVENTS } from 'react-joyride';
+import { useTour } from "@/context/TourContext";
+import { applicationsTourSteps, tourStyles, tourLocale } from "@/utils/tourConfig";
 
 interface Application {
   id: string;
@@ -35,12 +38,14 @@ interface Application {
 
 export default function Applications() {
   const { setCurrentView } = useView();
+  const { run, stopTour, stepIndex, setStepIndex, tourActive } = useTour();
   const [applications, setApplications] = useState<Application[]>([]);
   const [showNewApplication, setShowNewApplication] = useState(false);
   const [showCoverLetter, setShowCoverLetter] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [editedCoverLetter, setEditedCoverLetter] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [componentLoaded, setComponentLoaded] = useState(false);
   
   // New application form state
   const [jobDescription, setJobDescription] = useState('');
@@ -79,6 +84,8 @@ export default function Applications() {
   useEffect(() => {
     if (applicationsData) {
       setApplications(applicationsData);
+      // Mark component as loaded after data is fetched
+      setComponentLoaded(true);
     }
   }, [applicationsData]);
 
@@ -193,14 +200,41 @@ export default function Applications() {
       : description;
   };
 
+  // Handle tour callback
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { status, index, type } = data;
+    
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      stopTour();
+    } else if (type === EVENTS.STEP_AFTER) {
+      setStepIndex(index + 1);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      {/* Joyride Tour - only runs when component is loaded and user has master resume */}
+      {componentLoaded && user.hasMasterResume && tourActive && (
+        <Joyride
+          steps={applicationsTourSteps}
+          run={run}
+          stepIndex={stepIndex}
+          continuous
+          showSkipButton
+          showProgress
+          callback={handleJoyrideCallback}
+          styles={tourStyles}
+          locale={tourLocale}
+        />
+      )}
+      
+      <div className="flex justify-between items-center applications-header">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Applications</h1>
           <p className="text-gray-600 mt-1">Manage your job applications</p>
         </div>
         <Button
+          id="new-application-btn"
           onClick={handleStartNewApplication}
           className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
         >
