@@ -38,7 +38,7 @@ interface Application {
 
 export default function Applications() {
   const { setCurrentView } = useView();
-  const { run, stopTour, stepIndex, setStepIndex, tourActive } = useTour();
+  const { run, stopTour, stepIndex, setStepIndex } = useTour();
   const [applications, setApplications] = useState<Application[]>([]);
   const [showNewApplication, setShowNewApplication] = useState(false);
   const [showCoverLetter, setShowCoverLetter] = useState(false);
@@ -214,7 +214,7 @@ export default function Applications() {
   return (
     <div className="space-y-6">
       {/* Joyride Tour - only runs when component is loaded and user has master resume */}
-      {componentLoaded && user.hasMasterResume && tourActive && (
+      {componentLoaded && user.hasMasterResume && (
         <Joyride
           steps={applicationsTourSteps}
           run={run}

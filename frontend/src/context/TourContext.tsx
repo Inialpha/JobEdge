@@ -59,6 +59,14 @@ export const TourProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } else if (location.pathname === '/dashboard/applications' && tourStage === 'applications') {
           // Continue tour on applications page
           return scheduleTourStart();
+        } else if (user.hasMasterResume && tourStage === 'applications' && location.pathname !== '/dashboard/applications') {
+          // User has master resume and tour stage is applications, but not on applications page
+          // Navigate to applications page to continue tour
+          const timer = setTimeout(() => {
+            navigate('/dashboard/applications');
+          }, TOUR_NAVIGATION_DELAY);
+          
+          return () => clearTimeout(timer);
         }
       }
     }

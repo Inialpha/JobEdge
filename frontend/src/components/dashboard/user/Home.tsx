@@ -36,7 +36,7 @@ export default function HomeComponent() {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.user);
   const { setCurrentView } = useView();
-  const { run, stopTour, stepIndex, setStepIndex } = useTour();
+  const { run, stopTour, stepIndex, setStepIndex, navigateToApplications } = useTour();
   const [masterResume, setMasterResume] = useState<Resume | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -145,7 +145,11 @@ export default function HomeComponent() {
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, index, type } = data;
     
-    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+    if (status === STATUS.FINISHED) {
+      // Tour finished - set stage to applications (tour continues after user creates profile)
+      navigateToApplications();
+    } else if (status === STATUS.SKIPPED) {
+      // User skipped the tour - mark as completed
       stopTour();
     } else if (type === EVENTS.STEP_AFTER) {
       setStepIndex(index + 1);
