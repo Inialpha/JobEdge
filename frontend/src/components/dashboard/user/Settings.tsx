@@ -7,6 +7,7 @@ import { useView } from "@/context/ViewContext";
 import { useTour } from "@/context/TourContext";
 import { useNavigate } from "react-router-dom";
 import { RotateCcw } from "lucide-react";
+import { TOUR_NAVIGATION_DELAY } from "@/utils/tourConfig";
 
 export default function SettingsComponent() {
   const user = useSelector((state: RootState) => state.user);
@@ -44,7 +45,7 @@ export default function SettingsComponent() {
     // Start the tour after a brief delay
     setTimeout(() => {
       startTour();
-    }, 500);
+    }, TOUR_NAVIGATION_DELAY);
   };
 
   return (

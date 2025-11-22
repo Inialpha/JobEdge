@@ -1,5 +1,9 @@
 import { Step } from 'react-joyride';
 
+// Timing constants for tour delays
+export const TOUR_START_DELAY = 1000; // Delay before starting tour to allow page load
+export const TOUR_NAVIGATION_DELAY = 500; // Delay when navigating between tour stages
+
 // Tour steps for the Home page (profile creation)
 export const homeTourSteps: Step[] = [
   {
