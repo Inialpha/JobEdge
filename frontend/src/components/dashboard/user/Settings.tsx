@@ -4,10 +4,16 @@ import { Input } from "@/components/ui/input";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { useView } from "@/context/ViewContext";
+import { useTour } from "@/context/TourContext";
+import { useNavigate } from "react-router-dom";
+import { RotateCcw } from "lucide-react";
+import { TOUR_NAVIGATION_DELAY } from "@/utils/tourConfig";
 
 export default function SettingsComponent() {
   const user = useSelector((state: RootState) => state.user);
   const { setCurrentView } = useView();
+  const { resetTour, startTour } = useTour();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
@@ -30,6 +36,16 @@ export default function SettingsComponent() {
     e.preventDefault();
     // TODO: Implement settings update
     console.log("Settings updated:", formData);
+  };
+
+  const handleRestartTour = () => {
+    resetTour();
+    // Navigate to home page to start the tour
+    navigate('/dashboard/home');
+    // Start the tour after a brief delay
+    setTimeout(() => {
+      startTour();
+    }, TOUR_NAVIGATION_DELAY);
   };
 
   return (
@@ -102,6 +118,23 @@ export default function SettingsComponent() {
             </Button>
           </div>
         </form>
+      </div>
+
+      {/* Tour Settings Section */}
+      <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mt-6">
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">Getting Started Tour</h2>
+        <p className="text-gray-600 mb-4">
+          Take a guided tour to learn how to create your profile and first job application.
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleRestartTour}
+          className="flex items-center gap-2"
+        >
+          <RotateCcw className="h-4 w-4" />
+          Restart Tour
+        </Button>
       </div>
     </div>
   );
