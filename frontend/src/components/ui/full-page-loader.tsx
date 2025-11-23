@@ -30,6 +30,7 @@ export function FullPageLoader({ message = "Be patient while we are processing y
         </div>
       </div>
 
+      {/* Custom animation - inline for component isolation */}
       <style>{`
         @keyframes loading {
           0%, 100% {

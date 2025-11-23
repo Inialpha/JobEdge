@@ -6,6 +6,7 @@ import { RootState } from "@/store/store";
 import { useView } from "@/context/ViewContext";
 import { useNavigate } from "react-router-dom";
 import { RotateCcw } from "lucide-react";
+import { TOUR_PAGE_KEYS } from "@/hooks/usePageTour";
 
 export default function SettingsComponent() {
   const user = useSelector((state: RootState) => state.user);
@@ -38,9 +39,8 @@ export default function SettingsComponent() {
   const handleResetAllTours = () => {
     if (!user.id) return;
     
-    // Remove all tour completion statuses for this user
-    const tourPages = ['home', 'applications', 'resume_builder', 'jobs'];
-    tourPages.forEach(page => {
+    // Remove all tour completion statuses for this user using centralized page keys
+    TOUR_PAGE_KEYS.forEach(page => {
       localStorage.removeItem(`${page}_tour_completed_${user.id}`);
     });
     

@@ -3,11 +3,15 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { TOUR_START_DELAY } from '@/utils/tourConfig';
 
+// Centralized list of tour page keys
+export const TOUR_PAGE_KEYS = ['home', 'applications', 'resume_builder', 'jobs'] as const;
+export type TourPageKey = typeof TOUR_PAGE_KEYS[number];
+
 /**
  * Custom hook for managing page-specific tours
  * Each dashboard page can use this hook to manage its own tour state independently
  */
-export function usePageTour(pageKey: string) {
+export function usePageTour(pageKey: TourPageKey) {
   const user = useSelector((state: RootState) => state.user);
   const [run, setRun] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
@@ -23,12 +27,10 @@ export function usePageTour(pageKey: string) {
   const startTour = useCallback(() => {
     if (!user.id) return;
     
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       setRun(true);
       setStepIndex(0);
     }, TOUR_START_DELAY);
-    
-    return () => clearTimeout(timer);
   }, [user.id]);
 
   // Stop the tour and mark as completed
