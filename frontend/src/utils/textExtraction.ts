@@ -13,8 +13,12 @@ export async function extractTextFromPDF(file: File): Promise<string> {
   const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
 
   const worker = await createWorker({
-    logger: (m: unknown) => console.log(m)  // optional
+    logger: (m: unknown) => console.log(m),
   });
+  await worker.load();
+  await worker.loadLanguage('eng');
+  await worker.initialize('eng');
+
 
   let finalText = "";
 

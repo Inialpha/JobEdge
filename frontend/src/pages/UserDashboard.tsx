@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Menu, X, FileText, Settings, LogOut, Sparkles, Briefcase, ChevronDown, ChevronLeft, ChevronRight, Home, ClipboardList } from "lucide-react";
+import { Menu, X, FileText, Settings, LogOut, FileEdit, Sparkles, Briefcase, ChevronDown, ChevronLeft, ChevronRight, Home, ClipboardList } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 //import { useView } from "@/hooks/useView";
@@ -50,7 +50,8 @@ export default function UserDashboardLayout() {
   const sidebarItems = [
     { name: "Home", icon: Home, path: "/dashboard/home" },
     { name: "Resumes", icon: FileText, path: "/dashboard/resumes" },
-    { name: "Tailor Resume", icon: Sparkles, path: "/dashboard/tailor-resume" },
+    { name: "Resume Builder", icon: FileEdit, path: "/dashboard/resume-builder" },
+    //{ name: "Tailor Resume", icon: Sparkles, path: "/dashboard/tailor-resume" },
     { name: "Applications", icon: ClipboardList, path: "/dashboard/applications" },
     { name: "Jobs", icon: Briefcase, path: "/dashboard/jobs" },
     { name: "Settings", icon: Settings, path: "/dashboard/settings" },

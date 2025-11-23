@@ -214,7 +214,7 @@ export default function Applications() {
   return (
     <div className="space-y-6">
       {/* Joyride Tour - only runs when component is loaded and user has master resume */}
-      {componentLoaded && user.hasMasterResume && (
+      {componentLoaded && (
         <Joyride
           steps={applicationsTourSteps}
           run={run}
