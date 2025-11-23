@@ -99,6 +99,51 @@ export const jobsTourSteps: Step[] = [
   },
 ];
 
+// Tour steps for the Search Jobs page (dashboard)
+export const searchJobsTourSteps: Step[] = [
+  {
+    target: 'body',
+    content: 'Welcome to the Job Search page! Here you can search for jobs using your master resume. Let\'s explore how to customize your job search.',
+    placement: 'center',
+    disableBeacon: true,
+  },
+  {
+    target: '#keywords',
+    content: 'These are the keywords extracted from your master resume. Keywords are automatically populated from your profile if you have completed it. You can add or remove keywords to refine your search based on your skills, technologies, and experience!',
+    placement: 'bottom',
+  },
+  {
+    target: '#location',
+    content: 'Specify a location to search for jobs in specific cities, states, or countries. For example, "New York, USA" or "Remote".',
+    placement: 'bottom',
+  },
+  {
+    target: '#jobType',
+    content: 'Filter by job type to find full-time, part-time, or contract positions that match your preferences.',
+    placement: 'bottom',
+  },
+  {
+    target: '#remote',
+    content: 'Enable this switch if you\'re looking for remote work opportunities exclusively.',
+    placement: 'bottom',
+  },
+  {
+    target: '#daysAgo',
+    content: 'Filter jobs by how recently they were posted. For example, set to "7" to see only jobs posted in the last 7 days.',
+    placement: 'bottom',
+  },
+  {
+    target: '#maxJobs',
+    content: 'Set the maximum number of job results to return (up to 25 jobs). This helps you focus on the most relevant opportunities without being overwhelmed.',
+    placement: 'bottom',
+  },
+  {
+    target: '.search-button',
+    content: 'Click here to search for jobs based on your criteria. The results will appear below with options to apply directly or generate a tailored application!',
+    placement: 'top',
+  },
+];
+
 // Tour styles configuration
 export const tourStyles = {
   options: {
