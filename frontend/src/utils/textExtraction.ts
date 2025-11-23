@@ -1,4 +1,5 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import { TextItem } from 'pdfjs-dist/types/src/display/api';
 import { createWorker } from "tesseract.js";
 import mammoth from 'mammoth';
 
@@ -8,11 +9,11 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.j
 /**
  * Extract text from a PDF file (handles both regular and scanned PDFs)
  */
-export async function extractTextFromPDF(file) {
+export async function extractTextFromPDF(file: File): Promise<string> {
   const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
 
   const worker = await createWorker({
-    logger: m => console.log(m)  // optional
+    logger: (m: unknown) => console.log(m)  // optional
   });
 
   let finalText = "";
@@ -22,7 +23,9 @@ export async function extractTextFromPDF(file) {
     const content = await page.getTextContent();
 
     // If text layer exists (normal PDF)
-    const extracted = content.items.map(item => item.str).join(" ");
+    const extracted = content.items
+      .map(item => ('str' in item ? (item as TextItem).str : ''))
+      .join(" ");
     if (extracted.trim().length > 0) {
       finalText += extracted + "\n";
       continue;
@@ -32,6 +35,11 @@ export async function extractTextFromPDF(file) {
     const viewport = page.getViewport({ scale: 2 });
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      console.error("Failed to get canvas context");
+      continue;
+    }
 
     canvas.width = viewport.width;
     canvas.height = viewport.height;
