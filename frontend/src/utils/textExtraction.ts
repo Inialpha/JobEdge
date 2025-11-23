@@ -2,7 +2,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import mammoth from 'mammoth';
 
 // Set the worker source for pdfjs
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 /**
  * Extract text from a PDF file (handles both regular and scanned PDFs)
@@ -19,7 +19,12 @@ async function extractTextFromPDF(file: File): Promise<string> {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
       const pageText = textContent.items
-        .map((item: any) => item.str)
+        .map((item) => {
+          if ('str' in item) {
+            return item.str;
+          }
+          return '';
+        })
         .join(' ');
       fullText += pageText + '\n';
     }
@@ -63,6 +68,10 @@ async function extractTextFromTxt(file: File): Promise<string> {
  */
 export async function extractTextFromFile(file: File): Promise<string> {
   const fileExtension = file.name.split('.').pop()?.toLowerCase();
+  
+  if (!fileExtension) {
+    throw new Error('File has no extension');
+  }
   
   switch (fileExtension) {
     case 'pdf':

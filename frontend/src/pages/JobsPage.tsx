@@ -38,7 +38,7 @@ export default function JobsPage() {
         setRunTour(true);
       }, 1000);
     }
-  }, [])
+  }, [user.id])
   
   
   const fetchJobs = async (url: string) => {
