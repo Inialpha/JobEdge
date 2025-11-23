@@ -1,40 +1,55 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import { createWorker } from "tesseract.js";
 import mammoth from 'mammoth';
 
-// Set the worker source for pdfjs
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
 
 /**
  * Extract text from a PDF file (handles both regular and scanned PDFs)
  */
-async function extractTextFromPDF(file: File): Promise<string> {
-  try {
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    
-    let fullText = '';
-    
-    // Extract text from each page
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item) => {
-          if ('str' in item) {
-            return item.str;
-          }
-          return '';
-        })
-        .join(' ');
-      fullText += pageText + '\n';
+export async function extractTextFromPDF(file) {
+  const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
+
+  const worker = await createWorker({
+    logger: m => console.log(m)  // optional
+  });
+
+  let finalText = "";
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+
+    // If text layer exists (normal PDF)
+    const extracted = content.items.map(item => item.str).join(" ");
+    if (extracted.trim().length > 0) {
+      finalText += extracted + "\n";
+      continue;
     }
-    
-    return fullText.trim();
-  } catch (error) {
-    console.error('Error extracting text from PDF:', error);
-    throw new Error('Failed to extract text from PDF file');
+
+    // Else: page is an image — convert page to image for OCR
+    const viewport = page.getViewport({ scale: 2 });
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    await page.render({ canvasContext: ctx, viewport }).promise;
+
+    // Run OCR on the image
+    const {
+      data: { text: ocrText }
+    } = await worker.recognize(canvas);
+
+    finalText += ocrText + "\n";
   }
+
+  await worker.terminate();
+  return finalText;
 }
+
 
 /**
  * Extract text from a DOCX file

@@ -137,6 +137,7 @@ export default function HomeComponent() {
       let extractedText = '';
       try {
         extractedText = await extractTextFromFile(file);
+        console.log(extractedText)
         console.log('Extracted text length:', extractedText.length);
       } catch (extractError) {
         console.warn('Text extraction failed, will rely on backend:', extractError);
