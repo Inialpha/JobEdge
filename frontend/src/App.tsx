@@ -18,8 +18,8 @@ import { AuthMiddleware, AdminMiddleware } from "@/utils/middleware";
 import VerifyEmail from "@/pages/VerifyEmail"
 import NotFound from "@/pages/NotFound"
 import { ViewProvider } from "@/context/ViewContext";
-import { Analytics } from '@vercel/analytics/react';
- 
+import { Analytics } from '@vercel/analytics/react'; 
+
 
 const routes = createBrowserRouter(
   createRoutesFromElements(
@@ -60,7 +60,6 @@ const routes = createBrowserRouter(
 )
 
 function App() {
-
   return (
     <>
       <RouterProvider router={routes} />

@@ -91,6 +91,7 @@ dmypy.json
 
 # Django stuff:
 *.log
+logs/
 local_settings.py
 db.sqlite3
 media/

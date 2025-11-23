@@ -4,10 +4,14 @@ import { Input } from "@/components/ui/input";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { useView } from "@/context/ViewContext";
+import { useNavigate } from "react-router-dom";
+import { RotateCcw } from "lucide-react";
+import { TOUR_PAGE_KEYS } from "@/hooks/usePageTour";
 
 export default function SettingsComponent() {
   const user = useSelector((state: RootState) => state.user);
   const { setCurrentView } = useView();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
@@ -30,6 +34,18 @@ export default function SettingsComponent() {
     e.preventDefault();
     // TODO: Implement settings update
     console.log("Settings updated:", formData);
+  };
+
+  const handleResetAllTours = () => {
+    if (!user.id) return;
+    
+    // Remove all tour completion statuses for this user using centralized page keys
+    TOUR_PAGE_KEYS.forEach(page => {
+      localStorage.removeItem(`${page}_tour_completed_${user.id}`);
+    });
+    
+    // Navigate to home page
+    navigate('/dashboard/home');
   };
 
   return (
@@ -102,6 +118,23 @@ export default function SettingsComponent() {
             </Button>
           </div>
         </form>
+      </div>
+
+      {/* Tour Settings Section */}
+      <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mt-6">
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">Getting Started Tours</h2>
+        <p className="text-gray-600 mb-4">
+          Reset all guided tours to see them again. Each page (Home, Applications, Resume Builder, and Jobs) has its own independent tour.
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleResetAllTours}
+          className="flex items-center gap-2"
+        >
+          <RotateCcw className="h-4 w-4" />
+          Reset All Tours
+        </Button>
       </div>
     </div>
   );

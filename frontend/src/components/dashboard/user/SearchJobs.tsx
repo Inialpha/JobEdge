@@ -11,6 +11,9 @@ import { X, Search, ExternalLink, FileText, Loader2 } from 'lucide-react';
 import { getRequest, postRequest } from '@/utils/apis';
 import { useQuery } from '@tanstack/react-query';
 import { useView } from '@/context/ViewContext';
+import Joyride, { CallBackProps, STATUS, EVENTS } from 'react-joyride';
+import { searchJobsTourSteps, tourStyles, tourLocale } from '@/utils/tourConfig';
+import { usePageTour } from '@/hooks/usePageTour';
 
 
 interface JobResult {
@@ -47,11 +50,14 @@ export default function SearchJobs() {
   const [jobType, setJobType] = useState('');
   const [isRemote, setIsRemote] = useState(false);
   const [daysAgo, setDaysAgo] = useState<number>(2);
-  const [maxJobs, setMaxJobs] = useState<number>(50);
+  const [maxJobs, setMaxJobs] = useState<number>(25);
   const [isSearching, setIsSearching] = useState(false);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [jobs, setJobs] = useState<JobResult[]>([]);
   const [error, setError] = useState<string>('');
+
+  // Tour state using the new hook
+  const { run: runTour, stepIndex: tourStepIndex, setStepIndex: setTourStepIndex, startTour, stopTour, tourCompleted } = usePageTour('search_jobs');
 
   // Set current view when component mounts
   useEffect(() => {
@@ -77,6 +83,13 @@ export default function SearchJobs() {
     queryKey: ['userProfile'],
     queryFn: fetchUser,
   })
+
+  // Start tour if not completed yet
+  useEffect(() => {
+    if (!tourCompleted && userData) {
+      startTour();
+    }
+  }, [tourCompleted, startTour, userData]);
 
   useEffect(() => {
     if (userData?.resume) {
@@ -105,6 +118,17 @@ export default function SearchJobs() {
     if (e.key === 'Enter') {
       e.preventDefault();
       addKeyword();
+    }
+  };
+
+  // Handle tour callback
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { status, type, index } = data;
+    
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      stopTour();
+    } else if (type === EVENTS.STEP_AFTER) {
+      setTourStepIndex(index + 1);
     }
   };
 
@@ -213,6 +237,19 @@ export default function SearchJobs() {
 
   return (
     <div className="max-w-[1400px] mx-auto md:p-6">
+      {/* Joyride Tour */}
+      <Joyride
+        steps={searchJobsTourSteps}
+        run={runTour}
+        stepIndex={tourStepIndex}
+        continuous
+        showSkipButton
+        showProgress
+        callback={handleJoyrideCallback}
+        styles={tourStyles}
+        locale={tourLocale}
+      />
+
       {/* Show loader when user data is loading */}
       {isLoading && (
         <div className="flex justify-center items-center py-12">
@@ -319,9 +356,19 @@ export default function SearchJobs() {
               id="maxJobs"
               type="number"
               min="1"
-              max="100"
+              max="25"
               value={maxJobs}
-              onChange={(e) => setMaxJobs(Number(e.target.value))}
+              onChange={(e) => {
+                const value = parseInt(e.target.value, 10);
+                // Enforce maximum of 25 jobs, handle NaN
+                if (isNaN(value) || value < 1) {
+                  setMaxJobs(1);
+                } else if (value > 25) {
+                  setMaxJobs(25);
+                } else {
+                  setMaxJobs(value);
+                }
+              }}
             />
           </div>
 
@@ -330,7 +377,7 @@ export default function SearchJobs() {
           )}
 
           <Button
-            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 search-button"
             onClick={handleSearch}
             disabled={isSearching}
           >

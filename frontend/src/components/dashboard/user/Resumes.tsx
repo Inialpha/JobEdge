@@ -120,7 +120,6 @@ export default function ResumesComponent() {
         if (response.ok) {
           const resume = await response.json();
           setFeedback({type: 'success', message: "Resume uploaded successfully. Redirecting to editor..."});
-          // Navigate to resume-builder with the parsed resume
           setTimeout(() => {
             navigate('/dashboard/resume-builder', { state: { resume, component: 'resume builder' } });
           }, 1000);
@@ -185,13 +184,13 @@ export default function ResumesComponent() {
 
   return (
     <div className="p-6">
-      {/* Create Master Resume Dialog */}
+      {/* Create Resume Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Master Resume</DialogTitle>
+            <DialogTitle>Create Resume</DialogTitle>
             <DialogDescription>
-              Choose how you want to create your master resume
+              Choose how you want to create your resume
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -256,7 +255,7 @@ export default function ResumesComponent() {
           className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
         >
           <FileText className="h-4 w-4 mr-2" />
-          Create Master Resume
+          Create Resume
         </Button>
       </div>
 

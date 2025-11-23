@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Menu, X, FileText, Settings, LogOut, FileEdit, Sparkles, Briefcase, ChevronDown, ChevronLeft, ChevronRight, Home, ClipboardList } from "lucide-react";
+import { Menu, X, FileText, Settings, LogOut, FileEdit, Briefcase, ChevronDown, ChevronLeft, ChevronRight, Home, ClipboardList } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 //import { useView } from "@/hooks/useView";
@@ -42,7 +42,6 @@ export default function UserDashboardLayout() {
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  //const { activeView, setActiveView } = useView("resumes");
   const { currentView, setCurrentView } = useView();
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -52,7 +51,7 @@ export default function UserDashboardLayout() {
     { name: "Home", icon: Home, path: "/dashboard/home" },
     { name: "Resumes", icon: FileText, path: "/dashboard/resumes" },
     { name: "Resume Builder", icon: FileEdit, path: "/dashboard/resume-builder" },
-    { name: "Tailor Resume", icon: Sparkles, path: "/dashboard/tailor-resume" },
+    //{ name: "Tailor Resume", icon: Sparkles, path: "/dashboard/tailor-resume" },
     { name: "Applications", icon: ClipboardList, path: "/dashboard/applications" },
     { name: "Jobs", icon: Briefcase, path: "/dashboard/jobs" },
     { name: "Settings", icon: Settings, path: "/dashboard/settings" },
