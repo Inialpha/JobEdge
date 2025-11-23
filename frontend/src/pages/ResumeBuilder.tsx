@@ -14,6 +14,7 @@ import cleanData from "@/utils/cleanData"
 import { useView } from "@/context/ViewContext";
 import Joyride, { CallBackProps, STATUS, EVENTS } from 'react-joyride';
 import { resumeBuilderTourSteps, tourStyles, tourLocale } from '@/utils/tourConfig';
+import { usePageTour } from '@/hooks/usePageTour';
 
 export default function ResumeBuilder() {
   const { setCurrentView } = useView();
@@ -33,22 +34,17 @@ export default function ResumeBuilder() {
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Tour state
-  const [runTour, setRunTour] = useState(false);
-  const [tourStepIndex, setTourStepIndex] = useState(0);
+  // Tour state using the new hook
+  const { run: runTour, stepIndex: tourStepIndex, setStepIndex: setTourStepIndex, startTour, stopTour, tourCompleted } = usePageTour('resume_builder');
 
   useEffect(() => {
     setCurrentView("resume builder");
     
-    // Check if user wants to see the tour
-    const tourShown = localStorage.getItem(`resume_builder_tour_shown_${user.id}`);
-    if (!tourShown) {
-      // Delay tour start to allow page to render
-      setTimeout(() => {
-        setRunTour(true);
-      }, 1000);
+    // Start tour if not completed yet
+    if (!tourCompleted) {
+      startTour();
     }
-  }, [setCurrentView, user.id]);
+  }, [setCurrentView, tourCompleted, startTour]);
 
   const [newExperience, setNewExperience] = useState<ProfessionalExperience>({
     organization: '',
@@ -439,8 +435,7 @@ export default function ResumeBuilder() {
     const { status, type, index } = data;
     
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
-      setRunTour(false);
-      localStorage.setItem(`resume_builder_tour_shown_${user.id}`, 'true');
+      stopTour();
     } else if (type === EVENTS.STEP_AFTER) {
       setTourStepIndex(index + 1);
     }

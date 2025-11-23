@@ -18,8 +18,7 @@ import { AuthMiddleware, AdminMiddleware } from "@/utils/middleware";
 import VerifyEmail from "@/pages/VerifyEmail"
 import NotFound from "@/pages/NotFound"
 import { ViewProvider } from "@/context/ViewContext";
-import { Analytics } from '@vercel/analytics/react';
-import { TourProvider } from "@/context/TourContext"; 
+import { Analytics } from '@vercel/analytics/react'; 
 
 
 const routes = createBrowserRouter(
@@ -37,9 +36,7 @@ const routes = createBrowserRouter(
         {/* User Dashboard with nested routes */}
         <Route path="dashboard" element={
           <ViewProvider>
-            <TourProvider>
-              <UserDashboardLayout />
-            </TourProvider>
+            <UserDashboardLayout />
           </ViewProvider>
         }>
           <Route index element={<HomeComponent />} />

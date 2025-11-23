@@ -8,37 +8,30 @@ import { Job } from "@/utils/types"
 import { getRequest } from "@/utils/apis";
 import { useInView } from "react-intersection-observer"
 import { Loader2 } from "lucide-react"
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
 import Joyride, { CallBackProps, STATUS, EVENTS } from 'react-joyride';
 import { jobsTourSteps, tourStyles, tourLocale } from '@/utils/tourConfig';
+import { usePageTour } from '@/hooks/usePageTour';
 
 
 export default function JobsPage() {
-  const user = useSelector((state: RootState) => state.user);
   const [jobs, setJobs] = useState<Job[] | []>([]);
   //const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [ref, inView] = useInView()
   const [nextUrl, setNextUrl] = useState<string>()
   
-  // Tour state
-  const [runTour, setRunTour] = useState(false);
-  const [tourStepIndex, setTourStepIndex] = useState(0);
+  // Tour state using the new hook
+  const { run: runTour, stepIndex: tourStepIndex, setStepIndex: setTourStepIndex, startTour, stopTour, tourCompleted } = usePageTour('jobs');
   
   useEffect(() => {
     const url = `${import.meta.env.VITE_API_URL}/jobs/?page_num=1&page_size=25`;
     fetchJobs(url);
     
-    // Check if user wants to see the tour
-    const tourShown = localStorage.getItem(`jobs_tour_shown_${user.id}`);
-    if (!tourShown) {
-      // Delay tour start to allow page to render
-      setTimeout(() => {
-        setRunTour(true);
-      }, 1000);
+    // Start tour if not completed yet
+    if (!tourCompleted) {
+      startTour();
     }
-  }, [user.id])
+  }, [tourCompleted, startTour])
   
   
   const fetchJobs = async (url: string) => {
@@ -112,8 +105,7 @@ export default function JobsPage() {
     const { status, type, index } = data;
     
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
-      setRunTour(false);
-      localStorage.setItem(`jobs_tour_shown_${user.id}`, 'true');
+      stopTour();
     } else if (type === EVENTS.STEP_AFTER) {
       setTourStepIndex(index + 1);
     }
