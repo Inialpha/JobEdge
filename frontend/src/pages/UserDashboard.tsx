@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Menu, X, FileText, Settings, LogOut, FileEdit, Sparkles, Briefcase, ChevronDown, ChevronLeft, ChevronRight, Home, ClipboardList } from "lucide-react";
+import { Menu, X, FileText, Settings, LogOut, FileEdit, Briefcase, ChevronDown, ChevronLeft, ChevronRight, Home, ClipboardList } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 //import { useView } from "@/hooks/useView";

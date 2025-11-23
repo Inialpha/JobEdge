@@ -17,9 +17,10 @@ import { RootState } from "@/store/store";
 import { useView } from "@/context/ViewContext";
 import { useQuery } from '@tanstack/react-query';
 import Joyride, { CallBackProps, STATUS, EVENTS } from 'react-joyride';
-import { useTour } from "@/context/TourContext";
 import { homeTourSteps, tourStyles, tourLocale } from "@/utils/tourConfig";
 import { extractTextFromFile } from "@/utils/textExtraction";
+import { usePageTour } from "@/hooks/usePageTour";
+import { FullPageLoader } from "@/components/ui/full-page-loader";
 
 interface Resume {
   id: string;
@@ -37,7 +38,7 @@ export default function HomeComponent() {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.user);
   const { setCurrentView } = useView();
-  const { run, stopTour, stepIndex, setStepIndex } = useTour();
+  const { run, stepIndex, setStepIndex, startTour, stopTour, tourCompleted } = usePageTour('home');
   const [masterResume, setMasterResume] = useState<Resume | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -97,8 +98,13 @@ export default function HomeComponent() {
       
       // Mark component as loaded after data is fetched and state is set
       setComponentLoaded(true);
+      
+      // Start tour if user doesn't have master resume and hasn't seen tour
+      if (!master && !tourCompleted && user.id) {
+        startTour();
+      }
     }
-  }, [resumesData]);
+  }, [resumesData, tourCompleted, startTour, user.id]);
 
   const handleCreateProfile = () => {
     setShowCreateDialog(true);
@@ -205,6 +211,9 @@ export default function HomeComponent() {
 
   return (
     <div className="space-y-6">
+      {/* Full-page loader during file upload */}
+      {isUploading && <FullPageLoader />}
+      
       {/* Joyride Tour - only runs when component is loaded */}
       {componentLoaded && (
         <Joyride

@@ -18,8 +18,8 @@ import { useView } from "@/context/ViewContext";
 import { useQuery } from '@tanstack/react-query';
 import { coverLetterPdf } from "@/utils/coverLetterPdf";
 import Joyride, { CallBackProps, STATUS, EVENTS } from 'react-joyride';
-import { useTour } from "@/context/TourContext";
 import { applicationsTourSteps, tourStyles, tourLocale } from "@/utils/tourConfig";
+import { usePageTour } from "@/hooks/usePageTour";
 
 interface Application {
   id: string;
@@ -38,7 +38,7 @@ interface Application {
 
 export default function Applications() {
   const { setCurrentView } = useView();
-  const { run, stopTour, stepIndex, setStepIndex } = useTour();
+  const { run, stepIndex, setStepIndex, startTour, stopTour, tourCompleted } = usePageTour('applications');
   const [applications, setApplications] = useState<Application[]>([]);
   const [showNewApplication, setShowNewApplication] = useState(false);
   const [showCoverLetter, setShowCoverLetter] = useState(false);
@@ -86,8 +86,13 @@ export default function Applications() {
       setApplications(applicationsData);
       // Mark component as loaded after data is fetched
       setComponentLoaded(true);
+      
+      // Start tour if user has master resume and hasn't seen tour yet
+      if (user.hasMasterResume && !tourCompleted && applicationsData.length === 0) {
+        startTour();
+      }
     }
-  }, [applicationsData]);
+  }, [applicationsData, user.hasMasterResume, tourCompleted, startTour]);
 
   const handleStartNewApplication = () => {
     setShowNewApplication(true);
