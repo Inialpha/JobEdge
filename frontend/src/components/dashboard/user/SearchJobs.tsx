@@ -359,12 +359,12 @@ export default function SearchJobs() {
               max="25"
               value={maxJobs}
               onChange={(e) => {
-                const value = Number(e.target.value);
-                // Enforce maximum of 25 jobs
-                if (value > 25) {
-                  setMaxJobs(25);
-                } else if (value < 1) {
+                const value = parseInt(e.target.value, 10);
+                // Enforce maximum of 25 jobs, handle NaN
+                if (isNaN(value) || value < 1) {
                   setMaxJobs(1);
+                } else if (value > 25) {
+                  setMaxJobs(25);
                 } else {
                   setMaxJobs(value);
                 }
