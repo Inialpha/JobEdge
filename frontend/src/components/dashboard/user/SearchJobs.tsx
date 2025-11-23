@@ -47,7 +47,7 @@ export default function SearchJobs() {
   const [jobType, setJobType] = useState('');
   const [isRemote, setIsRemote] = useState(false);
   const [daysAgo, setDaysAgo] = useState<number>(2);
-  const [maxJobs, setMaxJobs] = useState<number>(50);
+  const [maxJobs, setMaxJobs] = useState<number>(25);
   const [isSearching, setIsSearching] = useState(false);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [jobs, setJobs] = useState<JobResult[]>([]);
@@ -319,7 +319,7 @@ export default function SearchJobs() {
               id="maxJobs"
               type="number"
               min="1"
-              max="100"
+              max="25"
               value={maxJobs}
               onChange={(e) => setMaxJobs(Number(e.target.value))}
             />

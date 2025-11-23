@@ -84,17 +84,17 @@ export const jobsTourSteps: Step[] = [
   },
   {
     target: '.search-keywords',
-    content: 'Use this field to search for jobs by keywords. If you\'ve completed your master profile, we\'ll automatically extract relevant keywords from it to help you find matching opportunities!',
+    content: 'Use this field to search for jobs by keywords. Keywords are automatically extracted from your master resume if you have completed your profile. This helps you find matching opportunities based on your skills and experience!',
     placement: 'bottom',
   },
   {
     target: '.location-filter',
-    content: 'Filter jobs by location here. You can search for jobs in specific cities or select "Remote" for work-from-home opportunities.',
+    content: 'Filter jobs by location here. You can search for jobs in specific cities, states, or countries.',
     placement: 'bottom',
   },
   {
     target: '.job-results',
-    content: 'Your search results will appear here. You can view up to 25 jobs at a time. Scroll down to see more job listings.',
+    content: 'Your search results will appear here. You can view up to 25 jobs at a time. Scroll down to load more job listings automatically.',
     placement: 'top',
   },
 ];
