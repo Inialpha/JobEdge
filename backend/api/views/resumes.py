@@ -49,6 +49,7 @@ class ResumeAPIView(APIView):
         """
 
         file_name = request.data.get("file")
+        extracted_text = request.data.get("extracted_text")
         user_id = request.user.id
         #user_id = request.data.get("user")
         try:
@@ -57,9 +58,13 @@ class ResumeAPIView(APIView):
             print("No user for user's id")
             return Response({"details": "No user for user's id"}, status=status.HTTP_400_BAD_REQUEST)
 
-        text = extract_text_safe(file_name)
-        if len(text) < 5:
-            return Response({"error": "Failed to process this file. This can happen if the file contains images. Please upload another file or another format"}, status=status.HTTP_400_BAD_REQUEST)
+        # Use extracted_text if provided, otherwise extract from file
+        if extracted_text and len(extracted_text) >= 5:
+            text = extracted_text
+        else:
+            text = extract_text_safe(file_name)
+            if len(text) < 5:
+                return Response({"error": "Failed to process this file. This can happen if the file contains images. Please upload another file or another format"}, status=status.HTTP_400_BAD_REQUEST)
 
         resume_data = ai(text)
         if resume_data is None:

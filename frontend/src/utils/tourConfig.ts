@@ -39,6 +39,66 @@ export const applicationsTourSteps: Step[] = [
   },
 ];
 
+// Tour steps for the Resume Builder page
+export const resumeBuilderTourSteps: Step[] = [
+  {
+    target: 'body',
+    content: 'Welcome to the Resume Builder! Here you can create and edit your professional resume. Let\'s walk through the key features.',
+    placement: 'center',
+    disableBeacon: true,
+  },
+  {
+    target: '.resume-form-section',
+    content: 'Fill in all the required fields marked with an asterisk (*). Make sure to complete all required information before saving your resume.',
+    placement: 'right',
+  },
+  {
+    target: '.resume-preview-section',
+    content: 'This is the live preview! As you fill in the form, you\'ll see your resume update in real-time. This helps you visualize how your resume will look.',
+    placement: 'left',
+  },
+  {
+    target: '.template-selector',
+    content: 'You can change your resume template here! Click on different templates to see how your resume looks in various styles.',
+    placement: 'bottom',
+  },
+  {
+    target: '.download-buttons',
+    content: 'Once you\'ve completed all required fields and saved your resume, you can download it as a PDF or DOCX file using these buttons.',
+    placement: 'top',
+  },
+  {
+    target: '#save-resume-btn',
+    content: 'Don\'t forget to save your work! Click this button to save your resume. Remember, all required fields must be filled before you can save.',
+    placement: 'bottom',
+  },
+];
+
+// Tour steps for the Jobs page
+export const jobsTourSteps: Step[] = [
+  {
+    target: 'body',
+    content: 'Welcome to the Jobs page! Here you can search and filter job opportunities. Let\'s explore the search features.',
+    placement: 'center',
+    disableBeacon: true,
+  },
+  {
+    target: '.search-keywords',
+    content: 'Use this field to search for jobs by keywords. If you\'ve completed your master profile, we\'ll automatically extract relevant keywords from it to help you find matching opportunities!',
+    placement: 'bottom',
+  },
+  {
+    target: '.location-filter',
+    content: 'Filter jobs by location here. You can search for jobs in specific cities or select "Remote" for work-from-home opportunities.',
+    placement: 'bottom',
+  },
+  {
+    target: '.job-results',
+    content: 'Your search results will appear here. You can view up to 25 jobs at a time. Scroll down to see more job listings.',
+    placement: 'top',
+  },
+];
+
 // Tour styles configuration
 export const tourStyles = {
   options: {
