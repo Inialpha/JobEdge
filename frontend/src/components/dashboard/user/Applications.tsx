@@ -84,11 +84,9 @@ export default function Applications() {
   useEffect(() => {
     if (applicationsData) {
       setApplications(applicationsData);
-      // Mark component as loaded after data is fetched
       setComponentLoaded(true);
       
-      // Start tour if user has master resume and hasn't seen tour yet
-      if (user.hasMasterResume && !tourCompleted && applicationsData.length === 0) {
+      if (!tourCompleted) {
         startTour();
       }
     }
