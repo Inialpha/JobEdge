@@ -4,7 +4,7 @@ import { RootState } from '@/store/store';
 import { TOUR_START_DELAY } from '@/utils/tourConfig';
 
 // Centralized list of tour page keys
-export const TOUR_PAGE_KEYS = ['home', 'applications', 'resume_builder', 'jobs'] as const;
+export const TOUR_PAGE_KEYS = ['home', 'applications', 'resume_builder', 'jobs', 'search_jobs'] as const;
 export type TourPageKey = typeof TOUR_PAGE_KEYS[number];
 
 /**
