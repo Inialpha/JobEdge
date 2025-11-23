@@ -12,6 +12,8 @@ import { useDispatch } from "react-redux"
 import { updateUserInfo } from "@/store/userSlice"
 import cleanData from "@/utils/cleanData"
 import { useView } from "@/context/ViewContext";
+import Joyride, { CallBackProps, STATUS, EVENTS } from 'react-joyride';
+import { resumeBuilderTourSteps, tourStyles, tourLocale } from '@/utils/tourConfig';
 
 export default function ResumeBuilder() {
   const { setCurrentView } = useView();
@@ -30,10 +32,23 @@ export default function ResumeBuilder() {
   const [saveMessage, setSaveMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Tour state
+  const [runTour, setRunTour] = useState(false);
+  const [tourStepIndex, setTourStepIndex] = useState(0);
 
   useEffect(() => {
     setCurrentView("resume builder");
-  }, [setCurrentView]);
+    
+    // Check if user wants to see the tour
+    const tourShown = localStorage.getItem(`resume_builder_tour_shown_${user.id}`);
+    if (!tourShown) {
+      // Delay tour start to allow page to render
+      setTimeout(() => {
+        setRunTour(true);
+      }, 1000);
+    }
+  }, [setCurrentView, user.id]);
 
   const [newExperience, setNewExperience] = useState<ProfessionalExperience>({
     organization: '',
@@ -419,8 +434,33 @@ export default function ResumeBuilder() {
     };
   }, []);
 
+  // Handle tour callback
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { status, type, index } = data;
+    
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      setRunTour(false);
+      localStorage.setItem(`resume_builder_tour_shown_${user.id}`, 'true');
+    } else if (type === EVENTS.STEP_AFTER) {
+      setTourStepIndex(index + 1);
+    }
+  };
+
   return (
     <>
+      {/* Joyride Tour */}
+      <Joyride
+        steps={resumeBuilderTourSteps}
+        run={runTour}
+        stepIndex={tourStepIndex}
+        continuous
+        showSkipButton
+        showProgress
+        callback={handleJoyrideCallback}
+        styles={tourStyles}
+        locale={tourLocale}
+      />
+      
       <style>{`
         .icontainer {
           max-width: 1400px;
@@ -836,13 +876,13 @@ export default function ResumeBuilder() {
       
       <div className="max-w-[1400px] mx-auto grid gap-5 grid-cols-1 lg:grid-cols-[350px_1fr]">
         {/* Editor Panel */}
-        <div className="bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] h-fit max-h-[50vh] overflow-y-auto">
+        <div className="resume-form-section bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] h-fit max-h-[50vh] overflow-y-auto">
           <div className="header">
             <h1>Resume Builder</h1>
             <p>Edit & Download as PDF/DOCX</p>
           </div>
           
-          <div className="controls">
+          <div className="controls download-buttons">
             {saveMessage && (
               <div style={{
                 padding: '10px 15px',
@@ -894,6 +934,7 @@ export default function ResumeBuilder() {
               )}
             </button>
             <button 
+              id="save-resume-btn"
               className="btn" 
               style={{background: '#17a2b8', color: 'white'}}
               onClick={saveResume}
@@ -905,7 +946,7 @@ export default function ResumeBuilder() {
 
           <div className="editor">
             {/* Template Selection */}
-            <div className="section">
+            <div className="section template-selector">
               <div className="section-title">Choose Template</div>
               <div className="template-carousel">
                 <div className="carousel-container">
@@ -1439,7 +1480,7 @@ export default function ResumeBuilder() {
         </div>
 
         {/* Preview Panel */}
-        <div className="bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] p-6">
+        <div className="resume-preview-section bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] p-6">
           <div id="resumePreview" className="resume-preview classic-template"></div>
         </div>
       </div>
