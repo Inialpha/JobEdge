@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { FileText, Briefcase, CheckCircle } from 'lucide-react';
+import { FileText, Briefcase, CheckCircle, Mail } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 
@@ -30,8 +30,8 @@ export default function LandingPage() {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              <Link to="/dashboard/tailor-resume">
-                <Button variant="ghost">Generate Resume</Button>
+              <Link to="/dashboard/applications">
+                <Button variant="ghost">Start Applying</Button>
               </Link>
               {isLoggedIn ? (
                 <Link to="/dashboard/resumes">
@@ -77,7 +77,7 @@ export default function LandingPage() {
           </div>
           
           {/* Feature Highlights */}
-          <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center p-6 bg-white rounded-lg shadow-lg">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full mb-4">
                 <FileText className="h-6 w-6 text-white" />
@@ -99,6 +99,18 @@ export default function LandingPage() {
               </h3>
               <p className="text-gray-600">
                 Browse and apply to thousands of job listings tailored to your skills
+              </p>
+            </div>
+            
+            <div className="text-center p-6 bg-white rounded-lg shadow-lg">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full mb-4">
+                <Mail className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                AI Cover Letters
+              </h3>
+              <p className="text-gray-600">
+                Generate personalized cover letters automatically with our AI technology
               </p>
             </div>
             
@@ -190,12 +202,12 @@ export default function LandingPage() {
               <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/dashboard/tailor-resume" className="text-gray-400 hover:text-white transition-colors">
-                    Generate Resume
+                  <Link to="/dashboard/applications" className="text-gray-400 hover:text-white transition-colors">
+                    Start Applying
                   </Link>
                 </li>
                 <li>
-                  <Link to="/jobs" className="text-gray-400 hover:text-white transition-colors">
+                  <Link to="/dashboard/jobs" className="text-gray-400 hover:text-white transition-colors">
                     Browse Jobs
                   </Link>
                 </li>

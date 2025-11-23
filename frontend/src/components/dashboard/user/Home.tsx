@@ -19,6 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import Joyride, { CallBackProps, STATUS, EVENTS } from 'react-joyride';
 import { useTour } from "@/context/TourContext";
 import { homeTourSteps, tourStyles, tourLocale } from "@/utils/tourConfig";
+import { extractTextFromFile } from "@/utils/textExtraction";
 
 interface Resume {
   id: string;
@@ -36,7 +37,7 @@ export default function HomeComponent() {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.user);
   const { setCurrentView } = useView();
-  const { run, stopTour, stepIndex, setStepIndex, navigateToApplications } = useTour();
+  const { run, stopTour, stepIndex, setStepIndex } = useTour();
   const [masterResume, setMasterResume] = useState<Resume | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -64,9 +65,29 @@ export default function HomeComponent() {
     }
   };
 
+  const fetchApplications = async () => {
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/applications/`;
+      const response = await getRequest(url);
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+      throw new Error('Failed to fetch applications');
+    } catch (error) {
+      console.error("Error fetching applications:", error);
+      throw error;
+    }
+  };
+
   const { data: resumesData, isLoading } = useQuery({
     queryKey: ['resumes'],
     queryFn: fetchResumes,
+  });
+
+  const { data: applicationsData, isLoading: isLoadingApplications } = useQuery({
+    queryKey: ['applications'],
+    queryFn: fetchApplications,
   });
 
   useEffect(() => {
@@ -112,9 +133,24 @@ export default function HomeComponent() {
 
     setIsUploading(true);
     try {
+      // Extract text from the file
+      let extractedText = '';
+      try {
+        extractedText = await extractTextFromFile(file);
+        console.log('Extracted text length:', extractedText.length);
+      } catch (extractError) {
+        console.warn('Text extraction failed, will rely on backend:', extractError);
+        // Continue with upload even if extraction fails - backend will handle it
+      }
+
       const url = `${import.meta.env.VITE_API_URL}/resumes/`;
       const formData = new FormData();
       formData.append("file", file);
+      
+      // Add extracted text if available
+      if (extractedText) {
+        formData.append("extracted_text", extractedText);
+      }
       
       const response = await postFormData(url, formData);
       if (response.ok) {
@@ -148,8 +184,8 @@ export default function HomeComponent() {
     const { status, index, type } = data;
     
     if (status === STATUS.FINISHED) {
-      // Tour finished - set stage to applications (tour continues after user creates profile)
-      navigateToApplications();
+      // Tour finished - mark as completed, do not navigate to applications
+      stopTour();
     } else if (status === STATUS.SKIPPED) {
       // User skipped the tour - mark as completed
       stopTour();
@@ -158,7 +194,7 @@ export default function HomeComponent() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingApplications) {
     return (
       <div className="flex justify-center items-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
@@ -236,20 +272,14 @@ export default function HomeComponent() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-medium text-gray-600">Master Profile</h3>
-          <p className="text-2xl font-bold text-gray-900 mt-2">
-            {masterResume ? '1' : '0'}
-          </p>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-sm font-medium text-gray-600">Resumes</h3>
-          <p className="text-2xl font-bold text-gray-900 mt-2">{resumesData.length}</p>
+          <p className="text-2xl font-bold text-gray-900 mt-2">{resumesData?.length || 0}</p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-sm font-medium text-gray-600">Applications</h3>
-          <p className="text-2xl font-bold text-gray-900 mt-2">-</p>
+          <p className="text-2xl font-bold text-gray-900 mt-2">{applicationsData?.length || 0}</p>
         </div>
       </div>
 

@@ -8,20 +8,37 @@ import { Job } from "@/utils/types"
 import { getRequest } from "@/utils/apis";
 import { useInView } from "react-intersection-observer"
 import { Loader2 } from "lucide-react"
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import Joyride, { CallBackProps, STATUS, EVENTS } from 'react-joyride';
+import { jobsTourSteps, tourStyles, tourLocale } from '@/utils/tourConfig';
 
 
 export default function JobsPage() {
-
+  const user = useSelector((state: RootState) => state.user);
   const [jobs, setJobs] = useState<Job[] | []>([]);
   //const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [ref, inView] = useInView()
   const [nextUrl, setNextUrl] = useState<string>()
   
+  // Tour state
+  const [runTour, setRunTour] = useState(false);
+  const [tourStepIndex, setTourStepIndex] = useState(0);
+  
   useEffect(() => {
-    const url = `${import.meta.env.VITE_API_URL}/jobs/?page_num=1`;
+    const url = `${import.meta.env.VITE_API_URL}/jobs/?page_num=1&page_size=25`;
     fetchJobs(url);
-  }, [])
+    
+    // Check if user wants to see the tour
+    const tourShown = localStorage.getItem(`jobs_tour_shown_${user.id}`);
+    if (!tourShown) {
+      // Delay tour start to allow page to render
+      setTimeout(() => {
+        setRunTour(true);
+      }, 1000);
+    }
+  }, [user.id])
   
   
   const fetchJobs = async (url: string) => {
@@ -65,7 +82,7 @@ export default function JobsPage() {
 
     console.log(searchLocation);
     console.log(keywords);
-    let url = `${import.meta.env.VITE_API_URL}/jobs/search/?page_num=1`
+    let url = `${import.meta.env.VITE_API_URL}/jobs/search/?page_num=1&page_size=25`
     if (keywords) {
       url += `&keywords=${keywords}`
     }
@@ -90,18 +107,45 @@ export default function JobsPage() {
 
   }
 
+  // Handle tour callback
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { status, type, index } = data;
+    
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      setRunTour(false);
+      localStorage.setItem(`jobs_tour_shown_${user.id}`, 'true');
+    } else if (type === EVENTS.STEP_AFTER) {
+      setTourStepIndex(index + 1);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Joyride Tour */}
+      <Joyride
+        steps={jobsTourSteps}
+        run={runTour}
+        stepIndex={tourStepIndex}
+        continuous
+        showSkipButton
+        showProgress
+        callback={handleJoyrideCallback}
+        styles={tourStyles}
+        locale={tourLocale}
+      />
+      
       <h1 className="text-4xl font-bold mb-8">Job Listings</h1>
       <div className="flex flex-col md:flex-row gap-4 mb-8">
-        <div className="flex md:flex-row gap-4">
+        <div className="flex md:flex-row gap-4 search-keywords">
         <SearchBar />
         <Button onClick={handleJobSearch}>Search</Button>
        </div>
-        <LocationFilter />
+        <div className="location-filter">
+          <LocationFilter />
+        </div>
       </div>
       <Suspense fallback={<div>Loading jobs...</div>}>
-        <div className="grid gap-6">
+        <div className="grid gap-6 job-results">
           {jobs && (<JobList jobs={jobs}/> )}
           <div ref={ref} className="flex justify-center mt-8">
             {loading && <Loader2 className="h-8 w-8 animate-spin text-primary" />}
