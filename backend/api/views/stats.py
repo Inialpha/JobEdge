@@ -56,7 +56,13 @@ class AdminAnalyticsAPIView(APIView):
             )
         
         # Get date range from query params or default to last 30 days
-        days = int(request.query_params.get('days', 30))
+        try:
+            days = int(request.query_params.get('days', 30))
+            # Limit to reasonable range (1-365 days)
+            days = max(1, min(days, 365))
+        except (ValueError, TypeError):
+            days = 30
+        
         end_date = timezone.now().date()
         start_date = end_date - timedelta(days=days)
         
