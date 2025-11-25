@@ -871,7 +871,7 @@ export default function ResumeBuilder() {
       
       <div className="max-w-[1400px] mx-auto grid gap-5 grid-cols-1 lg:grid-cols-[350px_1fr]">
         {/* Editor Panel */}
-        <div className="resume-form-section bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] h-fit max-h-[50vh] overflow-y-auto">
+        <div className="resume-form-section bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] h-fit max-h-[50vh] lg:max-h-[100vh] overflow-y-auto">
           <div className="header">
             <h1>Resume Builder</h1>
             <p>Edit & Download as PDF/DOCX</p>
