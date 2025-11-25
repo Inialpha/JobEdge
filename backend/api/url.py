@@ -3,6 +3,7 @@ from .views.resumes import ResumeAPIView, GenerateResume, GenerateResumeFromJobD
 from .views.users import UserAPIView, CustomSignup, ProfileAPIView
 from .views.jobs import JobSearchAPIView, JobAPIView, SearchJobsAPIView
 from .views.applications import ApplicationAPIView
+from .views.stats import AdminStatsAPIView, AdminAnalyticsAPIView
 # import authemail
 from authemail import views
 
@@ -56,6 +57,10 @@ urlpatterns = [
          name='authemail-password-change'),
 
     path('users/me/', views.UserMe.as_view(), name='authemail-me'),
+    
+    # admin stats
+    path('admin/stats/', AdminStatsAPIView.as_view(), name='admin-stats'),
+    path('admin/analytics/', AdminAnalyticsAPIView.as_view(), name='admin-analytics'),
 ]
 
 

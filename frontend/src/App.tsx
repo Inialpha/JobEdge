@@ -4,7 +4,7 @@ import JobDetails from "@/pages/JobDetails";
 import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router-dom';
 import Signup from "@/pages/Signup";
 import Login from "@/pages/Login";
-import AdminDashboard from "@/pages/admin/Dashboard"
+import AdminDashboardLayout from "@/pages/admin/Dashboard"
 import LandingPage from "@/pages/LandingPage";
 import UserDashboardLayout from "@/pages/UserDashboard";
 import HomeComponent from "@/components/dashboard/user/Home";
@@ -14,6 +14,11 @@ import ResumeBuilderComponent from "@/components/dashboard/user/ResumeBuilder";
 import TailorResumeComponent from "@/components/dashboard/user/TailorResume";
 import SearchJobsComponent from "@/components/dashboard/user/SearchJobs";
 import ApplicationsComponent from "@/components/dashboard/user/Applications";
+import AdminHomeComponent from "@/components/dashboard/admin/Home";
+import AdminAnalyticsComponent from "@/components/dashboard/admin/Analytics";
+import AdminUsersComponent from "@/components/dashboard/admin/Users";
+import AdminResumesComponent from "@/components/dashboard/admin/Resume";
+import AdminSettingsComponent from "@/components/dashboard/admin/setting/settings";
 import { AuthMiddleware, AdminMiddleware } from "@/utils/middleware";
 import VerifyEmail from "@/pages/VerifyEmail"
 import NotFound from "@/pages/NotFound"
@@ -49,7 +54,14 @@ const routes = createBrowserRouter(
           <Route path="settings" element={<SettingsComponent />} />
         </Route>
         <Route element={<AdminMiddleware />}>
-          <Route path="admin/dashboard" element={<AdminDashboard />} />
+          <Route path="admin/dashboard" element={<AdminDashboardLayout />}>
+            <Route index element={<AdminHomeComponent />} />
+            <Route path="home" element={<AdminHomeComponent />} />
+            <Route path="analytics" element={<AdminAnalyticsComponent />} />
+            <Route path="users" element={<AdminUsersComponent />} />
+            <Route path="resumes" element={<AdminResumesComponent />} />
+            <Route path="settings" element={<AdminSettingsComponent />} />
+          </Route>
         </Route>
       </Route>
       
