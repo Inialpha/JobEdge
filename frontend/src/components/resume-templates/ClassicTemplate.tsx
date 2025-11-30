@@ -68,7 +68,6 @@ export const ClassicTemplate = ({ resume }: ClassicTemplateProps) => {
                 <div><strong>{escapeHtml(edu?.degree || '')}</strong></div>
                 <div>{escapeHtml(edu?.institution || '')}</div>
                 <div>{escapeHtml(edu?.startDate || '')} - {escapeHtml(edu?.endDate || '')}</div>
-                {edu?.gpa && <div>GPA: {escapeHtml(edu.gpa)}</div>}
               </div>
             ))}
           </div>
@@ -105,7 +104,6 @@ export const ClassicTemplate = ({ resume }: ClassicTemplateProps) => {
               <div key={index} style={{ marginBottom: '10px' }}>
                 <div className="no-break" ><div><strong className="no-break">{escapeHtml(proj?.name || '')}</strong></div></div>
                 <div className="no-break" >{escapeHtml(proj?.description || '')}</div>
-                <div><em>{escapeHtml(proj?.technologies || '')}</em></div>
               </div>
             ))}
           </div>

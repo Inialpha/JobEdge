@@ -23,17 +23,13 @@ export type ProfessionalExperience = {
 export type Education = {
   institution: string
   degree: string
-  field: string
   startDate: string
   endDate: string
-  gpa: string
 }
 
 export type Project = {
   name: string
   description: string
-  technologies: string
-  link: string
 }
 
 export type Certification = {
