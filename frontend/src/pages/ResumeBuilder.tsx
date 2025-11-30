@@ -58,17 +58,13 @@ export default function ResumeBuilder() {
   const [newEducation, setNewEducation] = useState<Education>({
     institution: '',
     degree: '',
-    field: '',
     startDate: '',
-    endDate: '',
-    gpa: ''
+    endDate: ''
   });
   
   const [newProject, setNewProject] = useState<Project>({
     name: '',
-    description: '',
-    technologies: '',
-    link: ''
+    description: ''
   });
   
   const [newCertification, setNewCertification] = useState<Certification>({
@@ -147,10 +143,8 @@ export default function ResumeBuilder() {
       setNewEducation({
         institution: '',
         degree: '',
-        field: '',
         startDate: '',
-        endDate: '',
-        gpa: ''
+        endDate: ''
       });
     }
   }, [newEducation, resume.education, updateResume]);
@@ -170,9 +164,7 @@ export default function ResumeBuilder() {
       updateResume('projects', [...resume.projects, newProject]);
       setNewProject({
         name: '',
-        description: '',
-        technologies: '',
-        link: ''
+        description: ''
       });
     }
   }, [newProject, resume.projects, updateResume]);
@@ -1225,12 +1217,6 @@ export default function ResumeBuilder() {
                   )}
                   <input 
                     type="text" 
-                    placeholder="Field of Study" 
-                    value={edu.field}
-                    onChange={(e) => updateEducationItem(index, 'field', e.target.value)}
-                  />
-                  <input 
-                    type="text" 
                     placeholder="Start Date (e.g., 2011) *" 
                     value={edu.startDate}
                     onChange={(e) => updateEducationItem(index, 'startDate', e.target.value)}
@@ -1253,12 +1239,6 @@ export default function ResumeBuilder() {
                       {validationErrors[`education.${index}.endDate`]}
                     </div>
                   )}
-                  <input 
-                    type="text" 
-                    placeholder="GPA (optional)" 
-                    value={edu.gpa}
-                    onChange={(e) => updateEducationItem(index, 'gpa', e.target.value)}
-                  />
                   <button className="remove-btn" onClick={() => removeEducation(index)}>Remove</button>
                 </div>
               ))}
@@ -1280,12 +1260,6 @@ export default function ResumeBuilder() {
                 />
                 <input 
                   type="text" 
-                  placeholder="Field of Study" 
-                  value={newEducation.field}
-                  onChange={(e) => setNewEducation({...newEducation, field: e.target.value})}
-                />
-                <input 
-                  type="text" 
                   placeholder="Start Date (e.g., 2011)" 
                   value={newEducation.startDate}
                   onChange={(e) => setNewEducation({...newEducation, startDate: e.target.value})}
@@ -1295,12 +1269,6 @@ export default function ResumeBuilder() {
                   placeholder="End Date (e.g., 2015)" 
                   value={newEducation.endDate}
                   onChange={(e) => setNewEducation({...newEducation, endDate: e.target.value})}
-                />
-                <input 
-                  type="text" 
-                  placeholder="GPA (optional)" 
-                  value={newEducation.gpa}
-                  onChange={(e) => setNewEducation({...newEducation, gpa: e.target.value})}
                 />
                 <button className="add-btn" onClick={addEducationItem}>Add Education</button>
               </div>
@@ -1386,12 +1354,6 @@ export default function ResumeBuilder() {
                       {validationErrors[`projects.${index}.description`]}
                     </div>
                   )}
-                  <input 
-                    type="text" 
-                    placeholder="Technologies Used" 
-                    value={proj.technologies}
-                    onChange={(e) => updateProjectItem(index, 'technologies', e.target.value)}
-                  />
                   <button className="remove-btn" onClick={() => removeProject(index)}>Remove</button>
                 </div>
               ))}
@@ -1409,12 +1371,6 @@ export default function ResumeBuilder() {
                   placeholder="Project Description" 
                   value={newProject.description}
                   onChange={(e) => setNewProject({...newProject, description: e.target.value})}
-                />
-                <input 
-                  type="text" 
-                  placeholder="Technologies Used" 
-                  value={newProject.technologies}
-                  onChange={(e) => setNewProject({...newProject, technologies: e.target.value})}
                 />
                 <button className="add-btn" onClick={addProjectItem}>Add Project</button>
               </div>

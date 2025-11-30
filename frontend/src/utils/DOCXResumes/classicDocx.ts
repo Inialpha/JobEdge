@@ -32,17 +32,13 @@ export type ProfessionalExperience = {
 export type Education = {
   institution: string;
   degree: string;
-  field: string;
   startDate: string;
   endDate: string;
-  gpa: string;
 };
 
 export type Project = {
   name: string;
   description: string;
-  technologies: string;
-  link: string;
 };
 
 export type Certification = {
@@ -211,27 +207,10 @@ export function generateClassicDocx(resume: ResumeData): Document {
       sections.push(
         new Paragraph({
           text: `${edu.startDate} - ${edu.endDate}`,
-          spacing: { after: 40 },
+          spacing: { after: 120 },
           style: 'contentText',
         })
       );
-
-      if (edu.gpa) {
-        sections.push(
-          new Paragraph({
-            text: `GPA: ${edu.gpa}`,
-            spacing: { after: 120 },
-            style: 'contentText',
-          })
-        );
-      } else {
-        sections.push(
-          new Paragraph({
-            text: '',
-            spacing: { after: 120 },
-          })
-        );
-      }
     });
   }
 
@@ -298,21 +277,8 @@ export function generateClassicDocx(resume: ResumeData): Document {
       sections.push(
         new Paragraph({
           text: proj.description,
-          spacing: { after: 40 },
-          style: 'contentText',
-        })
-      );
-
-      sections.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: proj.technologies,
-              italics: true,
-              size: 24,
-            }),
-          ],
           spacing: { after: 120 },
+          style: 'contentText',
         })
       );
     });

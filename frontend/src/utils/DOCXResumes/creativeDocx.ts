@@ -226,7 +226,7 @@ export function generateCreativeDocx(resume: ResumeData): Document {
       sections.push(
         new Paragraph({
           text: `${edu.startDate} - ${edu.endDate}`,
-          spacing: { after: edu.gpa ? 80 : 200 },
+          spacing: { after: 200 },
           run: {
             size: 24,
             color: '333333',
@@ -234,20 +234,6 @@ export function generateCreativeDocx(resume: ResumeData): Document {
           },
         })
       );
-
-      if (edu.gpa) {
-        sections.push(
-          new Paragraph({
-            text: `GPA: ${edu.gpa}`,
-            spacing: { after: 200 },
-            run: {
-              size: 24,
-              color: '333333',
-              font: 'Segoe UI',
-            },
-          })
-        );
-      }
     });
   }
 
@@ -324,7 +310,7 @@ export function generateCreativeDocx(resume: ResumeData): Document {
       sections.push(
         new Paragraph({
           text: proj.description,
-          spacing: { after: 80 },
+          spacing: { after: 200 },
           run: {
             size: 24,
             color: '333333',
@@ -332,22 +318,6 @@ export function generateCreativeDocx(resume: ResumeData): Document {
           },
         })
       );
-
-      if (proj.technologies) {
-        sections.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: proj.technologies,
-                italics: true,
-                size: 24,
-                color: '333333',
-              }),
-            ],
-            spacing: { after: 200 },
-          })
-        );
-      }
     });
   }
 

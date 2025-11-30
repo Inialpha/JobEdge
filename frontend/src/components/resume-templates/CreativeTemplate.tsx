@@ -70,7 +70,6 @@ export const CreativeTemplate = ({ resume }: CreativeTemplateProps) => {
                 <div><strong>{escapeHtml(edu?.degree || '')}</strong></div>
                 <div>{escapeHtml(edu?.institution || '')}</div>
                 <div>{escapeHtml(edu?.startDate || '')} - {escapeHtml(edu?.endDate || '')}</div>
-                {edu?.gpa && <div>GPA: {escapeHtml(edu.gpa)}</div>}
               </div>
             ))}
           </div>
@@ -107,7 +106,6 @@ export const CreativeTemplate = ({ resume }: CreativeTemplateProps) => {
               <div key={index} style={{ marginBottom: '10px' }}>
                 <div><strong>{escapeHtml(proj?.name || '')}</strong></div>
                 <div className="no-break">{escapeHtml(proj?.description || '')}</div>
-                <div><em>{escapeHtml(proj?.technologies || '')}</em></div>
               </div>
             ))}
           </div>

@@ -177,7 +177,7 @@ export function generateMinimalDocx(resume: ResumeData): Document {
       sections.push(
         new Paragraph({
           text: `${edu.institution} | ${edu.startDate} - ${edu.endDate}`,
-          spacing: { after: edu.gpa ? 40 : 120 },
+          spacing: { after: 120 },
           run: {
             size: 24,
             color: '333333',
@@ -185,20 +185,6 @@ export function generateMinimalDocx(resume: ResumeData): Document {
           },
         })
       );
-
-      if (edu.gpa) {
-        sections.push(
-          new Paragraph({
-            text: `GPA: ${edu.gpa}`,
-            spacing: { after: 120 },
-            run: {
-              size: 24,
-              color: '333333',
-              font: 'Segoe UI',
-            },
-          })
-        );
-      }
     });
   }
 
@@ -260,7 +246,7 @@ export function generateMinimalDocx(resume: ResumeData): Document {
       sections.push(
         new Paragraph({
           text: proj.description,
-          spacing: { after: 40 },
+          spacing: { after: 120 },
           run: {
             size: 24,
             color: '333333',
@@ -268,28 +254,6 @@ export function generateMinimalDocx(resume: ResumeData): Document {
           },
         })
       );
-
-      if (proj.technologies) {
-        sections.push(
-          new Paragraph({
-            text: `Technologies: ${proj.technologies}`,
-            spacing: { after: 120 },
-            run: {
-              size: 24,
-              color: '666666',
-              font: 'Segoe UI',
-              italics: true,
-            },
-          })
-        );
-      } else {
-        sections.push(
-          new Paragraph({
-            text: '',
-            spacing: { after: 120 },
-          })
-        );
-      }
     });
   }
 

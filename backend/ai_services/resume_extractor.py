@@ -92,6 +92,18 @@ Extract the resume information using this JSON schema and descriptions:
         "start_date": str — The start date (e.g, 2020 or May 2015).
         "end_date": str — The end date (e.g, 2020 or May 2015).
       }}
+  "certifications": List[Object] — List of certifications, each with:
+      {{
+        "name": str — The name of the certification.
+        "issuer": str — The issuing organization.
+        "year": str — The year the certification was obtained.
+      }}
+  "awards": List[Object] — List of awards, each with:
+      {{
+        "title": str — The title of the award.
+        "organization": str — The organization that gave the award.
+        "year": str — The year the award was received.
+      }}
   "languages": List[str] — List of languages the candidate can read, write, or speak.
 }}
 
@@ -200,6 +212,18 @@ Extract the resume information using this JSON schema and descriptions:
         "certificate": str — The degree, diploma, or qualification received.
         "start_date": str — The start date (e.g, 2020 or May 2015).
         "end_date": str — The end date (e.g, 2020 or May 2015).
+      }}
+  "certifications": List[Object] — List of certifications that are relevant to this job, each with:
+      {{
+        "name": str — The name of the certification.
+        "issuer": str — The issuing organization.
+        "year": str — The year the certification was obtained.
+      }}
+  "awards": List[Object] — List of awards that are relevant to this job, each with:
+      {{
+        "title": str — The title of the award.
+        "organization": str — The organization that gave the award.
+        "year": str — The year the award was received.
       }}
   "languages": List[str] — List of languages the candidate can read, write, or speak.
 }}

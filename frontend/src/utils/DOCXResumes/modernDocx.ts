@@ -204,7 +204,7 @@ export function generateModernDocx(resume: ResumeData): Document {
       leftColumnContent.push(
         new Paragraph({
           text: `${edu.startDate} - ${edu.endDate}`,
-          spacing: { after: edu.gpa ? 40 : 120 },
+          spacing: { after: 120 },
           run: {
             size: 22,
             color: 'FFFFFF',
@@ -212,20 +212,6 @@ export function generateModernDocx(resume: ResumeData): Document {
           },
         })
       );
-
-      if (edu.gpa) {
-        leftColumnContent.push(
-          new Paragraph({
-            text: `GPA: ${edu.gpa}`,
-            spacing: { after: 120 },
-            run: {
-              size: 22,
-              color: 'FFFFFF',
-              font: 'Segoe UI',
-            },
-          })
-        );
-      }
     });
   }
 
@@ -364,7 +350,7 @@ export function generateModernDocx(resume: ResumeData): Document {
       rightColumnContent.push(
         new Paragraph({
           text: proj.description,
-          spacing: { after: 40 },
+          spacing: { after: 120 },
           run: {
             size: 24,
             color: '333333',
@@ -372,21 +358,6 @@ export function generateModernDocx(resume: ResumeData): Document {
           },
         })
       );
-
-      if (proj.technologies) {
-        rightColumnContent.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: proj.technologies,
-                italics: true,
-                size: 24,
-              }),
-            ],
-            spacing: { after: 120 },
-          })
-        );
-      }
     });
   }
 
