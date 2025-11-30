@@ -231,34 +231,6 @@ export function generateClassicTemplateDocx(resume: ResumeData): Document {
     );
   }
 
-  // Certifications
-  if (resume.certifications.length > 0) {
-    sections.push(createSectionTitle('CERTIFICATIONS'));
-
-    resume.certifications.forEach((cert) => {
-      sections.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: cert.name,
-              bold: true,
-              size: 24,
-            }),
-          ],
-          spacing: { after: 40 },
-        })
-      );
-
-      sections.push(
-        new Paragraph({
-          text: `${cert.issuer} - ${cert.year}`,
-          spacing: { after: 120 },
-          style: 'contentText',
-        })
-      );
-    });
-  }
-
   // Projects
   if (resume.projects.length > 0) {
     sections.push(createSectionTitle('PROJECTS'));
@@ -280,6 +252,34 @@ export function generateClassicTemplateDocx(resume: ResumeData): Document {
       sections.push(
         new Paragraph({
           text: proj.description,
+          spacing: { after: 120 },
+          style: 'contentText',
+        })
+      );
+    });
+  }
+
+  // Certifications
+  if (resume.certifications.length > 0) {
+    sections.push(createSectionTitle('CERTIFICATIONS'));
+
+    resume.certifications.forEach((cert) => {
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: cert.name,
+              bold: true,
+              size: 24,
+            }),
+          ],
+          spacing: { after: 40 },
+        })
+      );
+
+      sections.push(
+        new Paragraph({
+          text: `${cert.issuer} - ${cert.year}`,
           spacing: { after: 120 },
           style: 'contentText',
         })

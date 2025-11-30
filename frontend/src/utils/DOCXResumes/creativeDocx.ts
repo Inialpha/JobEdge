@@ -255,39 +255,6 @@ export function generateCreativeDocx(resume: ResumeData): Document {
     );
   }
 
-  // Certifications
-  if (resume.certifications.length > 0) {
-    sections.push(createCreativeSectionTitle('CERTIFICATIONS'));
-
-    resume.certifications.forEach((cert) => {
-      sections.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: cert.name,
-              bold: true,
-              size: 24,
-              color: '333333',
-            }),
-          ],
-          spacing: { after: 80 },
-        })
-      );
-
-      sections.push(
-        new Paragraph({
-          text: `${cert.issuer} - ${cert.year}`,
-          spacing: { after: 200 },
-          run: {
-            size: 24,
-            color: '333333',
-            font: 'Segoe UI',
-          },
-        })
-      );
-    });
-  }
-
   // Projects
   if (resume.projects.length > 0) {
     sections.push(createCreativeSectionTitle('PROJECTS'));
@@ -310,6 +277,39 @@ export function generateCreativeDocx(resume: ResumeData): Document {
       sections.push(
         new Paragraph({
           text: proj.description,
+          spacing: { after: 200 },
+          run: {
+            size: 24,
+            color: '333333',
+            font: 'Segoe UI',
+          },
+        })
+      );
+    });
+  }
+
+  // Certifications
+  if (resume.certifications.length > 0) {
+    sections.push(createCreativeSectionTitle('CERTIFICATIONS'));
+
+    resume.certifications.forEach((cert) => {
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: cert.name,
+              bold: true,
+              size: 24,
+              color: '333333',
+            }),
+          ],
+          spacing: { after: 80 },
+        })
+      );
+
+      sections.push(
+        new Paragraph({
+          text: `${cert.issuer} - ${cert.year}`,
           spacing: { after: 200 },
           run: {
             size: 24,

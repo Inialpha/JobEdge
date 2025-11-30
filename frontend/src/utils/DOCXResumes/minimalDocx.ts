@@ -206,25 +206,6 @@ export function generateMinimalDocx(resume: ResumeData): Document {
     );
   }
 
-  // Certifications
-  if (resume.certifications.length > 0) {
-    sections.push(createMinimalSectionTitle('CERTIFICATIONS'));
-
-    resume.certifications.forEach((cert) => {
-      sections.push(
-        new Paragraph({
-          text: `${cert.name} - ${cert.issuer} (${cert.year})`,
-          spacing: { after: 120 },
-          run: {
-            size: 24,
-            color: '333333',
-            font: 'Segoe UI',
-          },
-        })
-      );
-    });
-  }
-
   // Projects
   if (resume.projects.length > 0) {
     sections.push(createMinimalSectionTitle('PROJECTS'));
@@ -246,6 +227,25 @@ export function generateMinimalDocx(resume: ResumeData): Document {
       sections.push(
         new Paragraph({
           text: proj.description,
+          spacing: { after: 120 },
+          run: {
+            size: 24,
+            color: '333333',
+            font: 'Segoe UI',
+          },
+        })
+      );
+    });
+  }
+
+  // Certifications
+  if (resume.certifications.length > 0) {
+    sections.push(createMinimalSectionTitle('CERTIFICATIONS'));
+
+    resume.certifications.forEach((cert) => {
+      sections.push(
+        new Paragraph({
+          text: `${cert.name} - ${cert.issuer} (${cert.year})`,
           spacing: { after: 120 },
           run: {
             size: 24,
