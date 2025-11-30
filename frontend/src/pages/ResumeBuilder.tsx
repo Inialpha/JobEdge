@@ -1274,6 +1274,56 @@ export default function ResumeBuilder() {
               </div>
             </div>
 
+            {/* Projects */}
+            <div className="section">
+              <div className="section-title">Projects</div>
+              {resume.projects.map((proj, index) => (
+                <div key={index} className="item">
+                  <input 
+                    type="text" 
+                    placeholder="Project Name *" 
+                    value={proj.name}
+                    onChange={(e) => updateProjectItem(index, 'name', e.target.value)}
+                    style={{borderColor: validationErrors[`projects.${index}.name`] ? '#dc3545' : undefined}}
+                  />
+                  {validationErrors[`projects.${index}.name`] && (
+                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                      {validationErrors[`projects.${index}.name`]}
+                    </div>
+                  )}
+                  <textarea 
+                    placeholder="Project Description *" 
+                    value={proj.description}
+                    onChange={(e) => updateProjectItem(index, 'description', e.target.value)}
+                    style={{borderColor: validationErrors[`projects.${index}.description`] ? '#dc3545' : undefined}}
+                  />
+                  {validationErrors[`projects.${index}.description`] && (
+                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                      {validationErrors[`projects.${index}.description`]}
+                    </div>
+                  )}
+                  <button className="remove-btn" onClick={() => removeProject(index)}>Remove</button>
+                </div>
+              ))}
+              
+              {/* Form for new project */}
+              <div className="item" style={{background: '#e8f4f8'}}>
+                <label>Add New Project</label>
+                <input 
+                  type="text" 
+                  placeholder="Project Name" 
+                  value={newProject.name}
+                  onChange={(e) => setNewProject({...newProject, name: e.target.value})}
+                />
+                <textarea 
+                  placeholder="Project Description" 
+                  value={newProject.description}
+                  onChange={(e) => setNewProject({...newProject, description: e.target.value})}
+                />
+                <button className="add-btn" onClick={addProjectItem}>Add Project</button>
+              </div>
+            </div>
+
             {/* Certifications */}
             <div className="section">
               <div className="section-title">Certifications</div>
@@ -1323,56 +1373,6 @@ export default function ResumeBuilder() {
                   onChange={(e) => setNewCertification({...newCertification, year: e.target.value})}
                 />
                 <button className="add-btn" onClick={addCertificationItem}>Add Certification</button>
-              </div>
-            </div>
-
-            {/* Projects */}
-            <div className="section">
-              <div className="section-title">Projects</div>
-              {resume.projects.map((proj, index) => (
-                <div key={index} className="item">
-                  <input 
-                    type="text" 
-                    placeholder="Project Name *" 
-                    value={proj.name}
-                    onChange={(e) => updateProjectItem(index, 'name', e.target.value)}
-                    style={{borderColor: validationErrors[`projects.${index}.name`] ? '#dc3545' : undefined}}
-                  />
-                  {validationErrors[`projects.${index}.name`] && (
-                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
-                      {validationErrors[`projects.${index}.name`]}
-                    </div>
-                  )}
-                  <textarea 
-                    placeholder="Project Description *" 
-                    value={proj.description}
-                    onChange={(e) => updateProjectItem(index, 'description', e.target.value)}
-                    style={{borderColor: validationErrors[`projects.${index}.description`] ? '#dc3545' : undefined}}
-                  />
-                  {validationErrors[`projects.${index}.description`] && (
-                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
-                      {validationErrors[`projects.${index}.description`]}
-                    </div>
-                  )}
-                  <button className="remove-btn" onClick={() => removeProject(index)}>Remove</button>
-                </div>
-              ))}
-              
-              {/* Form for new project */}
-              <div className="item" style={{background: '#e8f4f8'}}>
-                <label>Add New Project</label>
-                <input 
-                  type="text" 
-                  placeholder="Project Name" 
-                  value={newProject.name}
-                  onChange={(e) => setNewProject({...newProject, name: e.target.value})}
-                />
-                <textarea 
-                  placeholder="Project Description" 
-                  value={newProject.description}
-                  onChange={(e) => setNewProject({...newProject, description: e.target.value})}
-                />
-                <button className="add-btn" onClick={addProjectItem}>Add Project</button>
               </div>
             </div>
 

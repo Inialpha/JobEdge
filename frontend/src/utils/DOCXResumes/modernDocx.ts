@@ -297,38 +297,6 @@ export function generateModernDocx(resume: ResumeData): Document {
     });
   }
 
-  // Certifications
-  if (resume.certifications.length > 0) {
-    rightColumnContent.push(createMainSectionTitle('CERTIFICATIONS'));
-
-    resume.certifications.forEach((cert) => {
-      rightColumnContent.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: cert.name,
-              bold: true,
-              size: 24,
-            }),
-          ],
-          spacing: { after: 40 },
-        })
-      );
-
-      rightColumnContent.push(
-        new Paragraph({
-          text: `${cert.issuer} - ${cert.year}`,
-          spacing: { after: 120 },
-          run: {
-            size: 24,
-            color: '333333',
-            font: 'Segoe UI',
-          },
-        })
-      );
-    });
-  }
-
   // Projects
   if (resume.projects.length > 0) {
     rightColumnContent.push(createMainSectionTitle('PROJECTS'));
@@ -350,6 +318,38 @@ export function generateModernDocx(resume: ResumeData): Document {
       rightColumnContent.push(
         new Paragraph({
           text: proj.description,
+          spacing: { after: 120 },
+          run: {
+            size: 24,
+            color: '333333',
+            font: 'Segoe UI',
+          },
+        })
+      );
+    });
+  }
+
+  // Certifications
+  if (resume.certifications.length > 0) {
+    rightColumnContent.push(createMainSectionTitle('CERTIFICATIONS'));
+
+    resume.certifications.forEach((cert) => {
+      rightColumnContent.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: cert.name,
+              bold: true,
+              size: 24,
+            }),
+          ],
+          spacing: { after: 40 },
+        })
+      );
+
+      rightColumnContent.push(
+        new Paragraph({
+          text: `${cert.issuer} - ${cert.year}`,
           spacing: { after: 120 },
           run: {
             size: 24,
