@@ -61,17 +61,13 @@ export const getEditableResume = (resume: any): ResumeData => {
     education: (resume.educations || resume.education || []).map((edu: any) => ({
       institution: edu.institution || "",
       degree: edu.degree || edu.certificate || "",
-      field: edu.field || "",
       startDate: edu.startDate || edu.start_date || "",
       endDate: edu.endDate || edu.end_date || edu.graduationDate || "",
-      gpa: edu.gpa || "",
     })),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     projects: (resume.projects || []).map((proj: any) => ({
       name: proj.name || "",
       description: proj.description || "",
-      technologies: proj.technologies || "",
-      link: proj.link || "",
     })),
     skills: resume.skills,
     certifications: resume.certifications || [],

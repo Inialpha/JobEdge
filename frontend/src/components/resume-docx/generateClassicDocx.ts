@@ -210,27 +210,10 @@ export function generateClassicTemplateDocx(resume: ResumeData): Document {
       sections.push(
         new Paragraph({
           text: `${edu.startDate} - ${edu.endDate}`,
-          spacing: { after: 40 },
+          spacing: { after: 120 },
           style: 'contentText',
         })
       );
-
-      if (edu.gpa) {
-        sections.push(
-          new Paragraph({
-            text: `GPA: ${edu.gpa}`,
-            spacing: { after: 120 },
-            style: 'contentText',
-          })
-        );
-      } else {
-        sections.push(
-          new Paragraph({
-            text: '',
-            spacing: { after: 120 },
-          })
-        );
-      }
     });
   }
 
@@ -246,6 +229,34 @@ export function generateClassicTemplateDocx(resume: ResumeData): Document {
         style: 'contentText',
       })
     );
+  }
+
+  // Projects
+  if (resume.projects.length > 0) {
+    sections.push(createSectionTitle('PROJECTS'));
+
+    resume.projects.forEach((proj) => {
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: proj.name,
+              bold: true,
+              size: 24,
+            }),
+          ],
+          spacing: { after: 40 },
+        })
+      );
+
+      sections.push(
+        new Paragraph({
+          text: proj.description,
+          spacing: { after: 120 },
+          style: 'contentText',
+        })
+      );
+    });
   }
 
   // Certifications
@@ -271,47 +282,6 @@ export function generateClassicTemplateDocx(resume: ResumeData): Document {
           text: `${cert.issuer} - ${cert.year}`,
           spacing: { after: 120 },
           style: 'contentText',
-        })
-      );
-    });
-  }
-
-  // Projects
-  if (resume.projects.length > 0) {
-    sections.push(createSectionTitle('PROJECTS'));
-
-    resume.projects.forEach((proj) => {
-      sections.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: proj.name,
-              bold: true,
-              size: 24,
-            }),
-          ],
-          spacing: { after: 40 },
-        })
-      );
-
-      sections.push(
-        new Paragraph({
-          text: proj.description,
-          spacing: { after: 40 },
-          style: 'contentText',
-        })
-      );
-
-      sections.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: proj.technologies,
-              italics: true,
-              size: 24,
-            }),
-          ],
-          spacing: { after: 120 },
         })
       );
     });
