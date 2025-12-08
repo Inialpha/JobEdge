@@ -143,6 +143,21 @@ export default function ResumeBuilder() {
     updateResume('skills', updated);
   }, [resume.skills, updateResume]);
 
+  const addUncategorizedSkill = useCallback((skill: string) => {
+    if (skill.trim()) {
+      const currentUncategorizedSkills = Array.isArray(resume.uncategorizedSkills) ? resume.uncategorizedSkills : [];
+      if (!currentUncategorizedSkills.includes(skill.trim())) {
+        updateResume('uncategorizedSkills', [...currentUncategorizedSkills, skill.trim()]);
+      }
+    }
+  }, [resume.uncategorizedSkills, updateResume]);
+
+  const removeUncategorizedSkill = useCallback((index: number) => {
+    const currentUncategorizedSkills = Array.isArray(resume.uncategorizedSkills) ? resume.uncategorizedSkills : [];
+    const updated = currentUncategorizedSkills.filter((_, i) => i !== index);
+    updateResume('uncategorizedSkills', updated);
+  }, [resume.uncategorizedSkills, updateResume]);
+
   const addExperienceItem = useCallback(() => {
     if (newExperience.organization && newExperience.role) {
       updateResume('professionalExperience', [...resume.professionalExperience, newExperience]);
@@ -1065,6 +1080,40 @@ export default function ResumeBuilder() {
             {/* Skills */}
             <div className="section">
               <div className="section-title">Skills</div>
+              
+              {/* Add uncategorized skill */}
+              <div className="skill-input-group">
+                <input 
+                  type="text" 
+                  placeholder="Add an uncategorized skill" 
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      addUncategorizedSkill((e.target as HTMLInputElement).value);
+                      (e.target as HTMLInputElement).value = '';
+                    }
+                  }}
+                />
+                <button className="add-btn" style={{width: 'auto', marginTop: 0}} onClick={(e) => {
+                  const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                  addUncategorizedSkill(input.value);
+                  input.value = '';
+                }}>+ Add Skill</button>
+              </div>
+              
+              {/* Display uncategorized skills */}
+              {resume.uncategorizedSkills && resume.uncategorizedSkills.length > 0 && (
+                <div style={{marginBottom: '15px'}}>
+                  <label style={{display: 'block', fontSize: '11px', marginBottom: '5px'}}>Uncategorized Skills:</label>
+                  <div>
+                    {resume.uncategorizedSkills.map((skill, index) => (
+                      <span key={index} className="skill-tag skill-tag-edit">
+                        {skill}
+                        <button onClick={() => removeUncategorizedSkill(index)}>×</button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               {/* Add new category */}
               <div className="skill-input-group">

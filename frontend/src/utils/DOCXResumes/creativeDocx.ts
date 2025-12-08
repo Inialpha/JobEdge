@@ -238,9 +238,25 @@ export function generateCreativeDocx(resume: ResumeData): Document {
   }
 
   // Skills
-  if (resume.skills.length > 0) {
+  if (resume.skills.length > 0 || (resume.uncategorizedSkills && resume.uncategorizedSkills.length > 0)) {
     sections.push(createCreativeSectionTitle('SKILLS'));
 
+    // Add uncategorized skills first
+    if (resume.uncategorizedSkills && resume.uncategorizedSkills.length > 0) {
+      sections.push(
+        new Paragraph({
+          text: resume.uncategorizedSkills.join(', '),
+          spacing: { after: 160 },
+          run: {
+            size: 24,
+            color: '333333',
+            font: 'Segoe UI',
+          },
+        })
+      );
+    }
+
+    // Add categorized skills
     resume.skills.forEach((skillCategory) => {
       const categoryText = `${skillCategory.category}: `;
       const skillsText = skillCategory.skills.join(', ');
