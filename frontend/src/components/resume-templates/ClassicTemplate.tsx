@@ -79,7 +79,7 @@ export const ClassicTemplate = ({ resume }: ClassicTemplateProps) => {
           <div className="resume-content">
             {skills.map((skillCategory, index) => (
               <div key={index} style={{ marginBottom: '5px' }}>
-                <strong>{escapeHtml(skillCategory.category)}:</strong> {skillCategory.skills.map((skill, idx) => escapeHtml(skill)).join(', ')}
+                <strong>{escapeHtml(skillCategory.category)}:</strong> {skillCategory.skills.map(skill => escapeHtml(skill)).join(', ')}
               </div>
             ))}
           </div>
