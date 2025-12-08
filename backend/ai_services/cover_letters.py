@@ -25,24 +25,13 @@ def generate_cover_letter(resume: dict, job_description: str) -> str:
             "each specific role."
         )
 
-        # Extract key information from resume
-        personal_info = resume.get('personal_information', {})
-        name = personal_info.get('name', 'Candidate')
-        professional_experiences = resume.get('professional_experiences', [])
-        skills = resume.get('skills', [])
-        summary = resume.get('summary', '')
         
         user_prompt = f"""
 Create a professional cover letter for the following candidate applying to this job.
 
 Candidate Information:
-Name: {name}
-Professional Summary: {summary}
-
-Key Skills: {', '.join(skills[:10]) if skills else 'Various professional skills'}
-
-Relevant Experience:
-{json.dumps(professional_experiences[:3], indent=2) if professional_experiences else 'See resume for details'}
+Resume:
+{json.dumps(resume, indent=2)}
 
 Job Description:
 {job_description}
@@ -81,7 +70,7 @@ Return ONLY the cover letter text, no additional commentary or formatting marker
         
         return cover_letter
 
-    except (groq.RateLimitError, groq.GroqException) as e:
+    except (groq.RateLimitError) as e:
         print(f"❌ Groq API error in generate_cover_letter(): {e}")
         return None
     except Exception as e:
