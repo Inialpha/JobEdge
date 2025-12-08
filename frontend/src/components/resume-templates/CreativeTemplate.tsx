@@ -81,7 +81,7 @@ export const CreativeTemplate = ({ resume }: CreativeTemplateProps) => {
           <div className="resume-content">
             {resume?.uncategorizedSkills && resume.uncategorizedSkills.length > 0 && (
               <div style={{ marginBottom: '5px' }}>
-                {resume.uncategorizedSkills.map((skill, idx) => escapeHtml(skill)).join(', ')}
+                {resume.uncategorizedSkills.map((skill, _idx) => escapeHtml(skill)).join(', ')}
               </div>
             )}
             {skills.map((skillCategory, index) => (
