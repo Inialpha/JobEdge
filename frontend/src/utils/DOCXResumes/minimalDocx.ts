@@ -189,21 +189,48 @@ export function generateMinimalDocx(resume: ResumeData): Document {
   }
 
   // Skills
-  if (resume.skills.length > 0) {
+  if (resume.skills.length > 0 || (resume.uncategorizedSkills && resume.uncategorizedSkills.length > 0)) {
     sections.push(createMinimalSectionTitle('SKILLS'));
 
-    const skillsText = resume.skills.join(' • ');
-    sections.push(
-      new Paragraph({
-        text: skillsText,
-        spacing: { after: 240 },
-        run: {
-          size: 24,
-          color: '333333',
-          font: 'Segoe UI',
-        },
-      })
-    );
+    // Add uncategorized skills first
+    if (resume.uncategorizedSkills && resume.uncategorizedSkills.length > 0) {
+      sections.push(
+        new Paragraph({
+          text: resume.uncategorizedSkills.join(', '),
+          spacing: { after: 120 },
+          run: {
+            size: 24,
+            color: '333333',
+            font: 'Segoe UI',
+          },
+        })
+      );
+    }
+
+    // Add categorized skills
+    resume.skills.forEach((skillCategory) => {
+      const categoryText = `${skillCategory.category}: `;
+      const skillsText = skillCategory.skills.join(', ');
+      
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: categoryText,
+              bold: true,
+              size: 24,
+              color: '333333',
+            }),
+            new TextRun({
+              text: skillsText,
+              size: 24,
+              color: '333333',
+            }),
+          ],
+          spacing: { after: 120 },
+        })
+      );
+    });
   }
 
   // Projects

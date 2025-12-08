@@ -75,12 +75,19 @@ export const CreativeTemplate = ({ resume }: CreativeTemplateProps) => {
           </div>
         </>
       )}
-      {skills.length > 0 && (
+      {(skills.length > 0 || (resume?.uncategorizedSkills && resume.uncategorizedSkills.length > 0)) && (
         <>
           <div className="resume-section-title no-break">Skills</div>
           <div className="resume-content">
-            {skills.map((skill, index) => (
-              <span key={index} className="skill-tag">{escapeHtml(skill)} {index < skills.length - 1 && (" • ")}</span>
+            {resume?.uncategorizedSkills && resume.uncategorizedSkills.length > 0 && (
+              <div style={{ marginBottom: '5px' }}>
+                {resume.uncategorizedSkills.map((skill, idx) => escapeHtml(skill)).join(', ')}
+              </div>
+            )}
+            {skills.map((skillCategory, index) => (
+              <div key={index} style={{ marginBottom: '5px' }}>
+                <strong>{escapeHtml(skillCategory.category)}:</strong> {skillCategory.skills.map(skill => escapeHtml(skill)).join(', ')}
+              </div>
             ))}
           </div>
         </>

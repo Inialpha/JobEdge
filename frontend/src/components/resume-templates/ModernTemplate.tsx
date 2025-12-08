@@ -29,12 +29,19 @@ export const ModernTemplate = ({ resume }: ModernTemplateProps) => {
           {resume?.personalInformation?.twitter && <>{escapeHtml(resume.personalInformation.twitter)}<br/></>}
           {resume?.personalInformation?.address && <>{escapeHtml(resume.personalInformation.address)}</>}
         </div>
-        {skills.length > 0 && (
+        {(skills.length > 0 || (resume?.uncategorizedSkills && resume.uncategorizedSkills.length > 0)) && (
           <>
             <div className="resume-section-title">Skills</div>
             <div className="">
-              {skills.map((skill, index) => (
-                <div key={index} className="skill-tag">{escapeHtml(skill)} {index < skills.length - 1 && (" • ")}</div>
+              {resume?.uncategorizedSkills && resume.uncategorizedSkills.length > 0 && (
+                <div style={{ marginBottom: '5px' }}>
+                  {resume.uncategorizedSkills.map((skill, idx) => escapeHtml(skill)).join(', ')}
+                </div>
+              )}
+              {skills.map((skillCategory, index) => (
+                <div key={index} style={{ marginBottom: '5px' }}>
+                  <strong>{escapeHtml(skillCategory.category)}:</strong> {skillCategory.skills.map(skill => escapeHtml(skill)).join(', ')}
+                </div>
               ))}
             </div>
           </>

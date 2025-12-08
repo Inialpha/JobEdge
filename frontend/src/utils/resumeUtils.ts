@@ -1,19 +1,57 @@
-import { ResumeData } from "@/types/resume"
+import { ResumeData, Skill } from "@/types/resume"
 
 /**
- * Parses skills from string or array format into a string array
- * This function provides backward compatibility for old data that may have skills as a string
- * @param skills - Skills in array format or legacy string format (separated by ' • ')
+ * Parses uncategorized skills from various formats
+ * @param skills - Uncategorized skills in array or string format
  * @returns Array of skill strings
  */
-export const parseSkillsArray = (skills: string | string[] | unknown): string[] => {
+export const parseUncategorizedSkills = (skills: string | string[] | unknown): string[] => {
+  // Array of strings
+  if (Array.isArray(skills) && skills.length > 0 && typeof skills[0] === 'string') {
+    return skills.filter((s: string) => s && s.trim())
+  }
+  
+  // String separated by ' • ' or ','
   if (typeof skills === 'string') {
-    // Legacy format: parse string separated by ' • '
-    return skills.split(' • ').filter((s: string) => s.trim())
+    const skillsList = skills.split(/[•,]/).map((s: string) => s.trim()).filter((s: string) => s)
+    return skillsList
   }
-  if (Array.isArray(skills)) {
-    return skills.filter((s: string) => s && typeof s === 'string' && s.trim())
+  
+  return []
+}
+
+/**
+ * Parses skills from string, array, or categorized format into a Skill array
+ * This function provides backward compatibility for old data formats
+ * @param skills - Skills in categorized format (Skill[]), legacy array format (string[]), or legacy string format
+ * @returns Array of Skill objects with category and skills
+ */
+export const parseSkillsArray = (skills: string | string[] | Skill[] | unknown): Skill[] => {
+  // If already in the new format (array of objects with category and skills)
+  if (Array.isArray(skills) && skills.length > 0 && typeof skills[0] === 'object' && 'category' in skills[0]) {
+    return skills as Skill[]
   }
+  
+  // Legacy format: array of strings
+  if (Array.isArray(skills) && skills.length > 0 && typeof skills[0] === 'string') {
+    const skillsArray = skills as string[]
+    return [{
+      category: 'General',
+      skills: skillsArray.filter((s) => s && s.trim())
+    }]
+  }
+  
+  // Legacy format: string separated by ' • '
+  if (typeof skills === 'string') {
+    const skillsList = skills.split(' • ').filter((s: string) => s.trim())
+    if (skillsList.length > 0) {
+      return [{
+        category: 'General',
+        skills: skillsList
+      }]
+    }
+  }
+  
   return []
 }
 
@@ -39,6 +77,7 @@ export const getEditableResume = (resume: any): ResumeData => {
       education: [],
       projects: [],
       skills: [],
+      uncategorizedSkills: [],
       certifications: [],
       awards: [],
     }
@@ -69,7 +108,8 @@ export const getEditableResume = (resume: any): ResumeData => {
       name: proj.name || "",
       description: proj.description || "",
     })),
-    skills: resume.skills,
+    skills: parseSkillsArray(resume.skills),
+    uncategorizedSkills: parseUncategorizedSkills(resume.uncategorized_skills || resume.uncategorizedSkills || []),
     certifications: resume.certifications || [],
     awards: resume.awards || [],
   }

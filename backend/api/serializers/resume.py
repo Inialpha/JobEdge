@@ -27,9 +27,15 @@ class ResumeSerializer(serializers.Serializer):
         help_text="User's professional experiences"
     )
     skills = serializers.ListField(
+        child=serializers.DictField(),
+        default=[],
+        help_text="List of user's skills categorized by type. Each item should have 'category' and 'skills' keys"
+    )
+    uncategorized_skills = serializers.ListField(
         child=serializers.CharField(max_length=255),
         default=[],
-        help_text="List of user's skills"
+        help_text="List of user's uncategorized skills",
+        required=False
     )
     projects = serializers.ListField(
         child=serializers.DictField(),
