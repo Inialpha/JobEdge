@@ -37,7 +37,6 @@ class Resume(BaseModel):
     website: str = Field(description="User's website")
     professional_experiences: List[ProfessionalExperience] = Field(description="User's professional experiences")
     skills: List[dict] = Field(description="User's skills categorized by type. Each dict has 'category' (e.g., 'Programming Languages', 'Frameworks') and 'skills' (list of skill names)")
-    uncategorized_skills: List[str] = Field(default=[], description="User's uncategorized skills that don't belong to any specific category")
     projects: List[Project] = Field(description="User's projects")
     educations: List[Education] = Field(description="List of user's education")
     languages: List[str] = Field(description="Languages spoken by user")
@@ -85,7 +84,6 @@ Extract the resume information using this JSON schema and descriptions:
         "category": str — Category name (e.g., "Programming Languages", "Frameworks", "Tools", "Soft Skills").
         "skills": List[str] — List of skill names in this category.
       }}
-  "uncategorized_skills": List[str] — List of skills that don't fit into a specific category or are standalone.
   "projects": List[Object] — List of notable projects completed, each with:
       {{
         "name": str — The name or title of the project, including relevant tags or technologies.
@@ -211,7 +209,6 @@ Extract the resume information using this JSON schema and descriptions:
         "category": str — Category name (e.g., "Programming Languages", "Frameworks", "Tools", "Soft Skills").
         "skills": List[str] — List of skill names in this category relevant to the job.
       }}
-  "uncategorized_skills": List[str] — List of skills relevant to the job that don't fit into a specific category.
   "projects": List[Object] — List of notable projects completed that relates to this job, each with:
       {{
         "name": str — The name or title of the project, including relevant tags or technologies.

@@ -73,15 +73,10 @@ export const ClassicTemplate = ({ resume }: ClassicTemplateProps) => {
           </div>
         </>
       )}
-      {(skills.length > 0 || (resume?.uncategorizedSkills && resume.uncategorizedSkills.length > 0)) && (
+      {skills.length > 0 && (
         <>
           <div className="resume-section-title no-break">Skills</div>
           <div className="resume-content">
-            {resume?.uncategorizedSkills && resume.uncategorizedSkills.length > 0 && (
-              <div style={{ marginBottom: '5px' }}>
-                {resume.uncategorizedSkills.map((skill, _idx) => escapeHtml(skill)).join(', ')}
-              </div>
-            )}
             {skills.map((skillCategory, index) => (
               <div key={index} style={{ marginBottom: '5px' }}>
                 <strong>{escapeHtml(skillCategory.category)}:</strong> {skillCategory.skills.map(skill => escapeHtml(skill)).join(', ')}

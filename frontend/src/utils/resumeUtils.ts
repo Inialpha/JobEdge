@@ -1,26 +1,6 @@
 import { ResumeData, Skill } from "@/types/resume"
 
 /**
- * Parses uncategorized skills from various formats
- * @param skills - Uncategorized skills in array or string format
- * @returns Array of skill strings
- */
-export const parseUncategorizedSkills = (skills: string | string[] | unknown): string[] => {
-  // Array of strings
-  if (Array.isArray(skills) && skills.length > 0 && typeof skills[0] === 'string') {
-    return skills.filter((s: string) => s && s.trim())
-  }
-  
-  // String separated by ' • ' or ','
-  if (typeof skills === 'string') {
-    const skillsList = skills.split(/[•,]/).map((s: string) => s.trim()).filter((s: string) => s)
-    return skillsList
-  }
-  
-  return []
-}
-
-/**
  * Parses skills from string, array, or categorized format into a Skill array
  * This function provides backward compatibility for old data formats
  * @param skills - Skills in categorized format (Skill[]), legacy array format (string[]), or legacy string format
@@ -77,7 +57,6 @@ export const getEditableResume = (resume: any): ResumeData => {
       education: [],
       projects: [],
       skills: [],
-      uncategorizedSkills: [],
       certifications: [],
       awards: [],
     }
@@ -109,7 +88,6 @@ export const getEditableResume = (resume: any): ResumeData => {
       description: proj.description || "",
     })),
     skills: parseSkillsArray(resume.skills),
-    uncategorizedSkills: parseUncategorizedSkills(resume.uncategorized_skills || resume.uncategorizedSkills || []),
     certifications: resume.certifications || [],
     awards: resume.awards || [],
   }

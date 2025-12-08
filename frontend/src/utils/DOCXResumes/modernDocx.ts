@@ -113,7 +113,7 @@ export function generateModernDocx(resume: ResumeData): Document {
   );
 
   // Skills
-  if (resume.skills.length > 0 || (resume.uncategorizedSkills && resume.uncategorizedSkills.length > 0)) {
+  if (resume.skills.length > 0) {
     leftColumnContent.push(
       new Paragraph({
         children: [
@@ -135,21 +135,6 @@ export function generateModernDocx(resume: ResumeData): Document {
         },
       })
     );
-
-    // Add uncategorized skills first
-    if (resume.uncategorizedSkills && resume.uncategorizedSkills.length > 0) {
-      leftColumnContent.push(
-        new Paragraph({
-          text: resume.uncategorizedSkills.join(', '),
-          spacing: { after: 120 },
-          run: {
-            size: 22,
-            color: 'FFFFFF',
-            font: 'Segoe UI',
-          },
-        })
-      );
-    }
 
     // Add categorized skills
     resume.skills.forEach((skillCategory) => {

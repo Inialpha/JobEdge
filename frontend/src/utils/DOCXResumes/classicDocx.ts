@@ -65,7 +65,6 @@ export type ResumeData = {
   education: Education[];
   projects: Project[];
   skills: Skill[];
-  uncategorizedSkills: string[];
   certifications: Certification[];
   awards: Award[];
 };
@@ -221,19 +220,8 @@ export function generateClassicDocx(resume: ResumeData): Document {
   }
 
   // Skills
-  if (resume.skills.length > 0 || (resume.uncategorizedSkills && resume.uncategorizedSkills.length > 0)) {
+  if (resume.skills.length > 0) {
     sections.push(createSectionTitle('SKILLS'));
-
-    // Add uncategorized skills first
-    if (resume.uncategorizedSkills && resume.uncategorizedSkills.length > 0) {
-      sections.push(
-        new Paragraph({
-          text: resume.uncategorizedSkills.join(', '),
-          spacing: { after: 120 },
-          style: 'contentText',
-        })
-      );
-    }
 
     // Add categorized skills
     resume.skills.forEach((skillCategory) => {
