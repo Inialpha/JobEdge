@@ -53,13 +53,18 @@ export type Award = {
   year: string;
 };
 
+export type Skill = {
+  category: string;
+  skills: string[];
+};
+
 export type ResumeData = {
   personalInformation: PersonalInformation;
   summary: string;
   professionalExperience: ProfessionalExperience[];
   education: Education[];
   projects: Project[];
-  skills: string[];
+  skills: Skill[];
   certifications: Certification[];
   awards: Award[];
 };
@@ -218,14 +223,27 @@ export function generateClassicDocx(resume: ResumeData): Document {
   if (resume.skills.length > 0) {
     sections.push(createSectionTitle('SKILLS'));
 
-    const skillsText = resume.skills.join(' • ');
-    sections.push(
-      new Paragraph({
-        text: skillsText,
-        spacing: { after: 240 },
-        style: 'contentText',
-      })
-    );
+    resume.skills.forEach((skillCategory) => {
+      const categoryText = `${skillCategory.category}: `;
+      const skillsText = skillCategory.skills.join(', ');
+      
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: categoryText,
+              bold: true,
+              size: 24,
+            }),
+            new TextRun({
+              text: skillsText,
+              size: 24,
+            }),
+          ],
+          spacing: { after: 120 },
+        })
+      );
+    });
   }
 
   // Projects

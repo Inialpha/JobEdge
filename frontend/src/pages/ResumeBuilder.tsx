@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation } from '@/types/resume';
+import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation, Skill } from '@/types/resume';
 import { getEditableResume } from '@/utils/resumeUtils';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
 import { ResumePreview } from '@/components/ResumePreview';
@@ -79,7 +79,10 @@ export default function ResumeBuilder() {
     year: ''
   });
 
-  const updateResume = useCallback((field: keyof ResumeData, value: string | string[] | ProfessionalExperience[] | Education[] | Project[] | Certification[] | Award[] | PersonalInformation) => {
+  const [newSkillCategory, setNewSkillCategory] = useState<string>('');
+  const [newSkillInCategory, setNewSkillInCategory] = useState<{[category: string]: string}>({});
+
+  const updateResume = useCallback((field: keyof ResumeData, value: string | string[] | Skill[] | ProfessionalExperience[] | Education[] | Project[] | Certification[] | Award[] | PersonalInformation) => {
     setResume(prev => ({ ...prev, [field]: value }));
   }, []);
 
@@ -100,16 +103,43 @@ export default function ResumeBuilder() {
     }
   }, []);
 
-  const addSkill = useCallback((skill: string) => {
-    if (skill.trim()) {
+  const addSkillCategory = useCallback(() => {
+    if (newSkillCategory.trim()) {
       const currentSkills = Array.isArray(resume.skills) ? resume.skills : [];
-      updateResume('skills', [...currentSkills, skill.trim()]);
+      // Check if category already exists
+      if (!currentSkills.find(cat => cat.category === newSkillCategory.trim())) {
+        updateResume('skills', [...currentSkills, { category: newSkillCategory.trim(), skills: [] }]);
+        setNewSkillCategory('');
+      }
+    }
+  }, [newSkillCategory, resume.skills, updateResume]);
+
+  const addSkillToCategory = useCallback((categoryIndex: number, skill: string) => {
+    if (skill.trim()) {
+      const currentSkills = [...resume.skills];
+      if (!currentSkills[categoryIndex].skills.includes(skill.trim())) {
+        currentSkills[categoryIndex] = {
+          ...currentSkills[categoryIndex],
+          skills: [...currentSkills[categoryIndex].skills, skill.trim()]
+        };
+        updateResume('skills', currentSkills);
+        // Clear the input for this category
+        setNewSkillInCategory(prev => ({ ...prev, [currentSkills[categoryIndex].category]: '' }));
+      }
     }
   }, [resume.skills, updateResume]);
 
-  const removeSkill = useCallback((index: number) => {
-    const currentSkills = Array.isArray(resume.skills) ? resume.skills : [];
-    const updated = currentSkills.filter((_, i) => i !== index);
+  const removeSkillFromCategory = useCallback((categoryIndex: number, skillIndex: number) => {
+    const currentSkills = [...resume.skills];
+    currentSkills[categoryIndex] = {
+      ...currentSkills[categoryIndex],
+      skills: currentSkills[categoryIndex].skills.filter((_, i) => i !== skillIndex)
+    };
+    updateResume('skills', currentSkills);
+  }, [resume.skills, updateResume]);
+
+  const removeSkillCategory = useCallback((categoryIndex: number) => {
+    const updated = resume.skills.filter((_, i) => i !== categoryIndex);
     updateResume('skills', updated);
   }, [resume.skills, updateResume]);
 
@@ -1035,31 +1065,68 @@ export default function ResumeBuilder() {
             {/* Skills */}
             <div className="section">
               <div className="section-title">Skills</div>
+              
+              {/* Add new category */}
               <div className="skill-input-group">
                 <input 
                   type="text" 
-                  placeholder="Add a skill (separated by ,)" 
+                  placeholder="Add a category (e.g., Programming Languages)" 
+                  value={newSkillCategory}
+                  onChange={(e) => setNewSkillCategory(e.target.value)}
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
-                      addSkill((e.target as HTMLInputElement).value);
-                      (e.target as HTMLInputElement).value = '';
+                      addSkillCategory();
                     }
                   }}
                 />
-                <button className="add-btn" style={{width: 'auto', marginTop: 0}} onClick={(e) => {
-                  const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                  addSkill(input.value);
-                  input.value = '';
-                }}>+ Add</button>
+                <button className="add-btn" style={{width: 'auto', marginTop: 0}} onClick={addSkillCategory}>
+                  + Add Category
+                </button>
               </div>
-              <div>
-                {(Array.isArray(resume.skills) ? resume.skills : []).map((skill: string, index: number) => (
-                  <span key={index} className="skill-tag skill-tag-edit">
-                    {skill}
-                    <button onClick={() => removeSkill(index)}>×</button>
-                  </span>
-                ))}
-              </div>
+              
+              {/* Display existing categories and their skills */}
+              {resume.skills.map((skillCategory, categoryIndex) => (
+                <div key={categoryIndex} className="item">
+                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
+                    <label style={{margin: 0}}>{skillCategory.category}</label>
+                    <button className="remove-btn" style={{marginTop: 0}} onClick={() => removeSkillCategory(categoryIndex)}>
+                      Remove Category
+                    </button>
+                  </div>
+                  
+                  {/* Add skill to this category */}
+                  <div className="skill-input-group">
+                    <input 
+                      type="text" 
+                      placeholder={`Add a skill to ${skillCategory.category}`}
+                      value={newSkillInCategory[skillCategory.category] || ''}
+                      onChange={(e) => setNewSkillInCategory(prev => ({ ...prev, [skillCategory.category]: e.target.value }))}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          addSkillToCategory(categoryIndex, (e.target as HTMLInputElement).value);
+                        }
+                      }}
+                    />
+                    <button 
+                      className="add-btn" 
+                      style={{width: 'auto', marginTop: 0}} 
+                      onClick={() => addSkillToCategory(categoryIndex, newSkillInCategory[skillCategory.category] || '')}
+                    >
+                      + Add Skill
+                    </button>
+                  </div>
+                  
+                  {/* Display skills in this category */}
+                  <div>
+                    {skillCategory.skills.map((skill, skillIndex) => (
+                      <span key={skillIndex} className="skill-tag skill-tag-edit">
+                        {skill}
+                        <button onClick={() => removeSkillFromCategory(categoryIndex, skillIndex)}>×</button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Experience */}

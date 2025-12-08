@@ -9,7 +9,7 @@ class Resume(BaseModel):
     summary = models.TextField(help_text="Summary of the resume")
     personal_information = models.JSONField(default=list, help_text="List of personal information dictionaries with 'field' and 'value' keys")
     professional_experiences = models.JSONField(default=list, help_text="User's professional experiences")
-    skills = models.JSONField(default=list, help_text="List of user's skills")
+    skills = models.JSONField(default=list, help_text="List of user's skills categorized by type. Each item should have 'category' and 'skills' keys")
     projects = models.JSONField(default=list, help_text="User's projects")
     educations = models.JSONField(default=list, help_text="List of user's education")
     certifications = models.JSONField(default=list, help_text="List of user's certificate",

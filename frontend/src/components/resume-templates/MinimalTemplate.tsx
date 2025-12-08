@@ -77,8 +77,10 @@ export const MinimalTemplate = ({ resume }: MinimalTemplateProps) => {
         <>
           <div className="resume-section-title no-break">Skills</div>
           <div className="resume-content">
-            {skills.map((skill, index) => (
-              <span key={index} className="skill-tag">{escapeHtml(skill)} {index < skills.length - 1 && (" • ")}</span>
+            {skills.map((skillCategory, index) => (
+              <div key={index} style={{ marginBottom: '5px' }}>
+                <strong>{escapeHtml(skillCategory.category)}:</strong> {skillCategory.skills.map((skill, idx) => escapeHtml(skill)).join(', ')}
+              </div>
             ))}
           </div>
         </>
