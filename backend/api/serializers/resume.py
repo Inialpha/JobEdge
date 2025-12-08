@@ -6,6 +6,25 @@ import os
 import filetype
 #from .user import UserSerializer
 
+
+class SkillsField(serializers.ListField):
+    """
+    Normalizes skills for output:
+    - If value is a list of strings, convert to single dict
+    - If value is already a list of dicts, leave unchanged
+    """
+    child = serializers.DictField()
+
+    def to_representation(self, value):
+        if not value:
+            return []
+
+        if all(isinstance(item, str) for item in value):
+            return [{"category": "General", "skills": value}]
+
+        return value
+
+
 class ResumeSerializer(serializers.Serializer):
     id = serializers.CharField(max_length=255, read_only=True)
     user = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -26,8 +45,7 @@ class ResumeSerializer(serializers.Serializer):
         default=[],
         help_text="User's professional experiences"
     )
-    skills = serializers.ListField(
-        child=serializers.DictField(),
+    skills = SkillsField(
         default=[],
         help_text="List of user's skills categorized by type. Each item should have 'category' and 'skills' keys"
     )
