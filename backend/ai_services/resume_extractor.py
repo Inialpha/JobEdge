@@ -138,7 +138,7 @@ Return the extracted information as a JSON object following this structure.
             print("⚠️ AI output was not valid JSON. Returning raw text.")
             return None
 
-    except (groq.RateLimitError, groq.GroqException) as e:
+    except (groq.RateLimitError) as e:
         print(f"❌ Groq API error in ai(): {e}")
         return None
     except Exception as e:
@@ -260,7 +260,7 @@ Return the extracted information as a JSON object following this structure.
             print("⚠️ AI output was not valid JSON. Returning raw text.")
             return None
 
-    except (groq.RateLimitError, groq.GroqException) as e:
+    except (groq.RateLimitError) as e:
         print(f"❌ Groq API error in generate_resume(): {e}")
         return None
     except Exception as e:
