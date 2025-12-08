@@ -136,18 +136,27 @@ export function generateModernDocx(resume: ResumeData): Document {
       })
     );
 
-    const skillsText = resume.skills.join(' • ');
-    leftColumnContent.push(
-      new Paragraph({
-        text: skillsText,
-        spacing: { after: 180 },
-        run: {
-          size: 22,
-          color: 'FFFFFF',
-          font: 'Segoe UI',
-        },
-      })
-    );
+    // Add categorized skills
+    resume.skills.forEach((skillCategory) => {
+      leftColumnContent.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `${skillCategory.category}: `,
+              bold: true,
+              size: 22,
+              color: 'FFFFFF',
+            }),
+            new TextRun({
+              text: skillCategory.skills.join(', '),
+              size: 22,
+              color: 'FFFFFF',
+            }),
+          ],
+          spacing: { after: 120 },
+        })
+      );
+    });
   }
 
   // Education in sidebar

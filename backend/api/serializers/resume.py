@@ -27,9 +27,9 @@ class ResumeSerializer(serializers.Serializer):
         help_text="User's professional experiences"
     )
     skills = serializers.ListField(
-        child=serializers.CharField(max_length=255),
+        child=serializers.DictField(),
         default=[],
-        help_text="List of user's skills"
+        help_text="List of user's skills categorized by type. Each item should have 'category' and 'skills' keys"
     )
     projects = serializers.ListField(
         child=serializers.DictField(),

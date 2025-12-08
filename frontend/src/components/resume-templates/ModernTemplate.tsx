@@ -33,8 +33,10 @@ export const ModernTemplate = ({ resume }: ModernTemplateProps) => {
           <>
             <div className="resume-section-title">Skills</div>
             <div className="">
-              {skills.map((skill, index) => (
-                <div key={index} className="skill-tag">{escapeHtml(skill)} {index < skills.length - 1 && (" • ")}</div>
+              {skills.map((skillCategory, index) => (
+                <div key={index} style={{ marginBottom: '5px' }}>
+                  <strong>{escapeHtml(skillCategory.category)}:</strong> {skillCategory.skills.map(skill => escapeHtml(skill)).join(', ')}
+                </div>
               ))}
             </div>
           </>
