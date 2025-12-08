@@ -84,7 +84,13 @@ export function PreviewModal({ isOpen, onClose, resume }: PreviewModalProps) {
 
             <section>
               <h3 className="text-xl font-semibold">Skills</h3>
-              <p>{parseSkillsArray(resume.skills.content).join(' • ')}</p>
+              <div>
+                {parseSkillsArray(resume.skills.content).map((skillCategory, index) => (
+                  <div key={index} style={{ marginBottom: '5px' }}>
+                    <strong>{skillCategory.category}:</strong> {skillCategory.skills.join(', ')}
+                  </div>
+                ))}
+              </div>
             </section>
           </div>
         </ScrollArea>
