@@ -14,9 +14,10 @@ export const parseSkillsArray = (skills: string | string[] | Skill[] | unknown):
   
   // Legacy format: array of strings
   if (Array.isArray(skills) && skills.length > 0 && typeof skills[0] === 'string') {
+    const skillsArray = skills as string[]
     return [{
       category: 'General',
-      skills: skills.filter((s: string) => s && s.trim())
+      skills: skillsArray.filter((s) => s && s.trim())
     }]
   }
   

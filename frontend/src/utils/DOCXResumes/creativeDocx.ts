@@ -252,10 +252,12 @@ export function generateCreativeDocx(resume: ResumeData): Document {
               text: categoryText,
               bold: true,
               size: 24,
+              color: '333333',
             }),
             new TextRun({
               text: skillsText,
               size: 24,
+              color: '333333',
             }),
           ],
           spacing: { after: 160 },
