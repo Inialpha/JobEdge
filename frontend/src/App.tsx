@@ -21,6 +21,8 @@ import AdminResumesComponent from "@/components/dashboard/admin/Resume";
 import AdminSettingsComponent from "@/components/dashboard/admin/setting/settings";
 import { AuthMiddleware, AdminMiddleware } from "@/utils/middleware";
 import VerifyEmail from "@/pages/VerifyEmail"
+import ForgotPassword from "@/pages/ForgotPassword"
+import ResetPassword from "@/pages/ResetPassword"
 import NotFound from "@/pages/NotFound"
 import { ViewProvider } from "@/context/ViewContext";
 import { Analytics } from '@vercel/analytics/react'; 
@@ -33,6 +35,8 @@ const routes = createBrowserRouter(
       <Route path="signup" element={<Signup />} />
       <Route path="login" element={<Login />} />
       <Route path="verify-email" element={<VerifyEmail />} />
+      <Route path="forgot-password" element={<ForgotPassword />} />
+      <Route path="reset-password" element={<ResetPassword />} />
       <Route path="jobs/detail" element={<JobDetails />} />
       <Route path="jobs" element={<JobsPage />} />
       
