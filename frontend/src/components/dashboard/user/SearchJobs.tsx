@@ -52,6 +52,7 @@ export default function SearchJobs() {
   const [daysAgo, setDaysAgo] = useState<number>(2);
   const [maxJobs, setMaxJobs] = useState<number>(25);
   const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [jobs, setJobs] = useState<JobResult[]>([]);
   const [error, setError] = useState<string>('');
@@ -140,6 +141,7 @@ export default function SearchJobs() {
 
     setIsSearching(true);
     setError('');
+    setHasSearched(true);
 
     try {
       const params = new URLSearchParams();
@@ -397,6 +399,35 @@ export default function SearchJobs() {
       </Card>
 
       {/* Job Results */}
+      {hasSearched && jobs.length === 0 && !isSearching && (
+        <div className="mt-6">
+          <Card className="bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-l-4 border-l-yellow-500">
+            <CardContent className="py-8">
+              <div className="text-center space-y-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-full mb-4">
+                  <svg className="h-8 w-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800">No Jobs Found</h3>
+                <p className="text-gray-600 max-w-md mx-auto">
+                  We couldn't find any jobs matching your search criteria. Try adjusting your filters to see more results.
+                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto mt-4">
+                  <p className="text-sm text-blue-800 font-medium mb-2">💡 Suggestions:</p>
+                  <ul className="text-sm text-blue-700 text-left space-y-1">
+                    <li>• Consider increasing the number of days in the "Posted within" filter (currently set to {daysAgo} {daysAgo === 1 ? 'day' : 'days'})</li>
+                    <li>• Try removing location or job type filters</li>
+                    <li>• Use more general keywords</li>
+                    <li>• Try disabling the "Remote jobs only" filter if enabled</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      
       {jobs.length > 0 && (
         <div className="mt-6 space-y-4">
           <h2 className="text-xl font-semibold text-gray-700">

@@ -124,7 +124,12 @@ export default function Login() {
             </div>
 
             <div>
-              <Label htmlFor="password" className="text-gray-700 font-semibold">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-gray-700 font-semibold">Password</Label>
+                <Link to="/forgot-password" className="text-sm font-medium text-purple-600 hover:text-purple-500">
+                  Forgot password?
+                </Link>
+              </div>
               <Input id="password" type="password" autoComplete="current-password" className="mt-1"
                 {...register('password', {
                   required: "Please enter your password"})}
