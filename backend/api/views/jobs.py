@@ -212,7 +212,6 @@ class SearchJobsAPIView(APIView):
 
         site_query = " OR ".join([f"site:{domain}" for domain in ATS_SITES])
         search_params = {
-            #"engine": "google",
             "q": f"({site_query}) {search_query} (inurl:job OR inurl:jobs) AND -inurl:apply",
             "api_key": serpapi_key,
             "num": max_jobs,
