@@ -226,7 +226,7 @@ export function generateCreativeDocx(resume: ResumeData): Document {
       sections.push(
         new Paragraph({
           text: `${edu.startDate} - ${edu.endDate}`,
-          spacing: { after: edu.gpa ? 80 : 200 },
+          spacing: { after: 200 },
           run: {
             size: 24,
             color: '333333',
@@ -234,20 +234,6 @@ export function generateCreativeDocx(resume: ResumeData): Document {
           },
         })
       );
-
-      if (edu.gpa) {
-        sections.push(
-          new Paragraph({
-            text: `GPA: ${edu.gpa}`,
-            spacing: { after: 200 },
-            run: {
-              size: 24,
-              color: '333333',
-              font: 'Segoe UI',
-            },
-          })
-        );
-      }
     });
   }
 
@@ -255,18 +241,63 @@ export function generateCreativeDocx(resume: ResumeData): Document {
   if (resume.skills.length > 0) {
     sections.push(createCreativeSectionTitle('SKILLS'));
 
-    const skillsText = resume.skills.join(' • ');
-    sections.push(
-      new Paragraph({
-        text: skillsText,
-        spacing: { after: 320 },
-        run: {
-          size: 24,
-          color: '333333',
-          font: 'Segoe UI',
-        },
-      })
-    );
+    // Add categorized skills
+    resume.skills.forEach((skillCategory) => {
+      const categoryText = `${skillCategory.category}: `;
+      const skillsText = skillCategory.skills.join(', ');
+      
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: categoryText,
+              bold: true,
+              size: 24,
+              color: '333333',
+            }),
+            new TextRun({
+              text: skillsText,
+              size: 24,
+              color: '333333',
+            }),
+          ],
+          spacing: { after: 160 },
+        })
+      );
+    });
+  }
+
+  // Projects
+  if (resume.projects.length > 0) {
+    sections.push(createCreativeSectionTitle('PROJECTS'));
+
+    resume.projects.forEach((proj) => {
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: proj.name,
+              bold: true,
+              size: 24,
+              color: '333333',
+            }),
+          ],
+          spacing: { after: 80 },
+        })
+      );
+
+      sections.push(
+        new Paragraph({
+          text: proj.description,
+          spacing: { after: 200 },
+          run: {
+            size: 24,
+            color: '333333',
+            font: 'Segoe UI',
+          },
+        })
+      );
+    });
   }
 
   // Certifications
@@ -299,55 +330,6 @@ export function generateCreativeDocx(resume: ResumeData): Document {
           },
         })
       );
-    });
-  }
-
-  // Projects
-  if (resume.projects.length > 0) {
-    sections.push(createCreativeSectionTitle('PROJECTS'));
-
-    resume.projects.forEach((proj) => {
-      sections.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: proj.name,
-              bold: true,
-              size: 24,
-              color: '333333',
-            }),
-          ],
-          spacing: { after: 80 },
-        })
-      );
-
-      sections.push(
-        new Paragraph({
-          text: proj.description,
-          spacing: { after: 80 },
-          run: {
-            size: 24,
-            color: '333333',
-            font: 'Segoe UI',
-          },
-        })
-      );
-
-      if (proj.technologies) {
-        sections.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: proj.technologies,
-                italics: true,
-                size: 24,
-                color: '333333',
-              }),
-            ],
-            spacing: { after: 200 },
-          })
-        );
-      }
     });
   }
 

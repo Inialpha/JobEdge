@@ -68,7 +68,6 @@ export const ClassicTemplate = ({ resume }: ClassicTemplateProps) => {
                 <div><strong>{escapeHtml(edu?.degree || '')}</strong></div>
                 <div>{escapeHtml(edu?.institution || '')}</div>
                 <div>{escapeHtml(edu?.startDate || '')} - {escapeHtml(edu?.endDate || '')}</div>
-                {edu?.gpa && <div>GPA: {escapeHtml(edu.gpa)}</div>}
               </div>
             ))}
           </div>
@@ -78,20 +77,9 @@ export const ClassicTemplate = ({ resume }: ClassicTemplateProps) => {
         <>
           <div className="resume-section-title no-break">Skills</div>
           <div className="resume-content">
-            {skills.map((skill, index) => (
-              <span key={index} className="skill-tag">{escapeHtml(skill)} {index < skills.length - 1 && (" • ")} </span>
-            ))}
-          </div>
-        </>
-      )}
-      {resume?.certifications?.length > 0 && (
-        <>
-          <div className="resume-section-title">Certifications</div>
-          <div className="resume-content">
-            {resume.certifications.map((cert, index) => (
-              <div key={index}>
-                <div><strong>{escapeHtml(cert?.name || '')}</strong></div>
-                <div>{escapeHtml(cert?.issuer || '')} - {escapeHtml(cert?.year || '')}</div>
+            {skills.map((skillCategory, index) => (
+              <div key={index} style={{ marginBottom: '5px' }}>
+                <strong>{escapeHtml(skillCategory.category)}:</strong> {skillCategory.skills.map(skill => escapeHtml(skill)).join(', ')}
               </div>
             ))}
           </div>
@@ -105,7 +93,19 @@ export const ClassicTemplate = ({ resume }: ClassicTemplateProps) => {
               <div key={index} style={{ marginBottom: '10px' }}>
                 <div className="no-break" ><div><strong className="no-break">{escapeHtml(proj?.name || '')}</strong></div></div>
                 <div className="no-break" >{escapeHtml(proj?.description || '')}</div>
-                <div><em>{escapeHtml(proj?.technologies || '')}</em></div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+      {resume?.certifications?.length > 0 && (
+        <>
+          <div className="resume-section-title">Certifications</div>
+          <div className="resume-content">
+            {resume.certifications.map((cert, index) => (
+              <div key={index}>
+                <div><strong>{escapeHtml(cert?.name || '')}</strong></div>
+                <div>{escapeHtml(cert?.issuer || '')} - {escapeHtml(cert?.year || '')}</div>
               </div>
             ))}
           </div>

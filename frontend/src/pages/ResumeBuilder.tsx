@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation } from '@/types/resume';
+import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation, Skill } from '@/types/resume';
 import { getEditableResume } from '@/utils/resumeUtils';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
 import { ResumePreview } from '@/components/ResumePreview';
@@ -12,6 +12,9 @@ import { useDispatch } from "react-redux"
 import { updateUserInfo } from "@/store/userSlice"
 import cleanData from "@/utils/cleanData"
 import { useView } from "@/context/ViewContext";
+import Joyride, { CallBackProps, STATUS, EVENTS } from 'react-joyride';
+import { resumeBuilderTourSteps, tourStyles, tourLocale } from '@/utils/tourConfig';
+import { usePageTour } from '@/hooks/usePageTour';
 
 export default function ResumeBuilder() {
   const { setCurrentView } = useView();
@@ -30,10 +33,18 @@ export default function ResumeBuilder() {
   const [saveMessage, setSaveMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Tour state using the new hook
+  const { run: runTour, stepIndex: tourStepIndex, setStepIndex: setTourStepIndex, startTour, stopTour, tourCompleted } = usePageTour('resume_builder');
 
   useEffect(() => {
     setCurrentView("resume builder");
-  }, [setCurrentView]);
+    
+    // Start tour if not completed yet
+    if (!tourCompleted) {
+      startTour();
+    }
+  }, [setCurrentView, tourCompleted, startTour]);
 
   const [newExperience, setNewExperience] = useState<ProfessionalExperience>({
     organization: '',
@@ -47,17 +58,13 @@ export default function ResumeBuilder() {
   const [newEducation, setNewEducation] = useState<Education>({
     institution: '',
     degree: '',
-    field: '',
     startDate: '',
-    endDate: '',
-    gpa: ''
+    endDate: ''
   });
   
   const [newProject, setNewProject] = useState<Project>({
     name: '',
-    description: '',
-    technologies: '',
-    link: ''
+    description: ''
   });
   
   const [newCertification, setNewCertification] = useState<Certification>({
@@ -72,7 +79,10 @@ export default function ResumeBuilder() {
     year: ''
   });
 
-  const updateResume = useCallback((field: keyof ResumeData, value: string | string[] | ProfessionalExperience[] | Education[] | Project[] | Certification[] | Award[] | PersonalInformation) => {
+  const [newSkillCategory, setNewSkillCategory] = useState<string>('');
+  const [newSkillInCategory, setNewSkillInCategory] = useState<{[category: string]: string}>({});
+
+  const updateResume = useCallback((field: keyof ResumeData, value: string | string[] | Skill[] | ProfessionalExperience[] | Education[] | Project[] | Certification[] | Award[] | PersonalInformation) => {
     setResume(prev => ({ ...prev, [field]: value }));
   }, []);
 
@@ -93,16 +103,43 @@ export default function ResumeBuilder() {
     }
   }, []);
 
-  const addSkill = useCallback((skill: string) => {
-    if (skill.trim()) {
+  const addSkillCategory = useCallback(() => {
+    if (newSkillCategory.trim()) {
       const currentSkills = Array.isArray(resume.skills) ? resume.skills : [];
-      updateResume('skills', [...currentSkills, skill.trim()]);
+      // Check if category already exists
+      if (!currentSkills.find(cat => cat.category === newSkillCategory.trim())) {
+        updateResume('skills', [...currentSkills, { category: newSkillCategory.trim(), skills: [] }]);
+        setNewSkillCategory('');
+      }
+    }
+  }, [newSkillCategory, resume.skills, updateResume]);
+
+  const addSkillToCategory = useCallback((categoryIndex: number, skill: string) => {
+    if (skill.trim()) {
+      const currentSkills = [...resume.skills];
+      if (!currentSkills[categoryIndex].skills.includes(skill.trim())) {
+        currentSkills[categoryIndex] = {
+          ...currentSkills[categoryIndex],
+          skills: [...currentSkills[categoryIndex].skills, skill.trim()]
+        };
+        updateResume('skills', currentSkills);
+        // Clear the input for this category
+        setNewSkillInCategory(prev => ({ ...prev, [currentSkills[categoryIndex].category]: '' }));
+      }
     }
   }, [resume.skills, updateResume]);
 
-  const removeSkill = useCallback((index: number) => {
-    const currentSkills = Array.isArray(resume.skills) ? resume.skills : [];
-    const updated = currentSkills.filter((_, i) => i !== index);
+  const removeSkillFromCategory = useCallback((categoryIndex: number, skillIndex: number) => {
+    const currentSkills = [...resume.skills];
+    currentSkills[categoryIndex] = {
+      ...currentSkills[categoryIndex],
+      skills: currentSkills[categoryIndex].skills.filter((_, i) => i !== skillIndex)
+    };
+    updateResume('skills', currentSkills);
+  }, [resume.skills, updateResume]);
+
+  const removeSkillCategory = useCallback((categoryIndex: number) => {
+    const updated = resume.skills.filter((_, i) => i !== categoryIndex);
     updateResume('skills', updated);
   }, [resume.skills, updateResume]);
 
@@ -136,10 +173,8 @@ export default function ResumeBuilder() {
       setNewEducation({
         institution: '',
         degree: '',
-        field: '',
         startDate: '',
-        endDate: '',
-        gpa: ''
+        endDate: ''
       });
     }
   }, [newEducation, resume.education, updateResume]);
@@ -159,9 +194,7 @@ export default function ResumeBuilder() {
       updateResume('projects', [...resume.projects, newProject]);
       setNewProject({
         name: '',
-        description: '',
-        technologies: '',
-        link: ''
+        description: ''
       });
     }
   }, [newProject, resume.projects, updateResume]);
@@ -419,8 +452,32 @@ export default function ResumeBuilder() {
     };
   }, []);
 
+  // Handle tour callback
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { status, type, index } = data;
+    
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      stopTour();
+    } else if (type === EVENTS.STEP_AFTER) {
+      setTourStepIndex(index + 1);
+    }
+  };
+
   return (
     <>
+      {/* Joyride Tour */}
+      <Joyride
+        steps={resumeBuilderTourSteps}
+        run={runTour}
+        stepIndex={tourStepIndex}
+        continuous
+        showSkipButton
+        showProgress
+        callback={handleJoyrideCallback}
+        styles={tourStyles}
+        locale={tourLocale}
+      />
+      
       <style>{`
         .icontainer {
           max-width: 1400px;
@@ -836,13 +893,13 @@ export default function ResumeBuilder() {
       
       <div className="max-w-[1400px] mx-auto grid gap-5 grid-cols-1 lg:grid-cols-[350px_1fr]">
         {/* Editor Panel */}
-        <div className="bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] h-fit max-h-[50vh] overflow-y-auto">
+        <div className="resume-form-section bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] h-fit max-h-[50vh] lg:max-h-[100vh] overflow-y-auto">
           <div className="header">
             <h1>Resume Builder</h1>
             <p>Edit & Download as PDF/DOCX</p>
           </div>
           
-          <div className="controls">
+          <div className="controls download-buttons">
             {saveMessage && (
               <div style={{
                 padding: '10px 15px',
@@ -894,6 +951,7 @@ export default function ResumeBuilder() {
               )}
             </button>
             <button 
+              id="save-resume-btn"
               className="btn" 
               style={{background: '#17a2b8', color: 'white'}}
               onClick={saveResume}
@@ -905,7 +963,7 @@ export default function ResumeBuilder() {
 
           <div className="editor">
             {/* Template Selection */}
-            <div className="section">
+            <div className="section template-selector">
               <div className="section-title">Choose Template</div>
               <div className="template-carousel">
                 <div className="carousel-container">
@@ -1007,31 +1065,68 @@ export default function ResumeBuilder() {
             {/* Skills */}
             <div className="section">
               <div className="section-title">Skills</div>
+              
+              {/* Add new category */}
               <div className="skill-input-group">
                 <input 
                   type="text" 
-                  placeholder="Add a skill (separated by ,)" 
+                  placeholder="Add a category (e.g., Programming Languages)" 
+                  value={newSkillCategory}
+                  onChange={(e) => setNewSkillCategory(e.target.value)}
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
-                      addSkill((e.target as HTMLInputElement).value);
-                      (e.target as HTMLInputElement).value = '';
+                      addSkillCategory();
                     }
                   }}
                 />
-                <button className="add-btn" style={{width: 'auto', marginTop: 0}} onClick={(e) => {
-                  const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                  addSkill(input.value);
-                  input.value = '';
-                }}>+ Add</button>
+                <button className="add-btn" style={{width: 'auto', marginTop: 0}} onClick={addSkillCategory}>
+                  + Add Category
+                </button>
               </div>
-              <div>
-                {(Array.isArray(resume.skills) ? resume.skills : []).map((skill: string, index: number) => (
-                  <span key={index} className="skill-tag skill-tag-edit">
-                    {skill}
-                    <button onClick={() => removeSkill(index)}>×</button>
-                  </span>
-                ))}
-              </div>
+              
+              {/* Display existing categories and their skills */}
+              {resume.skills.map((skillCategory, categoryIndex) => (
+                <div key={categoryIndex} className="item">
+                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
+                    <label style={{margin: 0}}>{skillCategory.category}</label>
+                    <button className="remove-btn" style={{marginTop: 0}} onClick={() => removeSkillCategory(categoryIndex)}>
+                      Remove Category
+                    </button>
+                  </div>
+                  
+                  {/* Add skill to this category */}
+                  <div className="skill-input-group">
+                    <input 
+                      type="text" 
+                      placeholder={`Add a skill to ${skillCategory.category}`}
+                      value={newSkillInCategory[skillCategory.category] || ''}
+                      onChange={(e) => setNewSkillInCategory(prev => ({ ...prev, [skillCategory.category]: e.target.value }))}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          addSkillToCategory(categoryIndex, (e.target as HTMLInputElement).value);
+                        }
+                      }}
+                    />
+                    <button 
+                      className="add-btn" 
+                      style={{width: 'auto', marginTop: 0}} 
+                      onClick={() => addSkillToCategory(categoryIndex, newSkillInCategory[skillCategory.category] || '')}
+                    >
+                      + Add Skill
+                    </button>
+                  </div>
+                  
+                  {/* Display skills in this category */}
+                  <div>
+                    {skillCategory.skills.map((skill, skillIndex) => (
+                      <span key={skillIndex} className="skill-tag skill-tag-edit">
+                        {skill}
+                        <button onClick={() => removeSkillFromCategory(categoryIndex, skillIndex)}>×</button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Experience */}
@@ -1189,12 +1284,6 @@ export default function ResumeBuilder() {
                   )}
                   <input 
                     type="text" 
-                    placeholder="Field of Study" 
-                    value={edu.field}
-                    onChange={(e) => updateEducationItem(index, 'field', e.target.value)}
-                  />
-                  <input 
-                    type="text" 
                     placeholder="Start Date (e.g., 2011) *" 
                     value={edu.startDate}
                     onChange={(e) => updateEducationItem(index, 'startDate', e.target.value)}
@@ -1217,12 +1306,6 @@ export default function ResumeBuilder() {
                       {validationErrors[`education.${index}.endDate`]}
                     </div>
                   )}
-                  <input 
-                    type="text" 
-                    placeholder="GPA (optional)" 
-                    value={edu.gpa}
-                    onChange={(e) => updateEducationItem(index, 'gpa', e.target.value)}
-                  />
                   <button className="remove-btn" onClick={() => removeEducation(index)}>Remove</button>
                 </div>
               ))}
@@ -1244,12 +1327,6 @@ export default function ResumeBuilder() {
                 />
                 <input 
                   type="text" 
-                  placeholder="Field of Study" 
-                  value={newEducation.field}
-                  onChange={(e) => setNewEducation({...newEducation, field: e.target.value})}
-                />
-                <input 
-                  type="text" 
                   placeholder="Start Date (e.g., 2011)" 
                   value={newEducation.startDate}
                   onChange={(e) => setNewEducation({...newEducation, startDate: e.target.value})}
@@ -1260,13 +1337,57 @@ export default function ResumeBuilder() {
                   value={newEducation.endDate}
                   onChange={(e) => setNewEducation({...newEducation, endDate: e.target.value})}
                 />
+                <button className="add-btn" onClick={addEducationItem}>Add Education</button>
+              </div>
+            </div>
+
+            {/* Projects */}
+            <div className="section">
+              <div className="section-title">Projects</div>
+              {resume.projects.map((proj, index) => (
+                <div key={index} className="item">
+                  <input 
+                    type="text" 
+                    placeholder="Project Name *" 
+                    value={proj.name}
+                    onChange={(e) => updateProjectItem(index, 'name', e.target.value)}
+                    style={{borderColor: validationErrors[`projects.${index}.name`] ? '#dc3545' : undefined}}
+                  />
+                  {validationErrors[`projects.${index}.name`] && (
+                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                      {validationErrors[`projects.${index}.name`]}
+                    </div>
+                  )}
+                  <textarea 
+                    placeholder="Project Description *" 
+                    value={proj.description}
+                    onChange={(e) => updateProjectItem(index, 'description', e.target.value)}
+                    style={{borderColor: validationErrors[`projects.${index}.description`] ? '#dc3545' : undefined}}
+                  />
+                  {validationErrors[`projects.${index}.description`] && (
+                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
+                      {validationErrors[`projects.${index}.description`]}
+                    </div>
+                  )}
+                  <button className="remove-btn" onClick={() => removeProject(index)}>Remove</button>
+                </div>
+              ))}
+              
+              {/* Form for new project */}
+              <div className="item" style={{background: '#e8f4f8'}}>
+                <label>Add New Project</label>
                 <input 
                   type="text" 
-                  placeholder="GPA (optional)" 
-                  value={newEducation.gpa}
-                  onChange={(e) => setNewEducation({...newEducation, gpa: e.target.value})}
+                  placeholder="Project Name" 
+                  value={newProject.name}
+                  onChange={(e) => setNewProject({...newProject, name: e.target.value})}
                 />
-                <button className="add-btn" onClick={addEducationItem}>Add Education</button>
+                <textarea 
+                  placeholder="Project Description" 
+                  value={newProject.description}
+                  onChange={(e) => setNewProject({...newProject, description: e.target.value})}
+                />
+                <button className="add-btn" onClick={addProjectItem}>Add Project</button>
               </div>
             </div>
 
@@ -1319,68 +1440,6 @@ export default function ResumeBuilder() {
                   onChange={(e) => setNewCertification({...newCertification, year: e.target.value})}
                 />
                 <button className="add-btn" onClick={addCertificationItem}>Add Certification</button>
-              </div>
-            </div>
-
-            {/* Projects */}
-            <div className="section">
-              <div className="section-title">Projects</div>
-              {resume.projects.map((proj, index) => (
-                <div key={index} className="item">
-                  <input 
-                    type="text" 
-                    placeholder="Project Name *" 
-                    value={proj.name}
-                    onChange={(e) => updateProjectItem(index, 'name', e.target.value)}
-                    style={{borderColor: validationErrors[`projects.${index}.name`] ? '#dc3545' : undefined}}
-                  />
-                  {validationErrors[`projects.${index}.name`] && (
-                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
-                      {validationErrors[`projects.${index}.name`]}
-                    </div>
-                  )}
-                  <textarea 
-                    placeholder="Project Description *" 
-                    value={proj.description}
-                    onChange={(e) => updateProjectItem(index, 'description', e.target.value)}
-                    style={{borderColor: validationErrors[`projects.${index}.description`] ? '#dc3545' : undefined}}
-                  />
-                  {validationErrors[`projects.${index}.description`] && (
-                    <div style={{color: '#dc3545', fontSize: '11px', marginTop: '2px', marginBottom: '8px'}}>
-                      {validationErrors[`projects.${index}.description`]}
-                    </div>
-                  )}
-                  <input 
-                    type="text" 
-                    placeholder="Technologies Used" 
-                    value={proj.technologies}
-                    onChange={(e) => updateProjectItem(index, 'technologies', e.target.value)}
-                  />
-                  <button className="remove-btn" onClick={() => removeProject(index)}>Remove</button>
-                </div>
-              ))}
-              
-              {/* Form for new project */}
-              <div className="item" style={{background: '#e8f4f8'}}>
-                <label>Add New Project</label>
-                <input 
-                  type="text" 
-                  placeholder="Project Name" 
-                  value={newProject.name}
-                  onChange={(e) => setNewProject({...newProject, name: e.target.value})}
-                />
-                <textarea 
-                  placeholder="Project Description" 
-                  value={newProject.description}
-                  onChange={(e) => setNewProject({...newProject, description: e.target.value})}
-                />
-                <input 
-                  type="text" 
-                  placeholder="Technologies Used" 
-                  value={newProject.technologies}
-                  onChange={(e) => setNewProject({...newProject, technologies: e.target.value})}
-                />
-                <button className="add-btn" onClick={addProjectItem}>Add Project</button>
               </div>
             </div>
 
@@ -1439,7 +1498,7 @@ export default function ResumeBuilder() {
         </div>
 
         {/* Preview Panel */}
-        <div className="bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] p-6">
+        <div className="resume-preview-section bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] p-6">
           <div id="resumePreview" className="resume-preview classic-template"></div>
         </div>
       </div>

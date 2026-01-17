@@ -16,6 +16,11 @@ import { updateUserInfo } from "@/store/userSlice";
 import { RootState } from "@/store/store";
 import { useView } from "@/context/ViewContext";
 import { useQuery } from '@tanstack/react-query';
+import Joyride, { CallBackProps, STATUS, EVENTS } from 'react-joyride';
+import { homeTourSteps, tourStyles, tourLocale } from "@/utils/tourConfig";
+import { extractTextFromFile } from "@/utils/textExtraction";
+import { usePageTour } from "@/hooks/usePageTour";
+import { FullPageLoader } from "@/components/ui/full-page-loader";
 
 interface Resume {
   id: string;
@@ -33,10 +38,12 @@ export default function HomeComponent() {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.user);
   const { setCurrentView } = useView();
+  const { run, stepIndex, setStepIndex, startTour, stopTour, tourCompleted } = usePageTour('home');
   const [masterResume, setMasterResume] = useState<Resume | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
+  const [componentLoaded, setComponentLoaded] = useState(false);
   const navigate = useNavigate();
 
   // Set current view when component mounts
@@ -59,17 +66,45 @@ export default function HomeComponent() {
     }
   };
 
+  const fetchApplications = async () => {
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/applications/`;
+      const response = await getRequest(url);
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+      throw new Error('Failed to fetch applications');
+    } catch (error) {
+      console.error("Error fetching applications:", error);
+      throw error;
+    }
+  };
+
   const { data: resumesData, isLoading } = useQuery({
     queryKey: ['resumes'],
     queryFn: fetchResumes,
+  });
+
+  const { data: applicationsData, isLoading: isLoadingApplications } = useQuery({
+    queryKey: ['applications'],
+    queryFn: fetchApplications,
   });
 
   useEffect(() => {
     if (resumesData) {
       const master = resumesData.find((resume: Resume) => resume.is_master);
       setMasterResume(master || null);
+      
+      // Mark component as loaded after data is fetched and state is set
+      setComponentLoaded(true);
+      
+      // Start tour if user doesn't have master resume and hasn't seen tour
+      if (!master && !tourCompleted && user.id) {
+        startTour();
+      }
     }
-  }, [resumesData]);
+  }, [resumesData, tourCompleted, startTour, user.id]);
 
   const handleCreateProfile = () => {
     setShowCreateDialog(true);
@@ -104,9 +139,25 @@ export default function HomeComponent() {
 
     setIsUploading(true);
     try {
+      // Extract text from the file
+      let extractedText = '';
+      try {
+        extractedText = await extractTextFromFile(file);
+        console.log(extractedText)
+        console.log('Extracted text length:', extractedText.length);
+      } catch (extractError) {
+        console.warn('Text extraction failed, will rely on backend:', extractError);
+        // Continue with upload even if extraction fails - backend will handle it
+      }
+
       const url = `${import.meta.env.VITE_API_URL}/resumes/`;
       const formData = new FormData();
       formData.append("file", file);
+      
+      // Add extracted text if available
+      if (extractedText) {
+        formData.append("extracted_text", extractedText);
+      }
       
       const response = await postFormData(url, formData);
       if (response.ok) {
@@ -120,7 +171,9 @@ export default function HomeComponent() {
           });
         }, 1000);
       } else {
-        setFeedback({type: 'error', message: "There was an error uploading your resume. Please try again."});
+        const jsonRes = await response.json()
+        setFeedback({type: 'error', message: jsonRes.error  || "There was an error uploading the file. Please try again."});
+        //setFeedback({type: 'error', message: "There was an error uploading your resume. Please try again."});
       }
     } catch (error) {
       console.error(error);
@@ -133,7 +186,22 @@ export default function HomeComponent() {
     }
   };
 
-  if (isLoading) {
+  // Handle tour callback
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { status, index, type } = data;
+    
+    if (status === STATUS.FINISHED) {
+      // Tour finished - mark as completed, do not navigate to applications
+      stopTour();
+    } else if (status === STATUS.SKIPPED) {
+      // User skipped the tour - mark as completed
+      stopTour();
+    } else if (type === EVENTS.STEP_AFTER) {
+      setStepIndex(index + 1);
+    }
+  };
+
+  if (isLoading || isLoadingApplications) {
     return (
       <div className="flex justify-center items-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
@@ -143,7 +211,25 @@ export default function HomeComponent() {
 
   return (
     <div className="space-y-6">
-      <div>
+      {/* Full-page loader during file upload */}
+      {isUploading && <FullPageLoader />}
+      
+      {/* Joyride Tour - only runs when component is loaded */}
+      {componentLoaded && (
+        <Joyride
+          steps={homeTourSteps}
+          run={run}
+          stepIndex={stepIndex}
+          continuous
+          showSkipButton
+          showProgress
+          callback={handleJoyrideCallback}
+          styles={tourStyles}
+          locale={tourLocale}
+        />
+      )}
+      
+      <div className="home-welcome-section">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-gray-600 mt-1">Welcome back, {user?.firstName}!</p>
       </div>
@@ -174,6 +260,7 @@ export default function HomeComponent() {
           {masterResume ? (
             <>
               <Button
+                id="update-profile-btn"
                 onClick={handleUpdateProfile}
                 className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
               >
@@ -183,6 +270,7 @@ export default function HomeComponent() {
             </>
           ) : (
             <Button
+              id="create-profile-btn"
               onClick={handleCreateProfile}
               className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
             >
@@ -194,20 +282,14 @@ export default function HomeComponent() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-medium text-gray-600">Master Profile</h3>
-          <p className="text-2xl font-bold text-gray-900 mt-2">
-            {masterResume ? '1' : '0'}
-          </p>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-sm font-medium text-gray-600">Resumes</h3>
-          <p className="text-2xl font-bold text-gray-900 mt-2">{resumesData.length}</p>
+          <p className="text-2xl font-bold text-gray-900 mt-2">{resumesData?.length || 0}</p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-sm font-medium text-gray-600">Applications</h3>
-          <p className="text-2xl font-bold text-gray-900 mt-2">-</p>
+          <p className="text-2xl font-bold text-gray-900 mt-2">{applicationsData?.length || 0}</p>
         </div>
       </div>
 

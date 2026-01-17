@@ -36,7 +36,7 @@ class Resume(BaseModel):
     phone_number: Optional[str] = Field(default=None, description="User's phone number")
     website: str = Field(description="User's website")
     professional_experiences: List[ProfessionalExperience] = Field(description="User's professional experiences")
-    skills: List[str] = Field(description="User's skills")
+    skills: List[dict] = Field(description="User's skills categorized by type. Each dict has 'category' (e.g., 'Programming Languages', 'Frameworks') and 'skills' (list of skill names)")
     projects: List[Project] = Field(description="User's projects")
     educations: List[Education] = Field(description="List of user's education")
     languages: List[str] = Field(description="Languages spoken by user")
@@ -79,7 +79,11 @@ Extract the resume information using this JSON schema and descriptions:
         "end_date": str — The end date for this role (e.g., 'Dec 2023 or Present')
         "responsibilities": List[str] — Key tasks, achievements, or responsibilities handled in this role.
       }}
-  "skills": List[str] — List of technical and soft skills mentioned in the resume.
+  "skills": List[Object] — List of skills categorized by type. Each object has:
+      {{
+        "category": str — Category name (e.g., "Programming Languages", "Frameworks", "Tools", "Soft Skills").
+        "skills": List[str] — List of skill names in this category.
+      }}
   "projects": List[Object] — List of notable projects completed, each with:
       {{
         "name": str — The name or title of the project, including relevant tags or technologies.
@@ -91,6 +95,18 @@ Extract the resume information using this JSON schema and descriptions:
         "certificate": str — The degree, diploma, or qualification received.
         "start_date": str — The start date (e.g, 2020 or May 2015).
         "end_date": str — The end date (e.g, 2020 or May 2015).
+      }}
+  "certifications": List[Object] — List of certifications, each with:
+      {{
+        "name": str — The name of the certification.
+        "issuer": str — The issuing organization.
+        "year": str — The year the certification was obtained.
+      }}
+  "awards": List[Object] — List of awards, each with:
+      {{
+        "title": str — The title of the award.
+        "organization": str — The organization that gave the award.
+        "year": str — The year the award was received.
       }}
   "languages": List[str] — List of languages the candidate can read, write, or speak.
 }}
@@ -122,7 +138,7 @@ Return the extracted information as a JSON object following this structure.
             print("⚠️ AI output was not valid JSON. Returning raw text.")
             return None
 
-    except (groq.RateLimitError, groq.GroqException) as e:
+    except (groq.RateLimitError) as e:
         print(f"❌ Groq API error in ai(): {e}")
         return None
     except Exception as e:
@@ -188,7 +204,11 @@ Extract the resume information using this JSON schema and descriptions:
         "end_date": str — The end date for this role (e.g., 'Dec 2023 or Present').
         "responsibilities": List[str] — Key tasks, achievements, or responsibilities handled in this role.
       }}
-  "skills": List[str] — List of technical and soft skills mentioned in the resume that matches this job.
+  "skills": List[Object] — List of skills categorized by type that matches this job. Each object has:
+      {{
+        "category": str — Category name (e.g., "Programming Languages", "Frameworks", "Tools", "Soft Skills").
+        "skills": List[str] — List of skill names in this category relevant to the job.
+      }}
   "projects": List[Object] — List of notable projects completed that relates to this job, each with:
       {{
         "name": str — The name or title of the project, including relevant tags or technologies.
@@ -200,6 +220,18 @@ Extract the resume information using this JSON schema and descriptions:
         "certificate": str — The degree, diploma, or qualification received.
         "start_date": str — The start date (e.g, 2020 or May 2015).
         "end_date": str — The end date (e.g, 2020 or May 2015).
+      }}
+  "certifications": List[Object] — List of certifications that are relevant to this job, each with:
+      {{
+        "name": str — The name of the certification.
+        "issuer": str — The issuing organization.
+        "year": str — The year the certification was obtained.
+      }}
+  "awards": List[Object] — List of awards that are relevant to this job, each with:
+      {{
+        "title": str — The title of the award.
+        "organization": str — The organization that gave the award.
+        "year": str — The year the award was received.
       }}
   "languages": List[str] — List of languages the candidate can read, write, or speak.
 }}
@@ -228,7 +260,7 @@ Return the extracted information as a JSON object following this structure.
             print("⚠️ AI output was not valid JSON. Returning raw text.")
             return None
 
-    except (groq.RateLimitError, groq.GroqException) as e:
+    except (groq.RateLimitError) as e:
         print(f"❌ Groq API error in generate_resume(): {e}")
         return None
     except Exception as e:

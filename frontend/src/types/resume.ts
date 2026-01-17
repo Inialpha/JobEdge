@@ -23,17 +23,13 @@ export type ProfessionalExperience = {
 export type Education = {
   institution: string
   degree: string
-  field: string
   startDate: string
   endDate: string
-  gpa: string
 }
 
 export type Project = {
   name: string
   description: string
-  technologies: string
-  link: string
 }
 
 export type Certification = {
@@ -48,13 +44,18 @@ export type Award = {
   year: string
 }
 
+export type Skill = {
+  category: string
+  skills: string[]
+}
+
 export type ResumeData = {
   personalInformation: PersonalInformation
   summary: string
   professionalExperience: ProfessionalExperience[]
   education: Education[]
   projects: Project[]
-  skills: string[]
+  skills: Skill[]
   certifications: Certification[]
   awards: Award[]
 }

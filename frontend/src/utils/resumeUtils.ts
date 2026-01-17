@@ -1,19 +1,37 @@
-import { ResumeData } from "@/types/resume"
+import { ResumeData, Skill } from "@/types/resume"
 
 /**
- * Parses skills from string or array format into a string array
- * This function provides backward compatibility for old data that may have skills as a string
- * @param skills - Skills in array format or legacy string format (separated by ' • ')
- * @returns Array of skill strings
+ * Parses skills from string, array, or categorized format into a Skill array
+ * This function provides backward compatibility for old data formats
+ * @param skills - Skills in categorized format (Skill[]), legacy array format (string[]), or legacy string format
+ * @returns Array of Skill objects with category and skills
  */
-export const parseSkillsArray = (skills: string | string[] | unknown): string[] => {
+export const parseSkillsArray = (skills: string | string[] | Skill[] | unknown): Skill[] => {
+  // If already in the new format (array of objects with category and skills)
+  if (Array.isArray(skills) && skills.length > 0 && typeof skills[0] === 'object' && 'category' in skills[0]) {
+    return skills as Skill[]
+  }
+  
+  // Legacy format: array of strings
+  if (Array.isArray(skills) && skills.length > 0 && typeof skills[0] === 'string') {
+    const skillsArray = skills as string[]
+    return [{
+      category: 'General',
+      skills: skillsArray.filter((s) => s && s.trim())
+    }]
+  }
+  
+  // Legacy format: string separated by ' • '
   if (typeof skills === 'string') {
-    // Legacy format: parse string separated by ' • '
-    return skills.split(' • ').filter((s: string) => s.trim())
+    const skillsList = skills.split(' • ').filter((s: string) => s.trim())
+    if (skillsList.length > 0) {
+      return [{
+        category: 'General',
+        skills: skillsList
+      }]
+    }
   }
-  if (Array.isArray(skills)) {
-    return skills.filter((s: string) => s && typeof s === 'string' && s.trim())
-  }
+  
   return []
 }
 
@@ -61,19 +79,15 @@ export const getEditableResume = (resume: any): ResumeData => {
     education: (resume.educations || resume.education || []).map((edu: any) => ({
       institution: edu.institution || "",
       degree: edu.degree || edu.certificate || "",
-      field: edu.field || "",
       startDate: edu.startDate || edu.start_date || "",
       endDate: edu.endDate || edu.end_date || edu.graduationDate || "",
-      gpa: edu.gpa || "",
     })),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     projects: (resume.projects || []).map((proj: any) => ({
       name: proj.name || "",
       description: proj.description || "",
-      technologies: proj.technologies || "",
-      link: proj.link || "",
     })),
-    skills: resume.skills,
+    skills: parseSkillsArray(resume.skills),
     certifications: resume.certifications || [],
     awards: resume.awards || [],
   }

@@ -11,6 +11,9 @@ import { X, Search, ExternalLink, FileText, Loader2 } from 'lucide-react';
 import { getRequest, postRequest } from '@/utils/apis';
 import { useQuery } from '@tanstack/react-query';
 import { useView } from '@/context/ViewContext';
+import Joyride, { CallBackProps, STATUS, EVENTS } from 'react-joyride';
+import { searchJobsTourSteps, tourStyles, tourLocale } from '@/utils/tourConfig';
+import { usePageTour } from '@/hooks/usePageTour';
 
 
 interface JobResult {
@@ -47,11 +50,15 @@ export default function SearchJobs() {
   const [jobType, setJobType] = useState('');
   const [isRemote, setIsRemote] = useState(false);
   const [daysAgo, setDaysAgo] = useState<number>(2);
-  const [maxJobs, setMaxJobs] = useState<number>(50);
+  const [maxJobs, setMaxJobs] = useState<number>(25);
   const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [jobs, setJobs] = useState<JobResult[]>([]);
   const [error, setError] = useState<string>('');
+
+  // Tour state using the new hook
+  const { run: runTour, stepIndex: tourStepIndex, setStepIndex: setTourStepIndex, startTour, stopTour, tourCompleted } = usePageTour('search_jobs');
 
   // Set current view when component mounts
   useEffect(() => {
@@ -77,6 +84,13 @@ export default function SearchJobs() {
     queryKey: ['userProfile'],
     queryFn: fetchUser,
   })
+
+  // Start tour if not completed yet
+  useEffect(() => {
+    if (!tourCompleted && userData) {
+      startTour();
+    }
+  }, [tourCompleted, startTour, userData]);
 
   useEffect(() => {
     if (userData?.resume) {
@@ -108,6 +122,17 @@ export default function SearchJobs() {
     }
   };
 
+  // Handle tour callback
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { status, type, index } = data;
+    
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      stopTour();
+    } else if (type === EVENTS.STEP_AFTER) {
+      setTourStepIndex(index + 1);
+    }
+  };
+
   const handleSearch = async () => {
     if (keywords.length === 0) {
       setError('Please add at least one keyword');
@@ -116,6 +141,7 @@ export default function SearchJobs() {
 
     setIsSearching(true);
     setError('');
+    setHasSearched(true);
 
     try {
       const params = new URLSearchParams();
@@ -213,6 +239,19 @@ export default function SearchJobs() {
 
   return (
     <div className="max-w-[1400px] mx-auto md:p-6">
+      {/* Joyride Tour */}
+      <Joyride
+        steps={searchJobsTourSteps}
+        run={runTour}
+        stepIndex={tourStepIndex}
+        continuous
+        showSkipButton
+        showProgress
+        callback={handleJoyrideCallback}
+        styles={tourStyles}
+        locale={tourLocale}
+      />
+
       {/* Show loader when user data is loading */}
       {isLoading && (
         <div className="flex justify-center items-center py-12">
@@ -319,9 +358,19 @@ export default function SearchJobs() {
               id="maxJobs"
               type="number"
               min="1"
-              max="100"
+              max="25"
               value={maxJobs}
-              onChange={(e) => setMaxJobs(Number(e.target.value))}
+              onChange={(e) => {
+                const value = parseInt(e.target.value, 10);
+                // Enforce maximum of 25 jobs, handle NaN
+                if (isNaN(value) || value < 1) {
+                  setMaxJobs(1);
+                } else if (value > 25) {
+                  setMaxJobs(25);
+                } else {
+                  setMaxJobs(value);
+                }
+              }}
             />
           </div>
 
@@ -330,7 +379,7 @@ export default function SearchJobs() {
           )}
 
           <Button
-            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 search-button"
             onClick={handleSearch}
             disabled={isSearching}
           >
@@ -350,6 +399,35 @@ export default function SearchJobs() {
       </Card>
 
       {/* Job Results */}
+      {hasSearched && jobs.length === 0 && !isSearching && (
+        <div className="mt-6">
+          <Card className="bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-l-4 border-l-yellow-500">
+            <CardContent className="py-8">
+              <div className="text-center space-y-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-full mb-4">
+                  <svg className="h-8 w-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800">No Jobs Found</h3>
+                <p className="text-gray-600 max-w-md mx-auto">
+                  We couldn't find any jobs matching your search criteria. Try adjusting your filters to see more results.
+                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto mt-4">
+                  <p className="text-sm text-blue-800 font-medium mb-2">💡 Suggestions:</p>
+                  <ul className="text-sm text-blue-700 text-left space-y-1">
+                    <li>• Consider increasing the number of days in the "Posted within" filter (currently set to {daysAgo} {daysAgo === 1 ? 'day' : 'days'})</li>
+                    <li>• Try removing location or job type filters</li>
+                    <li>• Use more general keywords</li>
+                    <li>• Try disabling the "Remote jobs only" filter if enabled</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      
       {jobs.length > 0 && (
         <div className="mt-6 space-y-4">
           <h2 className="text-xl font-semibold text-gray-700">

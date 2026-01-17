@@ -177,7 +177,7 @@ export function generateMinimalDocx(resume: ResumeData): Document {
       sections.push(
         new Paragraph({
           text: `${edu.institution} | ${edu.startDate} - ${edu.endDate}`,
-          spacing: { after: edu.gpa ? 40 : 120 },
+          spacing: { after: 120 },
           run: {
             size: 24,
             color: '333333',
@@ -185,20 +185,6 @@ export function generateMinimalDocx(resume: ResumeData): Document {
           },
         })
       );
-
-      if (edu.gpa) {
-        sections.push(
-          new Paragraph({
-            text: `GPA: ${edu.gpa}`,
-            spacing: { after: 120 },
-            run: {
-              size: 24,
-              color: '333333',
-              font: 'Segoe UI',
-            },
-          })
-        );
-      }
     });
   }
 
@@ -206,34 +192,27 @@ export function generateMinimalDocx(resume: ResumeData): Document {
   if (resume.skills.length > 0) {
     sections.push(createMinimalSectionTitle('SKILLS'));
 
-    const skillsText = resume.skills.join(' • ');
-    sections.push(
-      new Paragraph({
-        text: skillsText,
-        spacing: { after: 240 },
-        run: {
-          size: 24,
-          color: '333333',
-          font: 'Segoe UI',
-        },
-      })
-    );
-  }
-
-  // Certifications
-  if (resume.certifications.length > 0) {
-    sections.push(createMinimalSectionTitle('CERTIFICATIONS'));
-
-    resume.certifications.forEach((cert) => {
+    // Add categorized skills
+    resume.skills.forEach((skillCategory) => {
+      const categoryText = `${skillCategory.category}: `;
+      const skillsText = skillCategory.skills.join(', ');
+      
       sections.push(
         new Paragraph({
-          text: `${cert.name} - ${cert.issuer} (${cert.year})`,
+          children: [
+            new TextRun({
+              text: categoryText,
+              bold: true,
+              size: 24,
+              color: '333333',
+            }),
+            new TextRun({
+              text: skillsText,
+              size: 24,
+              color: '333333',
+            }),
+          ],
           spacing: { after: 120 },
-          run: {
-            size: 24,
-            color: '333333',
-            font: 'Segoe UI',
-          },
         })
       );
     });
@@ -260,7 +239,7 @@ export function generateMinimalDocx(resume: ResumeData): Document {
       sections.push(
         new Paragraph({
           text: proj.description,
-          spacing: { after: 40 },
+          spacing: { after: 120 },
           run: {
             size: 24,
             color: '333333',
@@ -268,28 +247,25 @@ export function generateMinimalDocx(resume: ResumeData): Document {
           },
         })
       );
+    });
+  }
 
-      if (proj.technologies) {
-        sections.push(
-          new Paragraph({
-            text: `Technologies: ${proj.technologies}`,
-            spacing: { after: 120 },
-            run: {
-              size: 24,
-              color: '666666',
-              font: 'Segoe UI',
-              italics: true,
-            },
-          })
-        );
-      } else {
-        sections.push(
-          new Paragraph({
-            text: '',
-            spacing: { after: 120 },
-          })
-        );
-      }
+  // Certifications
+  if (resume.certifications.length > 0) {
+    sections.push(createMinimalSectionTitle('CERTIFICATIONS'));
+
+    resume.certifications.forEach((cert) => {
+      sections.push(
+        new Paragraph({
+          text: `${cert.name} - ${cert.issuer} (${cert.year})`,
+          spacing: { after: 120 },
+          run: {
+            size: 24,
+            color: '333333',
+            font: 'Segoe UI',
+          },
+        })
+      );
     });
   }
 

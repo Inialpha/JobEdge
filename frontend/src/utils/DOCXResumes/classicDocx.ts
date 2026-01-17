@@ -32,17 +32,13 @@ export type ProfessionalExperience = {
 export type Education = {
   institution: string;
   degree: string;
-  field: string;
   startDate: string;
   endDate: string;
-  gpa: string;
 };
 
 export type Project = {
   name: string;
   description: string;
-  technologies: string;
-  link: string;
 };
 
 export type Certification = {
@@ -57,13 +53,18 @@ export type Award = {
   year: string;
 };
 
+export type Skill = {
+  category: string;
+  skills: string[];
+};
+
 export type ResumeData = {
   personalInformation: PersonalInformation;
   summary: string;
   professionalExperience: ProfessionalExperience[];
   education: Education[];
   projects: Project[];
-  skills: string[];
+  skills: Skill[];
   certifications: Certification[];
   awards: Award[];
 };
@@ -211,27 +212,10 @@ export function generateClassicDocx(resume: ResumeData): Document {
       sections.push(
         new Paragraph({
           text: `${edu.startDate} - ${edu.endDate}`,
-          spacing: { after: 40 },
+          spacing: { after: 120 },
           style: 'contentText',
         })
       );
-
-      if (edu.gpa) {
-        sections.push(
-          new Paragraph({
-            text: `GPA: ${edu.gpa}`,
-            spacing: { after: 120 },
-            style: 'contentText',
-          })
-        );
-      } else {
-        sections.push(
-          new Paragraph({
-            text: '',
-            spacing: { after: 120 },
-          })
-        );
-      }
     });
   }
 
@@ -239,39 +223,27 @@ export function generateClassicDocx(resume: ResumeData): Document {
   if (resume.skills.length > 0) {
     sections.push(createSectionTitle('SKILLS'));
 
-    const skillsText = resume.skills.join(' • ');
-    sections.push(
-      new Paragraph({
-        text: skillsText,
-        spacing: { after: 240 },
-        style: 'contentText',
-      })
-    );
-  }
-
-  // Certifications
-  if (resume.certifications.length > 0) {
-    sections.push(createSectionTitle('CERTIFICATIONS'));
-
-    resume.certifications.forEach((cert) => {
+    // Add categorized skills
+    resume.skills.forEach((skillCategory) => {
+      const categoryText = `${skillCategory.category}: `;
+      const skillsText = skillCategory.skills.join(', ');
+      
       sections.push(
         new Paragraph({
           children: [
             new TextRun({
-              text: cert.name,
+              text: categoryText,
               bold: true,
               size: 24,
+              color: '2c3e50',
+            }),
+            new TextRun({
+              text: skillsText,
+              size: 24,
+              color: '333333',
             }),
           ],
-          spacing: { after: 40 },
-        })
-      );
-
-      sections.push(
-        new Paragraph({
-          text: `${cert.issuer} - ${cert.year}`,
           spacing: { after: 120 },
-          style: 'contentText',
         })
       );
     });
@@ -298,21 +270,36 @@ export function generateClassicDocx(resume: ResumeData): Document {
       sections.push(
         new Paragraph({
           text: proj.description,
-          spacing: { after: 40 },
+          spacing: { after: 120 },
           style: 'contentText',
+        })
+      );
+    });
+  }
+
+  // Certifications
+  if (resume.certifications.length > 0) {
+    sections.push(createSectionTitle('CERTIFICATIONS'));
+
+    resume.certifications.forEach((cert) => {
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: cert.name,
+              bold: true,
+              size: 24,
+            }),
+          ],
+          spacing: { after: 40 },
         })
       );
 
       sections.push(
         new Paragraph({
-          children: [
-            new TextRun({
-              text: proj.technologies,
-              italics: true,
-              size: 24,
-            }),
-          ],
+          text: `${cert.issuer} - ${cert.year}`,
           spacing: { after: 120 },
+          style: 'contentText',
         })
       );
     });

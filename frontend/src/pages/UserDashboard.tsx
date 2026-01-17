@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Menu, X, FileText, Settings, LogOut, FileEdit, Sparkles, Briefcase, ChevronDown, ChevronLeft, ChevronRight, Home, ClipboardList } from "lucide-react";
+import { Menu, X, FileText, Settings, LogOut, FileEdit, Briefcase, ChevronDown, ChevronLeft, ChevronRight, Home, ClipboardList } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 //import { useView } from "@/hooks/useView";
@@ -39,10 +39,10 @@ export default function UserDashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  //const { activeView, setActiveView } = useView("resumes");
   const { currentView, setCurrentView } = useView();
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -52,7 +52,7 @@ export default function UserDashboardLayout() {
     { name: "Home", icon: Home, path: "/dashboard/home" },
     { name: "Resumes", icon: FileText, path: "/dashboard/resumes" },
     { name: "Resume Builder", icon: FileEdit, path: "/dashboard/resume-builder" },
-    { name: "Tailor Resume", icon: Sparkles, path: "/dashboard/tailor-resume" },
+    //{ name: "Tailor Resume", icon: Sparkles, path: "/dashboard/tailor-resume" },
     { name: "Applications", icon: ClipboardList, path: "/dashboard/applications" },
     { name: "Jobs", icon: Briefcase, path: "/dashboard/jobs" },
     { name: "Settings", icon: Settings, path: "/dashboard/settings" },
@@ -71,6 +71,7 @@ export default function UserDashboardLayout() {
   };
 
   const handleLogoutConfirm = async () => {
+    setIsLoggingOut(true);
     try {
       const url = `${import.meta.env.VITE_API_URL}/auth/logout/`;
       await postRequest(url, {});
@@ -85,6 +86,7 @@ export default function UserDashboardLayout() {
       dispatch(logout());
       navigate("/login");
     } finally {
+      setIsLoggingOut(false);
       setShowLogoutDialog(false);
     }
   };
@@ -101,11 +103,21 @@ export default function UserDashboardLayout() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowLogoutDialog(false)}>
+            <AlertDialogCancel onClick={() => setShowLogoutDialog(false)} disabled={isLoggingOut}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleLogoutConfirm} className="bg-red-600 hover:bg-red-700">
-              Logout
+            <AlertDialogAction onClick={handleLogoutConfirm} className="bg-red-600 hover:bg-red-700" disabled={isLoggingOut}>
+              {isLoggingOut ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Logging out...
+                </span>
+              ) : (
+                'Logout'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -64,11 +64,10 @@ export function PreviewModal({ isOpen, onClose, resume }: PreviewModalProps) {
               {(resume.education.content as any[]).map((edu, index) => (
                 <div key={index} className="mb-4">
                   <h4 className="font-semibold">
-                    {edu.degree} in {edu.field}
+                    {edu.degree}
                   </h4>
                   <p>{edu.institution}</p>
                   <p>Graduated: {edu.graduationDate}</p>
-                  <p>GPA: {edu.gpa}</p>
                 </div>
               ))}
             </section>
@@ -79,20 +78,19 @@ export function PreviewModal({ isOpen, onClose, resume }: PreviewModalProps) {
                 <div key={index} className="mb-4">
                   <h4 className="font-semibold">{project.name}</h4>
                   <p>{project.description}</p>
-                  <p>Technologies: {project.technologies}</p>
-                  <p>
-                    Link:{" "}
-                    <a href={project.link} className="text-blue-600 hover:underline">
-                      {project.link}
-                    </a>
-                  </p>
                 </div>
               ))}
             </section>
 
             <section>
               <h3 className="text-xl font-semibold">Skills</h3>
-              <p>{parseSkillsArray(resume.skills.content).join(' • ')}</p>
+              <div>
+                {parseSkillsArray(resume.skills.content).map((skillCategory, index) => (
+                  <div key={index} style={{ marginBottom: '5px' }}>
+                    <strong>{skillCategory.category}:</strong> {skillCategory.skills.join(', ')}
+                  </div>
+                ))}
+              </div>
             </section>
           </div>
         </ScrollArea>
