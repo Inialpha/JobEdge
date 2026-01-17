@@ -36,6 +36,22 @@ Resume:
 Job Description:
 {job_description}
 
+STRUCTURE & FORMATTING RULES:
+    1. Begin with the candidate’s personal details at the very top, formatted exactly as:
+       - Full Name
+       - City, Country
+       - Phone Number
+       - Email Address
+       - Date (written in full, e.g., 4 April 2024)
+
+    2. After the candidate details, start the letter with:
+        "Dear Hiring Manager, or similar greeting"
+
+    3. Do NOT include the hiring manager’s name, company address, or any placeholders.
+    4. Do NOT include the candidate’s address beyond city and country.
+    5. Do NOT use placeholder text such as [Your Name], [Date], etc.  
+
+
 Requirements:
 1. Start with a strong opening that shows enthusiasm and demonstrates understanding of the role
 2. Highlight 2-3 key experiences or achievements that directly relate to the job requirements
@@ -46,7 +62,6 @@ Requirements:
 7. Use a professional but warm tone
 8. Do NOT include placeholder text like [Your Address] or [Date]
 9. Do NOT include the candidate's address, phone number, or email in the letter body
-10. Start directly with "Dear Hiring Manager," or similar greeting
 11. End with "Sincerely," followed by the candidate's name
 
 Return ONLY the cover letter text, no additional commentary or formatting markers.
