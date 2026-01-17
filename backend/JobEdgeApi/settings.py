@@ -87,7 +87,7 @@ TEMPLATES = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", "http://localhost:4173", "https://job-edge.vercel.app", "https://jobedge.initechnologies.tech"
+    "http://localhost:5173", "http://localhost:4173", "https://jobedge.initechnologies.tech"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
