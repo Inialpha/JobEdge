@@ -30,7 +30,8 @@ export default function ContactSection() {
     setErrorMessage('');
 
     try {
-      const response = await fetch('https://emailmanager-hz68.onrender.com/send-email/', {
+      const emailApiUrl = import.meta.env.VITE_EMAIL_API_URL || 'https://emailmanager-hz68.onrender.com/send-email/';
+      const response = await fetch(emailApiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -51,7 +52,8 @@ export default function ContactSection() {
         setSubmitStatus('error');
         setErrorMessage(errorData.message || 'Failed to send message. Please try again.');
       }
-    } catch {
+    } catch (error) {
+      console.error('Contact form submission error:', error);
       setSubmitStatus('error');
       setErrorMessage('Failed to send message. Please check your connection and try again.');
     } finally {
