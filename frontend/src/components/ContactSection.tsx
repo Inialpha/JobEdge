@@ -31,14 +31,24 @@ export default function ContactSection() {
 
     try {
       // The email API URL should be configured via VITE_EMAIL_API_URL environment variable
-      // Default is provided for backwards compatibility but should be configured in production
+      // Default URL is specified in requirements for backwards compatibility
+      // In production, set VITE_EMAIL_API_URL to a secure endpoint
       const emailApiUrl = import.meta.env.VITE_EMAIL_API_URL || 'https://emailmanager-hz68.onrender.com/send-email/';
+      
+      // Basic validation - trim whitespace and check for reasonable lengths
+      const sanitizedData = {
+        name: formData.name.trim().slice(0, 100),
+        email: formData.email.trim().slice(0, 100),
+        subject: formData.subject.trim().slice(0, 200),
+        message: formData.message.trim().slice(0, 5000)
+      };
+
       const response = await fetch(emailApiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(sanitizedData),
       });
 
       if (response.ok) {
