@@ -30,6 +30,8 @@ export default function ContactSection() {
     setErrorMessage('');
 
     try {
+      // The email API URL should be configured via VITE_EMAIL_API_URL environment variable
+      // Default is provided for backwards compatibility but should be configured in production
       const emailApiUrl = import.meta.env.VITE_EMAIL_API_URL || 'https://emailmanager-hz68.onrender.com/send-email/';
       const response = await fetch(emailApiUrl, {
         method: 'POST',
@@ -48,9 +50,15 @@ export default function ContactSection() {
           message: ''
         });
       } else {
-        const errorData = await response.json();
+        let errorMsg = 'Failed to send message. Please try again.';
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.message || errorMsg;
+        } catch {
+          // If response is not JSON, use default error message
+        }
         setSubmitStatus('error');
-        setErrorMessage(errorData.message || 'Failed to send message. Please try again.');
+        setErrorMessage(errorMsg);
       }
     } catch (error) {
       console.error('Contact form submission error:', error);
