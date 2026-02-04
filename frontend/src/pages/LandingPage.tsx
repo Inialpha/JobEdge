@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Briefcase, CheckCircle, Mail } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
+import ContactSection from '@/components/ContactSection';
 
 export default function LandingPage() {
   const user = useSelector((state: RootState) => state.user);
@@ -183,6 +184,9 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Contact Section */}
+      <ContactSection />
+
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -243,7 +247,7 @@ export default function LandingPage() {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                  <a href="#contact" className="text-gray-400 hover:text-white transition-colors">
                     Contact Us
                   </a>
                 </li>
