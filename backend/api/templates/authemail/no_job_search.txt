@@ -1,0 +1,17 @@
+Hi {{ user.first_name }},
+
+We noticed you haven't searched for any jobs on JobEdge yet. We'd love to understand what's stopping you from exploring opportunities.
+
+Could you share why you haven't tried the job search feature? Your insights would really help us improve the experience.
+
+Not sure where to start? Check out this walkthrough of JobEdge:
+{{ youtube_link }}
+
+We'd love to hear from you! Feel free to:
+- Reply directly to this email with your feedback
+- Use our "Contact Us" feature on the platform
+
+We're excited to help you find your next opportunity!
+
+Best regards,
+The JobEdge Team
