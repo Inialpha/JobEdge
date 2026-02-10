@@ -2,6 +2,7 @@
 Tests for the user feedback outreach system
 """
 from django.test import TestCase
+from django.db import IntegrityError
 from api.models import User, Application, Resume, UserOutreach
 from api.management.commands.send_user_feedback_emails import Command
 
@@ -162,8 +163,8 @@ class UserOutreachModelTestCase(TestCase):
             outreach_type='INCOMPLETE_PROFILE'
         )
         
-        # Attempting to create duplicate should fail
-        with self.assertRaises(Exception):
+        # Attempting to create duplicate should fail with IntegrityError
+        with self.assertRaises(IntegrityError):
             UserOutreach.objects.create(
                 user=self.user,
                 outreach_type='INCOMPLETE_PROFILE'

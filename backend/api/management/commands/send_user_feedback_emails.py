@@ -14,6 +14,7 @@ class Command(BaseCommand):
     help = 'Send targeted feedback emails to users who dropped off at different stages'
     
     # YouTube walkthrough link (shared across all segments)
+    # Using the full URL with tracking parameter as provided in requirements
     YOUTUBE_LINK = 'https://youtu.be/Ani3HY7dHcM?si=7CUU-KMK4quTJ4_2'
     
     def add_arguments(self, parser):
