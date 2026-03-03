@@ -3,7 +3,7 @@ Django management command to send targeted feedback emails to users
 based on their engagement level with the JobEdge platform.
 """
 from django.core.management.base import BaseCommand
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
 from api.models import User, Application, UserOutreach
@@ -151,16 +151,17 @@ class Command(BaseCommand):
                 )
                 
                 if not dry_run:
-                    # Send email
-                    send_mail(
+                    # Send email with Reply-To header using EmailMultiAlternatives
+                    # (send_mail does not support reply_to in this environment)
+                    email = EmailMultiAlternatives(
                         subject=subject,
-                        message=text_content,
+                        body=text_content,
                         from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[user.email],
-                        html_message=html_content,
-                        fail_silently=False,
+                        to=[user.email],
                         reply_to=["inimfonebong0001@gmail.com"],
                     )
+                    email.attach_alternative(html_content, "text/html")
+                    email.send(fail_silently=False)
                     
                     # Create tracking record
                     """UserOutreach.objects.create(
