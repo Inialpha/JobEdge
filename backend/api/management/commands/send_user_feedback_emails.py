@@ -15,7 +15,7 @@ class Command(BaseCommand):
     
     # YouTube walkthrough link (shared across all segments)
     # Using the full URL with tracking parameter as provided in requirements
-    YOUTUBE_LINK = 'https://youtu.be/Ani3HY7dHcM?si=7CUU-KMK4quTJ4_2'
+    YOUTUBE_LINK = 'https://youtu.be/oeNYHc7N070?si=U8gZUwFB1nP6g7y-'
     
     def add_arguments(self, parser):
         parser.add_argument(
@@ -80,7 +80,7 @@ class Command(BaseCommand):
         already_contacted = UserOutreach.objects.filter(
             outreach_type='INCOMPLETE_PROFILE'
         ).values_list('user_id', flat=True)
-        
+        already_contacted = []
         return User.objects.filter(
             has_master_resume=False
         ).exclude(
@@ -95,6 +95,7 @@ class Command(BaseCommand):
         ).values_list('user_id', flat=True)
         
         # Get users with master resume but no applications
+        already_contacted = []
         return User.objects.filter(
             has_master_resume=True
         ).annotate(
@@ -114,6 +115,7 @@ class Command(BaseCommand):
         
         # Check for users with empty or null currentJobSearch
         # JSONField with empty list [] or None
+        already_contacted = []
         return User.objects.filter(
             Q(current_job_search=[]) | Q(current_job_search__isnull=True)
         ).exclude(
@@ -157,20 +159,21 @@ class Command(BaseCommand):
                         recipient_list=[user.email],
                         html_message=html_content,
                         fail_silently=False,
+                        reply_to=["inimfonebong0001@gmail.com"],
                     )
                     
                     # Create tracking record
-                    UserOutreach.objects.create(
+                    """UserOutreach.objects.create(
                         user=user,
                         outreach_type=outreach_type
-                    )
+                    )"""
                     
                     self.stdout.write(
                         self.style.SUCCESS(f'✓ Sent {outreach_type} email to {user.email}')
                     )
                 else:
                     self.stdout.write(
-                        self.style.WARNING(f'[DRY RUN] Would send {outreach_type} email to {user.email}')
+                       self.style.WARNING(f'[DRY RUN] Would send {outreach_type} email to {user.email}')
                     )
                 
                 count += 1
