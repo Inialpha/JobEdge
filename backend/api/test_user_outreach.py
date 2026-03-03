@@ -1,8 +1,10 @@
 """
 Tests for the user feedback outreach system
 """
+from unittest.mock import patch
 from django.test import TestCase
 from django.db import IntegrityError
+from django.core import mail
 from api.models import User, Application, Resume, UserOutreach
 from api.management.commands.send_user_feedback_emails import Command
 
@@ -179,3 +181,33 @@ class UserOutreachModelTestCase(TestCase):
         
         self.assertIn('NO_APPLICATION', str(outreach))
         self.assertIn('test@test.com', str(outreach))
+
+
+class EmailReplyToTestCase(TestCase):
+    """Test that outreach emails include a Reply-To header"""
+
+    def setUp(self):
+        self.user = User.objects.create(
+            email='replyto@test.com',
+            first_name='ReplyTo',
+            last_name='User',
+            password='testpass123',
+            has_master_resume=False,
+            current_job_search=[]
+        )
+        self.command = Command()
+
+    def test_reply_to_header_is_set(self):
+        """Test that sent emails have the custom Reply-To address"""
+        rendered_content = 'Test content'
+        with patch(
+            'api.management.commands.send_user_feedback_emails.render_to_string',
+            return_value=rendered_content
+        ):
+            self.command._send_segment_emails(
+                [self.user], 'INCOMPLETE_PROFILE', 'incomplete_profile', dry_run=False
+            )
+
+        self.assertEqual(len(mail.outbox), 1)
+        sent_email = mail.outbox[0]
+        self.assertEqual(sent_email.reply_to, ['inimfonebong0001@gmail.com'])
