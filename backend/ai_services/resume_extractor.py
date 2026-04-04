@@ -123,7 +123,7 @@ Return the extracted information as a JSON object following this structure.
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": user_prompt},
             ],
-            temperature=0,
+            temperature=0.5,
             #max_completion_tokens=8192,
             top_p=1,
             #reasoning_effort="medium",
@@ -247,7 +247,7 @@ Return the extracted information as a JSON object following this structure.
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": user_prompt},
             ],
-            temperature=0,
+            temperature=0.5,
             top_p=1,
             stream=False,
         )

@@ -61,7 +61,7 @@ def ai(text):
 
     llm1 = ChatGroq(
         model="mixtral-8x7b-32768",
-        temperature=0,
+        temperature=0.5,
         max_tokens=None,
         timeout=None,
         max_retries=2,
@@ -70,7 +70,7 @@ def ai(text):
 
     llm2 = ChatGroq(
         model="llama3-70b-8192",
-        temperature=0,
+        temperature=0.5,
         max_tokens=None,
         timeout=None,
         max_retries=2,
@@ -130,7 +130,7 @@ def generate_resume(job, resume):
 
     llm = ChatGroq(
         model="llama3-70b-8192",
-        temperature=0,
+        temperature=0.5,
         max_tokens=None,
         timeout=None,
         max_retries=2,
