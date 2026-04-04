@@ -1,0 +1,17 @@
+Hi {{ user.first_name }},
+
+Great job completing your JobEdge profile! We noticed you haven't created any job applications yet, and we'd love to understand why.
+
+Could you share what's holding you back from applying? Your feedback will help us improve JobEdge for everyone.
+
+If you need help getting started with applications, here's a walkthrough of how JobEdge works:
+{{ youtube_link }}
+
+We're here to support you! Feel free to:
+- Reply directly to this email with your thoughts
+- Use our "Contact Us" feature on the platform
+
+Looking forward to hearing from you!
+
+Best regards,
+The JobEdge Team
