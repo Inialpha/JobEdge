@@ -50,7 +50,7 @@ def extract_job_details(job_text):
     """
             }
         ],
-        temperature=0.5,
+        temperature=0.7,
         #max_completion_tokens=8192,
         top_p=1,
         #reasoning_effort="medium",
