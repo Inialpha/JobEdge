@@ -12,7 +12,7 @@ prompt = PromptTemplate(
 
 llm = ChatGroq(
     model="llama3-70b-8192",  # Use correct Groq model name
-    temperature=0,
+    temperature=0.7,
     max_tokens=None,
     timeout=None,
     max_retries=2,
