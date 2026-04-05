@@ -80,7 +80,6 @@ class Command(BaseCommand):
         already_contacted = UserOutreach.objects.filter(
             outreach_type='INCOMPLETE_PROFILE'
         ).values_list('user_id', flat=True)
-        already_contacted = []
         return User.objects.filter(
             has_master_resume=False
         ).exclude(
@@ -95,7 +94,6 @@ class Command(BaseCommand):
         ).values_list('user_id', flat=True)
         
         # Get users with master resume but no applications
-        already_contacted = []
         return User.objects.filter(
             has_master_resume=True
         ).annotate(
@@ -115,7 +113,6 @@ class Command(BaseCommand):
         
         # Check for users with empty or null currentJobSearch
         # JSONField with empty list [] or None
-        already_contacted = []
         return User.objects.filter(
             Q(current_job_search=[]) | Q(current_job_search__isnull=True)
         ).exclude(
@@ -152,13 +149,12 @@ class Command(BaseCommand):
                 
                 if not dry_run:
                     # Send email with Reply-To header using EmailMultiAlternatives
-                    # (send_mail does not support reply_to in this environment)
                     email = EmailMultiAlternatives(
                         subject=subject,
                         body=text_content,
                         from_email=settings.DEFAULT_FROM_EMAIL,
                         to=[user.email],
-                        reply_to=["inimfonebong0001@gmail.com"],
+                        reply_to=["inimfonebong001@gmail.com"],
                     )
                     email.attach_alternative(html_content, "text/html")
                     email.send(fail_silently=False)
