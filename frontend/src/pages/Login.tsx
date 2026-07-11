@@ -11,6 +11,7 @@ import { postRequest, getRequest } from '../utils/apis'
 import { setCookie } from '../utils/cookieManager';
 import { useDispatch } from 'react-redux';
 import { login } from '../store/userSlice';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -153,7 +154,24 @@ export default function Login() {
               </Button>
             </div>
           </form>
-        
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-2 text-gray-500">or</span>
+              </div>
+            </div>
+            <div className="mt-6">
+              <GoogleSignInButton
+                onFeedback={({ message, variant }) => {
+                  setFeedback({ message, variant: variant === 'error' ? 'error' : undefined });
+                  setTimeout(() => setFeedback(null), 5000);
+                }}
+              />
+            </div>
+          </div>
 
           <div className="mt-6">
             <p className="text-center text-sm text-gray-600">
