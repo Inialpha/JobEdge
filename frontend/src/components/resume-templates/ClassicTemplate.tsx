@@ -1,5 +1,7 @@
+import { Fragment, type ReactNode } from "react"
 import { ResumeData } from "@/types/resume"
 import { parseSkillsArray } from "@/utils/resumeUtils"
+import { getSectionOrder, type SectionId } from "@/utils/sectionOrder"
 
 interface ClassicTemplateProps {
   resume: ResumeData
@@ -14,27 +16,9 @@ export const ClassicTemplate = ({ resume }: ClassicTemplateProps) => {
 
   const skills = parseSkillsArray(resume?.skills)
 
-  return (
-    <>
-      <div className="resume-name">{escapeHtml(resume?.personalInformation?.name || '')}</div>
-      {resume?.personalInformation?.profession && (
-        <div className="resume-title">{escapeHtml(resume.personalInformation.profession)}</div>
-      )}
-      <div className="resume-contact">
-        {escapeHtml(resume?.personalInformation?.email || '')}
-        {resume?.personalInformation?.phone && ` | ${escapeHtml(resume.personalInformation.phone)}`}
-        {resume?.personalInformation?.linkedin && ` | ${escapeHtml(resume.personalInformation.linkedin)}`}
-        {resume?.personalInformation?.website && ` | ${escapeHtml(resume.personalInformation.website)}`}
-        {resume?.personalInformation?.twitter && ` | ${escapeHtml(resume.personalInformation.twitter)}`}
-        {resume?.personalInformation?.address && ` | ${escapeHtml(resume.personalInformation.address)}`}
-      </div>
-      {resume?.summary && (
-        <>
-          <div className="resume-section-title">Professional Summary</div>
-          <div className="resume-content">{escapeHtml(resume.summary)}</div>
-        </>
-      )}
-      {resume?.professionalExperience?.length > 0 && (
+  const sections: Record<SectionId, () => ReactNode> = {
+    experience: () =>
+      resume?.professionalExperience?.length > 0 && (
         <>
           <div className="resume-section-title no-break">PROFESSIONAL EXPERIENCE</div>
           <div className="resume-content">
@@ -58,8 +42,9 @@ export const ClassicTemplate = ({ resume }: ClassicTemplateProps) => {
             ))}
           </div>
         </>
-      )}
-      {resume?.education?.length > 0 && (
+      ),
+    education: () =>
+      resume?.education?.length > 0 && (
         <>
           <div className="resume-section-title no-break">Education</div>
           <div className="resume-content">
@@ -72,8 +57,9 @@ export const ClassicTemplate = ({ resume }: ClassicTemplateProps) => {
             ))}
           </div>
         </>
-      )}
-      {skills.length > 0 && (
+      ),
+    skills: () =>
+      skills.length > 0 && (
         <>
           <div className="resume-section-title no-break">Skills</div>
           <div className="resume-content">
@@ -84,8 +70,9 @@ export const ClassicTemplate = ({ resume }: ClassicTemplateProps) => {
             ))}
           </div>
         </>
-      )}
-      {resume?.projects?.length > 0 && (
+      ),
+    projects: () =>
+      resume?.projects?.length > 0 && (
         <>
           <div className="resume-section-title no-break">Projects</div>
           <div className="resume-content">
@@ -97,8 +84,9 @@ export const ClassicTemplate = ({ resume }: ClassicTemplateProps) => {
             ))}
           </div>
         </>
-      )}
-      {resume?.certifications?.length > 0 && (
+      ),
+    certifications: () =>
+      resume?.certifications?.length > 0 && (
         <>
           <div className="resume-section-title">Certifications</div>
           <div className="resume-content">
@@ -110,8 +98,9 @@ export const ClassicTemplate = ({ resume }: ClassicTemplateProps) => {
             ))}
           </div>
         </>
-      )}
-      {resume?.awards?.length > 0 && (
+      ),
+    awards: () =>
+      resume?.awards?.length > 0 && (
         <>
           <div className="resume-section-title no-break">Awards</div>
           <div className="resume-content">
@@ -122,7 +111,32 @@ export const ClassicTemplate = ({ resume }: ClassicTemplateProps) => {
             ))}
           </div>
         </>
+      ),
+  }
+
+  return (
+    <>
+      <div className="resume-name">{escapeHtml(resume?.personalInformation?.name || '')}</div>
+      {resume?.personalInformation?.profession && (
+        <div className="resume-title">{escapeHtml(resume.personalInformation.profession)}</div>
       )}
+      <div className="resume-contact">
+        {escapeHtml(resume?.personalInformation?.email || '')}
+        {resume?.personalInformation?.phone && ` | ${escapeHtml(resume.personalInformation.phone)}`}
+        {resume?.personalInformation?.linkedin && ` | ${escapeHtml(resume.personalInformation.linkedin)}`}
+        {resume?.personalInformation?.website && ` | ${escapeHtml(resume.personalInformation.website)}`}
+        {resume?.personalInformation?.twitter && ` | ${escapeHtml(resume.personalInformation.twitter)}`}
+        {resume?.personalInformation?.address && ` | ${escapeHtml(resume.personalInformation.address)}`}
+      </div>
+      {resume?.summary && (
+        <>
+          <div className="resume-section-title">Professional Summary</div>
+          <div className="resume-content">{escapeHtml(resume.summary)}</div>
+        </>
+      )}
+      {getSectionOrder(resume?.sectionOrder, 'classic').map(id => (
+        <Fragment key={id}>{sections[id]()}</Fragment>
+      ))}
     </>
   )
 }

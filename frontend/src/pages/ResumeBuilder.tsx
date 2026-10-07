@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ResumeData, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation, Skill } from '@/types/resume';
+import { ResumeData, ResumeEvaluationSummary, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation, Skill } from '@/types/resume';
 import { getEditableResume } from '@/utils/resumeUtils';
+import { SECTION_LABELS, getSectionOrder, moveSection, type SectionId, type MoveDirection } from '@/utils/sectionOrder';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
 import { ResumePreview } from '@/components/ResumePreview';
 import { createRoot, Root } from 'react-dom/client';
@@ -15,6 +16,16 @@ import { useView } from "@/context/ViewContext";
 import Joyride, { CallBackProps, STATUS, EVENTS } from 'react-joyride';
 import { resumeBuilderTourSteps, tourStyles, tourLocale } from '@/utils/tourConfig';
 import { usePageTour } from '@/hooks/usePageTour';
+
+const JOB_MATCH_LABELS: Record<string, string> = {
+  factual_accuracy: 'Factual accuracy',
+  relevance: 'Relevance to the job',
+  keyword_alignment: 'Keyword match',
+  summary_quality: 'Summary',
+  naturalness: 'Natural wording',
+  redundancy: 'No repetition',
+  structure: 'Structure',
+};
 
 export default function ResumeBuilder() {
   const { setCurrentView } = useView();
@@ -92,6 +103,28 @@ export default function ResumeBuilder() {
       personalInformation: { ...prev.personalInformation, [field]: value }
     }));
   }, []);
+
+  // Present only for resumes generated for a job description.
+  const evaluation: ResumeEvaluationSummary | undefined = passedResume?.evaluation;
+
+  // Section order is data on the resume; the preview, PDF and DOCX all read it from there.
+  const sectionOrder = getSectionOrder(resume.sectionOrder, currentTemplate);
+
+  const sectionHasContent: Record<SectionId, boolean> = {
+    experience: resume.professionalExperience.length > 0,
+    education: resume.education.length > 0,
+    skills: resume.skills.length > 0,
+    projects: resume.projects.length > 0,
+    certifications: (resume.certifications?.length ?? 0) > 0,
+    awards: (resume.awards?.length ?? 0) > 0,
+  };
+
+  const moveResumeSection = useCallback((id: SectionId, direction: MoveDirection) => {
+    setResume(prev => ({
+      ...prev,
+      sectionOrder: moveSection(getSectionOrder(prev.sectionOrder, currentTemplate), id, direction),
+    }));
+  }, [currentTemplate]);
 
   const selectTemplate = useCallback((template: Template, event?: React.MouseEvent) => {
     setCurrentTemplate(template);
@@ -335,6 +368,8 @@ export default function ResumeBuilder() {
         ...trimmedResume,
         keywords: passedResume?.keywords || [],
         is_master: passedResume?.is_master || false,
+        // Only a chosen order is saved; an empty list keeps each template's default layout.
+        section_order: resume.sectionOrder ?? [],
       };
       
       let url: string;
@@ -647,6 +682,90 @@ export default function ResumeBuilder() {
         .template-preview {
           font-size: 9px;
           line-height: 1.3;
+        }
+        .job-match-score {
+          display: flex;
+          align-items: baseline;
+          gap: 10px;
+          margin-bottom: 8px;
+        }
+        .job-match-score strong {
+          font-size: 28px;
+          color: #667eea;
+        }
+        .job-match-score span {
+          font-size: 12px;
+          color: #555;
+        }
+        .job-match-dimensions {
+          list-style: none;
+          margin: 0 0 8px 0;
+          padding: 0;
+          font-size: 12px;
+          color: #444;
+        }
+        .job-match-dimensions li {
+          display: flex;
+          justify-content: space-between;
+          padding: 2px 0;
+          border-bottom: 1px dotted #ddd;
+        }
+        .job-match-line {
+          font-size: 12px;
+          color: #444;
+          line-height: 1.4;
+          margin: 6px 0 0 0;
+        }
+        .section-order-hint {
+          font-size: 12px;
+          color: #666;
+          margin-bottom: 10px;
+          line-height: 1.4;
+        }
+        .section-order-list {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+        }
+        .section-order-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          background: #f8f9fa;
+          border-left: 3px solid #667eea;
+          border-radius: 6px;
+          padding: 6px 10px;
+          margin-bottom: 6px;
+          font-size: 13px;
+        }
+        .section-order-empty {
+          color: #999;
+          font-size: 11px;
+        }
+        .section-order-buttons {
+          display: flex;
+          gap: 4px;
+          flex-shrink: 0;
+        }
+        .section-order-buttons button {
+          width: 28px;
+          height: 28px;
+          border: 1px solid #ccd0e8;
+          border-radius: 4px;
+          background: white;
+          color: #667eea;
+          font-size: 14px;
+          line-height: 1;
+          cursor: pointer;
+        }
+        .section-order-buttons button:hover:not(:disabled) {
+          background: #667eea;
+          color: white;
+        }
+        .section-order-buttons button:disabled {
+          opacity: 0.35;
+          cursor: not-allowed;
         }
         .template-name {
           font-weight: bold;
@@ -962,6 +1081,38 @@ export default function ResumeBuilder() {
           </div>
 
           <div className="editor">
+            {/* Job Match: how well this generated resume lines up with the job description */}
+            {evaluation && (
+              <div className="section" id="job-match">
+                <div className="section-title">Job Match</div>
+                <div className="job-match-score">
+                  <strong>{Math.round(evaluation.overall_score * 100)}%</strong>
+                  <span>
+                    {evaluation.passed
+                      ? 'Meets the quality bar for this job.'
+                      : 'Below the quality bar. Please review before sending.'}
+                  </span>
+                </div>
+                <ul className="job-match-dimensions">
+                  {Object.entries(JOB_MATCH_LABELS).map(([key, label]) => (
+                    <li key={key}>
+                      <span>{label}</span>
+                      <span>{Math.round((evaluation.scores?.[key] ?? 0) * 100)}%</span>
+                    </li>
+                  ))}
+                </ul>
+                {evaluation.matched_keywords?.length > 0 && (
+                  <p className="job-match-line"><strong>Matched from the job:</strong> {evaluation.matched_keywords.join(', ')}</p>
+                )}
+                {evaluation.missing_keywords?.length > 0 && (
+                  <p className="job-match-line"><strong>In your profile but not on this resume:</strong> {evaluation.missing_keywords.join(', ')}</p>
+                )}
+                {evaluation.gaps?.length > 0 && (
+                  <p className="job-match-line"><strong>Asked for, but not in your profile (not added):</strong> {evaluation.gaps.join(', ')}</p>
+                )}
+              </div>
+            )}
+
             {/* Template Selection */}
             <div className="section template-selector">
               <div className="section-title">Choose Template</div>
@@ -1062,10 +1213,48 @@ export default function ResumeBuilder() {
               )}
             </div>
 
+            {/* Section Order */}
+            <div className="section" id="section-order">
+              <div className="section-title">Section Order</div>
+              <p className="section-order-hint">
+                Contact information and Summary always stay at the top. Move the other sections up or down;
+                the preview, PDF and DOCX downloads follow this order.
+                {currentTemplate === 'modern' && ' In the Modern template, Skills and Education stay in the sidebar and the order applies within each column.'}
+              </p>
+              <ul className="section-order-list">
+                {sectionOrder.map((id, position) => (
+                  <li key={id} className="section-order-row">
+                    <span>
+                      {SECTION_LABELS[id]}
+                      {!sectionHasContent[id] && <span className="section-order-empty"> (empty)</span>}
+                    </span>
+                    <span className="section-order-buttons">
+                      <button
+                        type="button"
+                        aria-label={`Move ${SECTION_LABELS[id]} up`}
+                        disabled={position === 0}
+                        onClick={() => moveResumeSection(id, 'up')}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Move ${SECTION_LABELS[id]} down`}
+                        disabled={position === sectionOrder.length - 1}
+                        onClick={() => moveResumeSection(id, 'down')}
+                      >
+                        ↓
+                      </button>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             {/* Skills */}
             <div className="section">
               <div className="section-title">Skills</div>
-              
+
               {/* Add new category */}
               <div className="skill-input-group">
                 <input 

@@ -1,0 +1,210 @@
+[
+  {
+    "id": "backend_engineer",
+    "description": "Strong match: backend developer applying to a backend role. Job also asks for tools the candidate lacks (Kubernetes, Kafka).",
+    "master_resume": {
+      "keywords": ["Python", "Django", "REST APIs", "PostgreSQL", "Redis", "Docker", "pytest"],
+      "summary": "Software engineer with experience building web applications and APIs. Worked across backend and frontend projects in fast-paced teams.",
+      "personal_information": {"name": "Amara Eze", "email": "amara.eze@example.com", "phone": "+234 800 000 0001", "address": "Port Harcourt, Nigeria", "profession": "Software Engineer"},
+      "professional_experiences": [
+        {
+          "organization": "Brightline Payments", "role": "Backend Developer", "start_date": "Mar 2021", "end_date": "Present", "location": "Lagos, Nigeria",
+          "responsibilities": [
+            "Built REST APIs in Python and Django that process 15,000 payment requests per day.",
+            "Reduced average API response time from 800ms to 320ms by adding Redis caching and optimizing SQL queries.",
+            "Wrote unit and integration tests with pytest, raising test coverage from 45% to 85%.",
+            "Set up CI pipelines with GitHub Actions to run tests and deploy to AWS on every merge.",
+            "Mentored two junior developers through code reviews and pair programming."
+          ]
+        },
+        {
+          "organization": "Nova Retail Tech", "role": "Junior Software Developer", "start_date": "Jun 2019", "end_date": "Feb 2021", "location": "Port Harcourt, Nigeria",
+          "responsibilities": [
+            "Developed internal dashboards with React and JavaScript used by 40 store managers.",
+            "Maintained a PostgreSQL database and wrote reports for the finance team.",
+            "Fixed more than 60 bugs reported by users across the web application."
+          ]
+        }
+      ],
+      "skills": [
+        {"category": "Languages", "skills": ["Python", "JavaScript", "SQL"]},
+        {"category": "Frameworks", "skills": ["Django", "Django REST Framework", "React"]},
+        {"category": "Tools", "skills": ["PostgreSQL", "Redis", "Docker", "GitHub Actions", "AWS", "pytest", "Git"]},
+        {"category": "Soft Skills", "skills": ["Mentoring", "Communication"]}
+      ],
+      "projects": [
+        {"name": "Expense Tracker API", "description": "Personal project: a Django REST API with JWT authentication for tracking expenses, deployed with Docker."}
+      ],
+      "educations": [
+        {"institution": "University of Port Harcourt", "certificate": "B.Sc. Computer Science", "start_date": "2015", "end_date": "2019"}
+      ],
+      "certifications": [
+        {"name": "AWS Certified Cloud Practitioner", "issuer": "Amazon Web Services", "year": "2022"}
+      ],
+      "awards": [],
+      "languages": ["English"]
+    },
+    "job_description": "Backend Engineer\n\nWe are hiring a Backend Engineer to build and scale our payments APIs.\n\nRequirements:\n- 3+ years of experience with Python and Django\n- Strong knowledge of REST API design\n- Experience with PostgreSQL and Redis\n- Docker and CI/CD pipelines\n- Automated testing with pytest\n- AWS experience is a plus\n\nYou will design APIs, improve performance and reliability, and mentor other engineers.\n\nNice to have: Kubernetes, Kafka.",
+    "reference": {
+      "summary": "Backend developer who builds and speeds up Django REST APIs, including payment services handling 15,000 requests a day. Experienced with PostgreSQL, Redis, Docker and pytest, and comfortable mentoring junior engineers through code review.",
+      "experience_bullets": {
+        "Brightline Payments": [
+          "Designed and shipped Django REST APIs in Python that handle 15,000 payment requests daily.",
+          "Cut API response times from 800ms to 320ms by adding Redis caching and tuning SQL queries.",
+          "Raised pytest coverage from 45% to 85% with unit and integration tests.",
+          "Automated testing and AWS deployment through GitHub Actions CI pipelines on every merge.",
+          "Coached two junior developers via code reviews and pair programming sessions."
+        ],
+        "Nova Retail Tech": [
+          "Maintained the PostgreSQL database and built finance team reports with SQL."
+        ]
+      },
+      "skills": [
+        {"category": "Languages", "skills": ["Python", "SQL", "JavaScript"]},
+        {"category": "Frameworks", "skills": ["Django", "Django REST Framework"]},
+        {"category": "Tools", "skills": ["PostgreSQL", "Redis", "Docker", "GitHub Actions", "AWS", "pytest", "Git"]}
+      ],
+      "projects": {
+        "Expense Tracker API": "Built a Django REST API with JWT authentication for tracking expenses and packaged it with Docker."
+      },
+      "certifications": ["AWS Certified Cloud Practitioner"]
+    }
+  },
+  {
+    "id": "data_analyst",
+    "description": "Partial match: business analyst applying to a data analyst role. Job asks for Tableau, R, A/B testing, Looker and dbt, which the candidate does not list.",
+    "master_resume": {
+      "keywords": ["SQL", "Power BI", "Excel", "Python", "pandas", "data cleaning"],
+      "summary": "Business analyst who works with operational data and reports to managers. Interested in analytics and process improvement.",
+      "personal_information": {"name": "Ngozi Adebayo", "email": "ngozi.adebayo@example.com", "phone": "+234 800 000 0002", "address": "Abuja, Nigeria", "profession": "Business Analyst"},
+      "professional_experiences": [
+        {
+          "organization": "Harbor Logistics", "role": "Business Analyst", "start_date": "Jan 2020", "end_date": "Present", "location": "Abuja, Nigeria",
+          "responsibilities": [
+            "Built weekly Power BI dashboards that track delivery performance for 12 regional offices.",
+            "Wrote SQL queries to pull shipment data and found delays that cost the company about 8% of monthly revenue.",
+            "Automated a manual Excel reporting process with Python scripts, saving the team 10 hours every week.",
+            "Presented findings to senior managers and recommended route changes that cut late deliveries by 18%.",
+            "Cleaned and merged data from three internal systems before analysis."
+          ]
+        },
+        {
+          "organization": "Greenfield Bank", "role": "Operations Officer", "start_date": "Aug 2017", "end_date": "Dec 2019", "location": "Lagos, Nigeria",
+          "responsibilities": [
+            "Reconciled daily transaction records and resolved discrepancies for the customer accounts team.",
+            "Trained 15 new staff on account opening procedures.",
+            "Created monthly Excel reports on loan repayments for the branch manager."
+          ]
+        }
+      ],
+      "skills": [
+        {"category": "Analysis", "skills": ["SQL", "Excel", "Power BI", "Data cleaning"]},
+        {"category": "Programming", "skills": ["Python", "pandas"]},
+        {"category": "Professional", "skills": ["Presentation", "Stakeholder communication"]}
+      ],
+      "projects": [
+        {"name": "Customer Churn Analysis", "description": "Analyzed a public telecom dataset with Python and pandas to find the main drivers of customer churn and presented the results in a short report."}
+      ],
+      "educations": [
+        {"institution": "University of Lagos", "certificate": "B.Sc. Economics", "start_date": "2013", "end_date": "2017"}
+      ],
+      "certifications": [
+        {"name": "Google Data Analytics Certificate", "issuer": "Coursera", "year": "2021"}
+      ],
+      "awards": [],
+      "languages": ["English"]
+    },
+    "job_description": "Data Analyst\n\nAnalyze business data to help teams make better decisions.\n\nRequirements:\n- Proficiency in SQL and Excel\n- Experience with data visualization tools such as Power BI or Tableau\n- Python or R for data analysis\n- Ability to communicate insights to non-technical stakeholders\n- Experience cleaning and validating data\n\nNice to have: A/B testing, Looker, dbt.",
+    "reference": {
+      "summary": "Business analyst who turns shipment and delivery data into Power BI dashboards and SQL findings that managers act on, such as route changes that cut late deliveries by 18%. Uses Python and Excel to clean data and automate reporting.",
+      "experience_bullets": {
+        "Harbor Logistics": [
+          "Pulled shipment data with SQL and uncovered delays that cost about 8% of monthly revenue.",
+          "Created weekly Power BI dashboards giving 12 regional offices a clear view of delivery performance.",
+          "Replaced a manual Excel reporting process with Python scripts, freeing 10 hours of team time each week.",
+          "Explained findings to senior managers and recommended route changes that cut late deliveries by 18%.",
+          "Cleaned and merged data from three internal systems so analysis started from consistent records."
+        ],
+        "Greenfield Bank": [
+          "Prepared monthly Excel reports on loan repayments for the branch manager."
+        ]
+      },
+      "skills": [
+        {"category": "Analysis", "skills": ["SQL", "Excel", "Power BI", "Data cleaning"]},
+        {"category": "Programming", "skills": ["Python", "pandas"]},
+        {"category": "Professional", "skills": ["Presentation", "Stakeholder communication"]}
+      ],
+      "projects": {
+        "Customer Churn Analysis": "Used Python and pandas on a public telecom dataset to identify the main drivers of customer churn and summarized them in a short report."
+      },
+      "certifications": ["Google Data Analytics Certificate"]
+    }
+  },
+  {
+    "id": "frontend_to_fullstack_gaps",
+    "description": "Large gaps: frontend developer applying to a full-stack role that needs Go, PostgreSQL, Docker, Kubernetes. The resume must stay truthful and must not add the missing tools.",
+    "master_resume": {
+      "keywords": ["React", "TypeScript", "Node.js", "JavaScript", "testing"],
+      "summary": "Frontend developer who builds user interfaces for web applications. Enjoys working with designers and improving page speed.",
+      "personal_information": {"name": "Kelechi Obi", "email": "kelechi.obi@example.com", "phone": "+234 800 000 0003", "address": "Owerri, Nigeria", "profession": "Frontend Developer"},
+      "professional_experiences": [
+        {
+          "organization": "Pixel & Co", "role": "Frontend Developer", "start_date": "May 2021", "end_date": "Present", "location": "Owerri, Nigeria",
+          "responsibilities": [
+            "Built responsive React and TypeScript interfaces for an e-commerce site with 200,000 monthly visitors.",
+            "Improved the Lighthouse performance score from 55 to 92 by lazy loading images and splitting code bundles.",
+            "Worked with designers to turn Figma mockups into reusable component libraries.",
+            "Integrated REST APIs written by the backend team and handled loading and error states.",
+            "Wrote Jest and React Testing Library tests for checkout flows."
+          ]
+        },
+        {
+          "organization": "Freelance", "role": "Web Developer", "start_date": "Jan 2019", "end_date": "Apr 2021", "location": "Remote",
+          "responsibilities": [
+            "Delivered 12 websites for small businesses using HTML, CSS, and JavaScript.",
+            "Built a simple Node.js and Express API with MongoDB for a booking site."
+          ]
+        }
+      ],
+      "skills": [
+        {"category": "Languages", "skills": ["JavaScript", "TypeScript", "HTML", "CSS"]},
+        {"category": "Frameworks", "skills": ["React", "Next.js", "Express", "Node.js"]},
+        {"category": "Tools", "skills": ["Git", "Figma", "Jest", "MongoDB", "Lighthouse"]}
+      ],
+      "projects": [
+        {"name": "Recipe Finder", "description": "React app using a public recipe API with search and favorites, hosted on Vercel."}
+      ],
+      "educations": [
+        {"institution": "Federal University of Technology Owerri", "certificate": "B.Eng. Electrical Engineering", "start_date": "2014", "end_date": "2018"}
+      ],
+      "certifications": [],
+      "awards": [],
+      "languages": ["English"]
+    },
+    "job_description": "Full-Stack Engineer\n\nBuild features across our React frontend and our Go and Node.js backends, running on Kubernetes.\n\nRequirements:\n- Strong React and TypeScript\n- Experience building APIs with Node.js or Go\n- PostgreSQL\n- Docker and Kubernetes\n- Automated testing\n- Close collaboration with designers\n\nNice to have: GraphQL, Terraform.",
+    "reference": {
+      "summary": "Frontend developer focused on React and TypeScript who has shipped e-commerce interfaces for 200,000 monthly visitors and lifted Lighthouse scores from 55 to 92. Also builds Node.js and Express APIs and tests checkout flows with Jest.",
+      "experience_bullets": {
+        "Pixel & Co": [
+          "Shipped responsive React and TypeScript interfaces for an e-commerce site serving 200,000 monthly visitors.",
+          "Lifted the Lighthouse performance score from 55 to 92 through lazy loading images and splitting code bundles.",
+          "Turned Figma mockups from designers into reusable component libraries.",
+          "Connected the interface to REST APIs from the backend team and handled loading and error states.",
+          "Tested checkout flows with Jest and React Testing Library."
+        ],
+        "Freelance": [
+          "Developed a simple Node.js and Express API with MongoDB for a booking site."
+        ]
+      },
+      "skills": [
+        {"category": "Languages", "skills": ["TypeScript", "JavaScript", "HTML", "CSS"]},
+        {"category": "Frameworks", "skills": ["React", "Node.js", "Express", "Next.js"]},
+        {"category": "Tools", "skills": ["Jest", "Git", "Figma", "MongoDB"]}
+      ],
+      "projects": {
+        "Recipe Finder": "Created a React app on a public recipe API with search and favorites, hosted on Vercel."
+      },
+      "certifications": []
+    }
+  }
+]

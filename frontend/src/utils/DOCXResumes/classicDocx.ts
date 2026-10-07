@@ -7,6 +7,7 @@ import {
   convertInchesToTwip,
   TabStopPosition,
 } from 'docx';
+import { getSectionOrder, type SectionId } from '@/utils/sectionOrder';
 
 // Types
 export type PersonalInformation = {
@@ -67,6 +68,7 @@ export type ResumeData = {
   skills: Skill[];
   certifications: Certification[];
   awards: Award[];
+  sectionOrder?: string[];
 };
 
 /**
@@ -128,9 +130,10 @@ export function generateClassicDocx(resume: ResumeData): Document {
     );
   }
 
+  const experienceParagraphs: Paragraph[] = [];
   // Professional Experience
   if (resume.professionalExperience.length > 0) {
-    sections.push(createSectionTitle('PROFESSIONAL EXPERIENCE'));
+    experienceParagraphs.push(createSectionTitle('PROFESSIONAL EXPERIENCE'));
 
     resume.professionalExperience.forEach((exp) => {
       // Job header with role, organization, location
@@ -138,7 +141,7 @@ export function generateClassicDocx(resume: ResumeData): Document {
         exp.location ? `, ${exp.location}` : ''
       }`;
 
-      sections.push(
+      experienceParagraphs.push(
         new Paragraph({
           children: [
             new TextRun({
@@ -164,7 +167,7 @@ export function generateClassicDocx(resume: ResumeData): Document {
 
       // Responsibilities as bullet points
       exp.responsibilities.forEach((resp) => {
-        sections.push(
+        experienceParagraphs.push(
           new Paragraph({
             text: resp,
             bullet: { level: 0 },
@@ -174,7 +177,7 @@ export function generateClassicDocx(resume: ResumeData): Document {
         );
       });
 
-      sections.push(
+      experienceParagraphs.push(
         new Paragraph({
           text: '',
           spacing: { after: 120 },
@@ -183,12 +186,13 @@ export function generateClassicDocx(resume: ResumeData): Document {
     });
   }
 
+  const educationParagraphs: Paragraph[] = [];
   // Education
   if (resume.education.length > 0) {
-    sections.push(createSectionTitle('EDUCATION'));
+    educationParagraphs.push(createSectionTitle('EDUCATION'));
 
     resume.education.forEach((edu) => {
-      sections.push(
+      educationParagraphs.push(
         new Paragraph({
           children: [
             new TextRun({
@@ -201,7 +205,7 @@ export function generateClassicDocx(resume: ResumeData): Document {
         })
       );
 
-      sections.push(
+      educationParagraphs.push(
         new Paragraph({
           text: edu.institution,
           spacing: { after: 40 },
@@ -209,7 +213,7 @@ export function generateClassicDocx(resume: ResumeData): Document {
         })
       );
 
-      sections.push(
+      educationParagraphs.push(
         new Paragraph({
           text: `${edu.startDate} - ${edu.endDate}`,
           spacing: { after: 120 },
@@ -219,16 +223,17 @@ export function generateClassicDocx(resume: ResumeData): Document {
     });
   }
 
+  const skillsParagraphs: Paragraph[] = [];
   // Skills
   if (resume.skills.length > 0) {
-    sections.push(createSectionTitle('SKILLS'));
+    skillsParagraphs.push(createSectionTitle('SKILLS'));
 
     // Add categorized skills
     resume.skills.forEach((skillCategory) => {
       const categoryText = `${skillCategory.category}: `;
       const skillsText = skillCategory.skills.join(', ');
       
-      sections.push(
+      skillsParagraphs.push(
         new Paragraph({
           children: [
             new TextRun({
@@ -249,12 +254,13 @@ export function generateClassicDocx(resume: ResumeData): Document {
     });
   }
 
+  const projectsParagraphs: Paragraph[] = [];
   // Projects
   if (resume.projects.length > 0) {
-    sections.push(createSectionTitle('PROJECTS'));
+    projectsParagraphs.push(createSectionTitle('PROJECTS'));
 
     resume.projects.forEach((proj) => {
-      sections.push(
+      projectsParagraphs.push(
         new Paragraph({
           children: [
             new TextRun({
@@ -267,7 +273,7 @@ export function generateClassicDocx(resume: ResumeData): Document {
         })
       );
 
-      sections.push(
+      projectsParagraphs.push(
         new Paragraph({
           text: proj.description,
           spacing: { after: 120 },
@@ -277,12 +283,13 @@ export function generateClassicDocx(resume: ResumeData): Document {
     });
   }
 
+  const certificationsParagraphs: Paragraph[] = [];
   // Certifications
   if (resume.certifications.length > 0) {
-    sections.push(createSectionTitle('CERTIFICATIONS'));
+    certificationsParagraphs.push(createSectionTitle('CERTIFICATIONS'));
 
     resume.certifications.forEach((cert) => {
-      sections.push(
+      certificationsParagraphs.push(
         new Paragraph({
           children: [
             new TextRun({
@@ -295,7 +302,7 @@ export function generateClassicDocx(resume: ResumeData): Document {
         })
       );
 
-      sections.push(
+      certificationsParagraphs.push(
         new Paragraph({
           text: `${cert.issuer} - ${cert.year}`,
           spacing: { after: 120 },
@@ -305,12 +312,13 @@ export function generateClassicDocx(resume: ResumeData): Document {
     });
   }
 
+  const awardsParagraphs: Paragraph[] = [];
   // Awards
   if (resume.awards.length > 0) {
-    sections.push(createSectionTitle('AWARDS'));
+    awardsParagraphs.push(createSectionTitle('AWARDS'));
 
     resume.awards.forEach((award) => {
-      sections.push(
+      awardsParagraphs.push(
         new Paragraph({
           children: [
             new TextRun({
@@ -328,6 +336,19 @@ export function generateClassicDocx(resume: ResumeData): Document {
       );
     });
   }
+
+  // Movable sections go in the user's chosen order (contact and summary above stay first).
+  const sectionParagraphs: Record<SectionId, Paragraph[]> = {
+    experience: experienceParagraphs,
+    education: educationParagraphs,
+    skills: skillsParagraphs,
+    projects: projectsParagraphs,
+    certifications: certificationsParagraphs,
+    awards: awardsParagraphs,
+  };
+  getSectionOrder(resume.sectionOrder, 'classic').forEach((id) => {
+    sections.push(...sectionParagraphs[id]);
+  });
 
   return new Document({
     sections: [

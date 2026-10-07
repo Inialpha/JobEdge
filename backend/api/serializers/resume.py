@@ -76,6 +76,12 @@ class ResumeSerializer(serializers.Serializer):
         default=[],
         help_text="Languages spoken by the user"
     )
+    section_order = serializers.ListField(
+        child=serializers.CharField(max_length=64),
+        default=[],
+        required=False,
+        help_text="Order of the movable resume sections; empty means the default order"
+    )
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
 
