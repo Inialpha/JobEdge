@@ -6,6 +6,8 @@ Bump ``WORKFLOW_VERSION`` / ``PROMPT_VERSION`` whenever the loop or prompts
 change, because evaluation runs are stored with these labels.
 """
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 WORKFLOW_VERSION = "agent-loop-v1"
 PROMPT_VERSION = "grounded-transform-v1"

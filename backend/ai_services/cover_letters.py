@@ -68,7 +68,7 @@ Return ONLY the cover letter text, no additional commentary or formatting marker
 """
 
         completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-20b",
             messages=[
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": user_prompt},

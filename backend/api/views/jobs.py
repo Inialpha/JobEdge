@@ -13,7 +13,7 @@ import requests
 
 
 ATS_SITES = [
-            "careers-page.com",
+            "*.careers-page.com",
             #"boards.greenhouse.io"
 ]
 
@@ -162,6 +162,7 @@ class SearchJobsAPIView(APIView):
     def get(self, request, *args, **kwargs):
         # Get query parameters
         keywords = request.query_params.getlist('keywords', [])
+        print("\n\n\n", keywords)
         location = request.query_params.get('location', '')
         job_type = request.query_params.get('job_type', '')
         is_remote = request.query_params.get('is_remote', '').lower() == 'true'
@@ -191,7 +192,7 @@ class SearchJobsAPIView(APIView):
         if keywords:
             keyword_query = " OR ".join([f'"{kw}"' if ' ' in kw else kw for kw in keywords])
             query_parts.append(f"({keyword_query})")
-        
+        print(keyword_query)
         if is_remote:
             query_parts.append("(Remote OR remote)")
         
@@ -210,22 +211,48 @@ class SearchJobsAPIView(APIView):
 
         # Prepare search parameters
 
-        site_query = " OR ".join([f"site:{domain}" for domain in ATS_SITES])
+        # site_query = " OR ".join([f"site:{domain}" for domain in ATS_SITES])
+
         search_params = {
-            "q": f"({site_query}) {search_query} (inurl:job OR inurl:jobs) AND -inurl:apply",
+            "engine": "google",
+            "q": f"({keyword_query})",
+
             "api_key": serpapi_key,
             "num": max_jobs,
+            #"nfpr": 1,
+            "as_sitesearch": "careers-page.com",
+            "as_dt": "i"
         }
 
         if location:
             search_params["location"] = location
+        import math
 
         if days_ago:
-            search_params["tbs"] = f"qdr:d{days_ago}"
+            try:
+                days_ago = int(days_ago)
+                if days_ago >= 1:
+                    if days_ago <= 7:
+                        qdr = f"d{days_ago}"
+                    elif days_ago <= 30:
+                        weeks = math.ceil(days_ago / 7)
+                        qdr = f"w{weeks}"
+                    elif days_ago <= 365:
+                        months = math.ceil(days_ago / 30)
+                        qdr = f"m{min(months, 12)}"
+                    else:
+                        years = math.ceil(days_ago / 365)
+                        qdr = f"y{years}"
+        
+                    search_params["tbs"] = f"qdr:{qdr},li:1"
+            except (ValueError, TypeError):
+                pass
+
 
         try:
             search = GoogleSearch(search_params)
             results = search.get_dict()
+            print(results)
 
             jobs_list = []
             jobs_results = results.get("organic_results", [])

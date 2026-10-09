@@ -242,7 +242,7 @@ Return the extracted information as a JSON object following this structure.
 
 
         completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-20b",
             messages=[
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": user_prompt},

@@ -6,7 +6,7 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 def extract_job_details(job_text):
     completion = client.chat.completions.create(
-        model="groq/compound",
+        model="openai/gpt-oss-120b",
         messages=[
             {
                 "role": "system",
