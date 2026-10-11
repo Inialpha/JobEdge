@@ -2,8 +2,9 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ResumeData, ResumeEvaluationSummary, Template, ProfessionalExperience, Education, Project, Certification, Award, PersonalInformation, Skill } from '@/types/resume';
 import { getEditableResume } from '@/utils/resumeUtils';
-import { SECTION_LABELS, getSectionOrder, moveSection, type SectionId, type MoveDirection } from '@/utils/sectionOrder';
+import { SECTION_LABELS, getSectionOrder, moveSection, moveSectionTo, type SectionId, type MoveDirection } from '@/utils/sectionOrder';
 import { downloadPDF, downloadDocx } from '@/utils/resumeDownload';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ResumePreview } from '@/components/ResumePreview';
 import { createRoot, Root } from 'react-dom/client';
 import { postRequest, putRequest } from '@/utils/apis';
@@ -38,6 +39,10 @@ export default function ResumeBuilder() {
   
   const [currentTemplate, setCurrentTemplate] = useState<Template>("classic");
   const [resume, setResume] = useState<ResumeData>(() => getEditableResume(passedResume));
+  // 'edit' is the form; 'preview' is a full page showing only the resume.
+  const [view, setView] = useState<'edit' | 'preview'>('edit');
+  const [draggedSection, setDraggedSection] = useState<SectionId | null>(null);
+  const [dragOverSection, setDragOverSection] = useState<SectionId | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isPdfDownloading, setIsPdfDownloading] = useState(false);
   const [isDocxDownloading, setIsDocxDownloading] = useState(false);
@@ -126,15 +131,38 @@ export default function ResumeBuilder() {
     }));
   }, [currentTemplate]);
 
-  const selectTemplate = useCallback((template: Template, event?: React.MouseEvent) => {
+  const selectTemplate = useCallback((template: Template) => {
     setCurrentTemplate(template);
-    document.querySelectorAll('.template-card').forEach(card => {
-      card.classList.remove('active');
-    });
-    if (event?.target) {
-      (event.target as HTMLElement).closest('.template-card')?.classList.add('active');
-    }
   }, []);
+
+  const dropSection = useCallback((targetId: SectionId) => {
+    if (draggedSection) {
+      setResume(prev => ({
+        ...prev,
+        sectionOrder: moveSectionTo(getSectionOrder(prev.sectionOrder, currentTemplate), draggedSection, targetId),
+      }));
+    }
+    setDraggedSection(null);
+    setDragOverSection(null);
+  }, [draggedSection, currentTemplate]);
+
+  const openPreview = useCallback(() => {
+    setView('preview');
+    window.scrollTo({ top: 0 });
+  }, []);
+
+  const closePreview = useCallback(() => {
+    setView('edit');
+    window.scrollTo({ top: 0 });
+  }, []);
+
+  // Escape returns from the preview page to the editor.
+  useEffect(() => {
+    if (view !== 'preview') return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closePreview(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [view, closePreview]);
 
   const addSkillCategory = useCallback(() => {
     if (newSkillCategory.trim()) {
@@ -498,6 +526,21 @@ export default function ResumeBuilder() {
     }
   };
 
+  const isDownloading = isPdfDownloading || isDocxDownloading;
+  const downloadMenu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="btn btn-primary" disabled={isDownloading}>
+          {isDownloading ? 'Downloading...' : '⬇ Download ▾'}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <DropdownMenuItem onSelect={handlePdfDownload}>📄 Download as PDF</DropdownMenuItem>
+        <DropdownMenuItem onSelect={handleDocxDownload}>📥 Download as DOCX</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <>
       {/* Joyride Tour */}
@@ -716,6 +759,63 @@ export default function ResumeBuilder() {
           line-height: 1.4;
           margin: 6px 0 0 0;
         }
+        .section-cards {
+          padding: 15px 20px 5px;
+          background: #fff;
+          border-bottom: 2px solid #e9ecef;
+        }
+        .section-cards-title {
+          font-size: 14px;
+          font-weight: 700;
+          color: #667eea;
+          margin-bottom: 4px;
+        }
+        .section-cards-list {
+          list-style: none;
+          margin: 0 0 10px;
+          padding: 0;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .section-card {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: #f8f9fa;
+          border: 1px solid #ccd0e8;
+          border-left: 3px solid #667eea;
+          border-radius: 8px;
+          padding: 8px 10px;
+          font-size: 13px;
+          cursor: grab;
+          user-select: none;
+          transition: box-shadow 0.15s, transform 0.15s;
+        }
+        .section-card:hover { box-shadow: 0 3px 10px rgba(102,126,234,0.25); }
+        .section-card.locked { cursor: default; opacity: 0.65; border-left-color: #aaa; box-shadow: none; }
+        .section-card.dragging { opacity: 0.4; }
+        .section-card.drag-over { outline: 2px dashed #667eea; outline-offset: 2px; background: #eef0ff; }
+        .section-card-grip { color: #999; letter-spacing: -2px; font-size: 14px; }
+        .preview-toolbar {
+          position: sticky;
+          top: 0;
+          z-index: 5;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+          background: #fff;
+          padding: 10px 16px;
+          margin-bottom: 16px;
+          border-radius: 10px;
+          box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+        }
+        .preview-toolbar .btn { flex: 0 0 auto; }
+        .preview-back { background: #f1f3f9; color: #444; }
+        .preview-template { margin-left: auto; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+        .preview-template select { border: 1px solid #ccd0e8; border-radius: 6px; padding: 6px 8px; }
+        .controls .btn { min-width: 110px; }
         .section-order-hint {
           font-size: 12px;
           color: #666;
@@ -1010,12 +1110,12 @@ export default function ResumeBuilder() {
         }
       `}</style>
       
-      <div className="max-w-[1400px] mx-auto grid gap-5 grid-cols-1 lg:grid-cols-[350px_1fr]">
-        {/* Editor Panel */}
-        <div className="resume-form-section bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] h-fit max-h-[50vh] lg:max-h-[100vh] overflow-y-auto">
+      <div className="max-w-[1000px] mx-auto">
+        {/* Editor page */}
+        <div className="resume-form-section bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)]" style={{ display: view === 'edit' ? 'block' : 'none' }}>
           <div className="header">
             <h1>Resume Builder</h1>
-            <p>Edit & Download as PDF/DOCX</p>
+            <p>Edit, preview and download as PDF/DOCX</p>
           </div>
           
           <div className="controls download-buttons">
@@ -1035,49 +1135,54 @@ export default function ResumeBuilder() {
                 {saveMessage.text}
               </div>
             )}
-            <button 
-              className="btn btn-primary" 
-              onClick={handlePdfDownload}
-              disabled={isPdfDownloading}
-            >
-              {isPdfDownloading ? (
-                <>
-                  <svg className="animate-spin inline-block h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Downloading...
-                </>
-              ) : (
-                '📄 Download PDF'
-              )}
-            </button>
-            <button 
-              className="btn btn-secondary" 
-              onClick={handleDocxDownload}
-              disabled={isDocxDownloading}
-            >
-              {isDocxDownloading ? (
-                <>
-                  <svg className="animate-spin inline-block h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Downloading...
-                </>
-              ) : (
-                '📥 Download DOCX'
-              )}
-            </button>
-            <button 
+            {downloadMenu}
+            <button
               id="save-resume-btn"
-              className="btn" 
+              className="btn"
               style={{background: '#17a2b8', color: 'white'}}
               onClick={saveResume}
               disabled={isSaving}
             >
               {isSaving ? '💾 Saving...' : passedResume?.is_master ? '💾 Save Profile' : passedResume?.id ? '💾 Update Resume' : '💾 Save Resume'}
             </button>
+            <button id="preview-resume-btn" className="btn btn-secondary" onClick={openPreview}>
+              👁 Preview
+            </button>
+          </div>
+
+          {/* Section order: drag the cards to reorder. Contact and Summary stay on top. */}
+          <div className="section-cards" id="section-order">
+            <div className="section-cards-title">Section Order</div>
+            <p className="section-order-hint">
+              Drag a card to reorder your resume. Contact and Summary always stay at the top. The preview, PDF and DOCX follow this order.
+              {currentTemplate === 'modern' && ' In the Modern template, Skills and Education stay in the sidebar and the order applies within each column.'}
+            </p>
+            <ul className="section-cards-list">
+              <li className="section-card locked" title="Always first"><span>🔒 Contact</span></li>
+              <li className="section-card locked" title="Always second"><span>🔒 Summary</span></li>
+              {sectionOrder.map((id, position) => (
+                <li
+                  key={id}
+                  className={`section-card${draggedSection === id ? ' dragging' : ''}${dragOverSection === id && draggedSection !== id ? ' drag-over' : ''}`}
+                  draggable
+                  onDragStart={(e) => { setDraggedSection(id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', id); }}
+                  onDragOver={(e) => { if (draggedSection) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverSection(id); } }}
+                  onDragLeave={() => setDragOverSection(prev => (prev === id ? null : prev))}
+                  onDrop={(e) => { e.preventDefault(); dropSection(id); }}
+                  onDragEnd={() => { setDraggedSection(null); setDragOverSection(null); }}
+                >
+                  <span className="section-card-grip" aria-hidden="true">⋮⋮</span>
+                  <span className="section-card-label">
+                    {SECTION_LABELS[id]}
+                    {!sectionHasContent[id] && <span className="section-order-empty"> (empty)</span>}
+                  </span>
+                  <span className="section-order-buttons">
+                    <button type="button" aria-label={`Move ${SECTION_LABELS[id]} earlier`} disabled={position === 0} onClick={() => moveResumeSection(id, 'up')}>←</button>
+                    <button type="button" aria-label={`Move ${SECTION_LABELS[id]} later`} disabled={position === sectionOrder.length - 1} onClick={() => moveResumeSection(id, 'down')}>→</button>
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="editor">
@@ -1118,7 +1223,7 @@ export default function ResumeBuilder() {
               <div className="section-title">Choose Template</div>
               <div className="template-carousel">
                 <div className="carousel-container">
-                  <div className="template-card active" onClick={(e) => selectTemplate('classic', e)}>
+                  <div className={`template-card${currentTemplate === 'classic' ? ' active' : ''}`} onClick={() => selectTemplate('classic')}>
                     <div className="template-name">Classic</div>
                     <div className="template-preview">
                       <div style={{fontWeight: 'bold', textAlign: 'center', fontSize: '11px'}}>JOHN DOE</div>
@@ -1127,7 +1232,7 @@ export default function ResumeBuilder() {
                       <div style={{fontSize: '7px'}}>Professional summary text...</div>
                     </div>
                   </div>
-                  <div className="template-card" onClick={(e) => selectTemplate('modern', e)}>
+                  <div className={`template-card${currentTemplate === 'modern' ? ' active' : ''}`} onClick={() => selectTemplate('modern')}>
                     <div className="template-name">Modern</div>
                     <div className="template-preview">
                       <div style={{display: 'grid', gridTemplateColumns: '40% 60%', gap: '3px'}}>
@@ -1142,7 +1247,7 @@ export default function ResumeBuilder() {
                       </div>
                     </div>
                   </div>
-                  <div className="template-card" onClick={(e) => selectTemplate('minimal', e)}>
+                  <div className={`template-card${currentTemplate === 'minimal' ? ' active' : ''}`} onClick={() => selectTemplate('minimal')}>
                     <div className="template-name">Minimal</div>
                     <div className="template-preview">
                       <div style={{fontWeight: 300, fontSize: '11px'}}>John Doe</div>
@@ -1150,7 +1255,7 @@ export default function ResumeBuilder() {
                       <div style={{fontSize: '7px'}}>Clean and simple design with focus on content</div>
                     </div>
                   </div>
-                  <div className="template-card" onClick={(e) => selectTemplate('creative', e)}>
+                  <div className={`template-card${currentTemplate === 'creative' ? ' active' : ''}`} onClick={() => selectTemplate('creative')}>
                     <div className="template-name">Creative</div>
                     <div className="template-preview">
                       <div style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', padding: '5px', margin: '-5px -5px 5px -5px'}}>
@@ -1211,44 +1316,6 @@ export default function ResumeBuilder() {
                   {validationErrors['summary']}
                 </div>
               )}
-            </div>
-
-            {/* Section Order */}
-            <div className="section" id="section-order">
-              <div className="section-title">Section Order</div>
-              <p className="section-order-hint">
-                Contact information and Summary always stay at the top. Move the other sections up or down;
-                the preview, PDF and DOCX downloads follow this order.
-                {currentTemplate === 'modern' && ' In the Modern template, Skills and Education stay in the sidebar and the order applies within each column.'}
-              </p>
-              <ul className="section-order-list">
-                {sectionOrder.map((id, position) => (
-                  <li key={id} className="section-order-row">
-                    <span>
-                      {SECTION_LABELS[id]}
-                      {!sectionHasContent[id] && <span className="section-order-empty"> (empty)</span>}
-                    </span>
-                    <span className="section-order-buttons">
-                      <button
-                        type="button"
-                        aria-label={`Move ${SECTION_LABELS[id]} up`}
-                        disabled={position === 0}
-                        onClick={() => moveResumeSection(id, 'up')}
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        aria-label={`Move ${SECTION_LABELS[id]} down`}
-                        disabled={position === sectionOrder.length - 1}
-                        onClick={() => moveResumeSection(id, 'down')}
-                      >
-                        ↓
-                      </button>
-                    </span>
-                  </li>
-                ))}
-              </ul>
             </div>
 
             {/* Skills */}
@@ -1686,9 +1753,32 @@ export default function ResumeBuilder() {
           </div>
         </div>
 
-        {/* Preview Panel */}
-        <div className="resume-preview-section bg-white rounded-[10px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] p-6">
-          <div id="resumePreview" className="resume-preview classic-template"></div>
+        {/* Preview page: a page of its own, not a dialog */}
+        {view === 'preview' && (
+          <div className="preview-toolbar">
+            <button className="btn preview-back" onClick={closePreview}>← Back to editing</button>
+            <label className="preview-template">
+              Template
+              <select value={currentTemplate} onChange={(e) => selectTemplate(e.target.value as Template)}>
+                <option value="classic">Classic</option>
+                <option value="modern">Modern</option>
+                <option value="minimal">Minimal</option>
+                <option value="creative">Creative</option>
+              </select>
+            </label>
+            {downloadMenu}
+            {saveMessage && <span style={{ fontSize: 13, fontWeight: 600, color: saveMessage.type === 'success' ? '#155724' : '#721c24' }}>{saveMessage.text}</span>}
+          </div>
+        )}
+        {/* Always mounted so PDF export can read it; kept off-screen while editing. */}
+        <div
+          className="resume-preview-section"
+          aria-hidden={view !== 'preview'}
+          style={view === 'preview'
+            ? { overflowX: 'auto', paddingBottom: 24 }
+            : { position: 'absolute', left: -10000, top: 0, width: 816, pointerEvents: 'none' }}
+        >
+          <div id="resumePreview" className="resume-preview classic-template" style={{ width: 816, margin: '0 auto' }}></div>
         </div>
       </div>
     </>

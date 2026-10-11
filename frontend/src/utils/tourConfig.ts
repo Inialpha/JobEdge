@@ -53,9 +53,9 @@ export const resumeBuilderTourSteps: Step[] = [
     placement: 'right',
   },
   {
-    target: '.resume-preview-section',
-    content: 'This is the live preview! As you fill in the form, you\'ll see your resume update in real-time. This helps you visualize how your resume will look.',
-    placement: 'left',
+    target: '#preview-resume-btn',
+    content: 'Click Preview to see your resume as a full page, exactly as it will be downloaded. Use "Back to editing" to return.',
+    placement: 'bottom',
   },
   {
     target: '.template-selector',
@@ -64,7 +64,7 @@ export const resumeBuilderTourSteps: Step[] = [
   },
   {
     target: '.download-buttons',
-    content: 'Once you\'ve completed all required fields and saved your resume, you can download it as a PDF or DOCX file using these buttons.',
+    content: 'Once you\'ve completed all required fields and saved your resume, use Download to choose PDF or DOCX. Update saves your changes without downloading, and Preview shows the full-page resume.',
     placement: 'top',
   },
   {

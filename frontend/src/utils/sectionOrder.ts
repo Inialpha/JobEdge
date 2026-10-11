@@ -72,3 +72,14 @@ export const moveSection = (order: readonly SectionId[], id: SectionId, directio
   ;[next[from], next[to]] = [next[to], next[from]]
   return next
 }
+
+/** Drag and drop: puts ``id`` where ``targetId`` is (the cards in between shift by one). Returns a new list. */
+export const moveSectionTo = (order: readonly SectionId[], id: SectionId, targetId: SectionId): SectionId[] => {
+  const next = [...order]
+  const from = next.indexOf(id)
+  const to = next.indexOf(targetId)
+  if (from === -1 || to === -1 || from === to) return next
+  next.splice(from, 1)
+  next.splice(to, 0, id)
+  return next
+}

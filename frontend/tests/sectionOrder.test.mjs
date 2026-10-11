@@ -7,6 +7,7 @@ import {
   getSectionOrder,
   hasCustomOrder,
   moveSection,
+  moveSectionTo,
   normalizeSectionOrder,
 } from '../src/utils/sectionOrder.ts'
 
@@ -85,4 +86,25 @@ test('moving every section to the top one by one never loses or duplicates a sec
     assert.equal(new Set(order).size, SECTION_IDS.length)
   }
   assert.deepEqual(order, [...SECTION_IDS])
+})
+
+test('moveSectionTo drops a card onto another card and shifts the ones in between', () => {
+  const start = [...DEFAULT_SECTION_ORDER] // experience, education, skills, projects, certifications, awards
+  assert.deepEqual(moveSectionTo(start, 'awards', 'experience'), ['awards', 'experience', 'education', 'skills', 'projects', 'certifications'])
+  assert.deepEqual(moveSectionTo(start, 'experience', 'skills'), ['education', 'skills', 'experience', 'projects', 'certifications', 'awards'])
+})
+
+test('moveSectionTo ignores same-card drops and unknown ids', () => {
+  const start = [...DEFAULT_SECTION_ORDER]
+  assert.deepEqual(moveSectionTo(start, 'skills', 'skills'), start)
+  assert.deepEqual(moveSectionTo(start, 'nope', 'skills'), start)
+  assert.deepEqual(moveSectionTo(start, 'skills', 'nope'), start)
+})
+
+test('moveSectionTo never loses or duplicates a section', () => {
+  let order = [...DEFAULT_SECTION_ORDER]
+  for (const a of SECTION_IDS) for (const b of SECTION_IDS) {
+    order = moveSectionTo(order, a, b)
+    assert.equal(new Set(order).size, SECTION_IDS.length)
+  }
 })
