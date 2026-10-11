@@ -126,6 +126,9 @@ def _term_grounded(index: SourceIndex, word: str) -> bool:
     return False
 
 
+term_supported = _term_grounded  # public name for other modules (cover letters)
+
+
 def unsupported_terms(text: str, index: SourceIndex) -> List[str]:
     """Technology-like or proper-noun-like words in ``text`` that the source never mentions."""
     found: List[str] = []

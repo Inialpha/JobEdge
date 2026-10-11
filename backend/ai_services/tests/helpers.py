@@ -4,7 +4,7 @@ import json
 from typing import Callable, List, Optional
 
 from ai_services.resume_intelligence.benchmark import build_reference_resume, load_cases, passthrough_workflow
-from ai_services.resume_intelligence.prompts import ANALYZE_SYSTEM, GENERATE_SYSTEM, JUDGE_SYSTEM
+from ai_services.resume_intelligence.prompts import ANALYZE_SYSTEM, GENERATE_SYSTEM, JUDGE_SYSTEM, LETTER_SYSTEM
 
 CASES = {c["id"]: c for c in load_cases()}
 BACKEND = CASES["backend_engineer"]
@@ -17,7 +17,10 @@ class ScriptedLLM:
     model = "scripted"
 
     def __init__(self, generations: Optional[List] = None, judge: Optional[dict] = None, analysis: Optional[dict] = None,
-                 generation_fn: Optional[Callable[[str], dict]] = None):
+                 generation_fn: Optional[Callable[[str], dict]] = None, letters: Optional[List] = None):
+        self.letters = list(letters or [])
+        self.letter_prompts: List[str] = []
+        self.letter_calls = 0
         self.generations = list(generations or [])
         self.judge = judge
         self.analysis = analysis
@@ -34,6 +37,15 @@ class ScriptedLLM:
             if self.judge is None:
                 raise RuntimeError("judge unavailable")
             return json.dumps(self.judge)
+        if system == LETTER_SYSTEM:
+            self.letter_calls += 1
+            self.letter_prompts.append(user)
+            if not self.letters:
+                raise RuntimeError("no more scripted letters")
+            item = self.letters.pop(0) if len(self.letters) > 1 else self.letters[0]
+            if isinstance(item, Exception):
+                raise item
+            return json.dumps(item)
         assert system == GENERATE_SYSTEM
         self.generate_calls += 1
         self.generate_prompts.append(user)
@@ -77,3 +89,23 @@ def all_bullets(resume: dict) -> List[str]:
     for proj in resume.get("projects", []):
         out.append(proj["description"])
     return out
+
+
+GOLD_LETTER = {
+    "greeting": "Dear Hiring Manager,",
+    "paragraphs": [
+        "Building payment APIs that stay fast under load is the work I enjoy most, which is why the Backend Engineer role on your payments team caught my attention. At Brightline Payments I build REST APIs in Python and Django that process 15,000 payment requests per day, and I have spent the last few years making them quicker and easier to trust.",
+        "One example I am proud of is the response-time work. By adding Redis caching and tuning slow SQL queries, I brought average API response time down from 800ms to 320ms. I also raised test coverage from 45% to 85% by writing unit and integration tests with pytest, so that later changes shipped with far less risk.",
+        "Reliable delivery matters as much as clean code. I set up CI pipelines with GitHub Actions that run the tests and deploy to AWS on every merge, and I mentored two junior developers through code reviews and pair programming. Earlier, at Nova Retail Tech, I kept a PostgreSQL database healthy and built dashboards that 40 store managers used each day.",
+        "Your focus on scaling payments is exactly the kind of problem I want to keep solving. I would welcome a conversation about how my experience with Django, Docker and automated testing could help your team, and I thank you for considering my application.",
+    ],
+}
+
+BAD_LETTER = {
+    "greeting": "Dear Hiring Manager,",
+    "paragraphs": [
+        "I am writing to express my interest in this position. I am a passionate team player and the ideal candidate.",
+        "I scaled systems to 2,000,000 users with Kubernetes and Terraform and cut costs by 62%.",
+        "I look forward to hearing from you.",
+    ],
+}

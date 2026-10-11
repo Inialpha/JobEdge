@@ -83,3 +83,44 @@ BUZZWORDS = (
     "world-class", "seamless", "holistic", "game-changing", "paradigm",
     "revolutionary", "next-generation", "leverage", "leveraged", "robust",
 )
+
+
+# --------------------------------------------------------------------------- cover letters
+
+LETTER_PROMPT_VERSION = "cover-letter-grounded-v1"
+
+# Same idea as the resume budget; the application endpoint runs the resume loop and then this one.
+LETTER_MAX_SECONDS = float(os.getenv("RESUME_LETTER_TIME_BUDGET_SECONDS", "30"))
+
+LETTER_WEIGHTS = {
+    "factual_accuracy": 0.30,
+    "relevance": 0.20,
+    "specificity": 0.15,
+    "naturalness": 0.10,
+    "redundancy": 0.05,
+    "structure": 0.20,
+}
+LETTER_OVERALL_THRESHOLD = 0.75
+LETTER_DIMENSION_THRESHOLDS = {
+    "factual_accuracy": 0.95,
+    "relevance": 0.50,
+    "specificity": 0.50,
+    "naturalness": 0.55,
+    "redundancy": 0.60,
+    "structure": 0.85,
+}
+
+# The prompt asks for 250-350 words; the check allows a little slack either way.
+LETTER_WORDS_MIN = 220
+LETTER_WORDS_MAX = 380
+LETTER_PARAGRAPHS_MIN = 3
+LETTER_PARAGRAPHS_MAX = 5
+LETTER_COPY_SIMILARITY = 0.85  # a sentence this close to a resume bullet was pasted, not written
+
+LETTER_CLICHES = (
+    "i am writing to express my interest", "i am writing to apply", "i am writing to express my",
+    "i believe i would be a great fit", "i would be a great fit", "perfect fit", "ideal candidate",
+    "valuable asset", "hit the ground running", "to whom it may concern",
+    "i am a quick learner", "hard worker", "go above and beyond", "dream job",
+    "make a significant contribution", "take my career to the next level",
+)

@@ -88,3 +88,14 @@ python manage.py compare_resume_evaluations --days 30
 * Keyword extraction from the job description is a heuristic when the model's analysis is
   unavailable, so it can include a few generic words.
 * The calibration cases are small on purpose. Add cases to `cases.json` as real failures are found.
+
+## Application creation (resume + cover letter)
+
+`POST /applications/` (`api/views/applications.py`) calls `ai_services.application_generation.generate_application_documents`, which runs **both** documents through an agent loop:
+
+1. `ResumeAgent` (analyze → generate → evaluate → revise → finalize) produces the tailored resume.
+2. `CoverLetterAgent` reuses the job analysis and writes from the tailored resume, then runs the same loop with a separate `CoverLetterEvaluator`.
+
+Cover letter specifics: the model returns only a greeting and body paragraphs. The header (name, city/country, phone, email, date) and the "Sincerely," + name sign-off are built from the master resume, so contact details cannot be invented and placeholders cannot appear. After every draft, sentences with numbers/tools/names unsupported by the master resume (or the job post) are dropped, as are first-person sentences claiming job tools the candidate lacks. The evaluator scores factual accuracy, relevance, specificity, naturalness, redundancy and structure (`LETTER_*` in `config.py`).
+
+The resume and application are saved in one transaction only after both documents exist. Both evaluations are stored as `ResumeEvaluation` rows (`document_type` = `resume` / `cover_letter`, linked to the `application`) and a score summary is returned as `evaluation` in the response. `compare_resume_evaluations` groups by document type. `RESUME_AGENT_ENABLED=false` restores the single-shot generators; `RESUME_LETTER_TIME_BUDGET_SECONDS` bounds letter revisions. Apply migration `0024` before deploying.

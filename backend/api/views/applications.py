@@ -4,11 +4,11 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
-from ..models import Application, Resume, User
+from django.db import transaction
+from ..models import Application, Resume, ResumeEvaluation, User
 from ..serializers.application import ApplicationSerializer
 from ..serializers.resume import ResumeSerializer
-from ai_services.resume_extractor import generate_resume
-from ai_services.cover_letters import generate_cover_letter
+from ai_services.application_generation import DocumentsUnavailable, generate_application_documents
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from ..utils.normalize_resume_payload import normalize_resume_payload
@@ -73,60 +73,58 @@ class ApplicationAPIView(APIView):
         master_data.pop("user", None)
         master_data.pop("text", None)
         
-        # Generate tailored resume using AI
-        tailored_resume_data = generate_resume(job_description, master_data)
-        
-        if not tailored_resume_data:
+        # The resume AND the cover letter are written, evaluated and revised by the agent.
+        try:
+            documents = generate_application_documents(job_description, master_data)
+        except DocumentsUnavailable:
             return Response({
                 "details": "Our service is currently handling a high volume of requests. Please try again shortly."
             }, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
+        tailored_resume_data = dict(documents.resume)
         tailored_resume_data["is_master"] = False
         normalized_resume = normalize_resume_payload(tailored_resume_data)
-        
+
         if not normalized_resume.get("summary") and normalized_resume.get("professionalSummary"):
             normalized_resume["summary"] = normalized_resume.get("professionalSummary")
         resume_serializer = ResumeSerializer(data=normalized_resume)
         if not resume_serializer.is_valid():
-            print("Resume serializer errors:", resume_serializer.errors)
             return Response({
                 "details": "Failed to create resume",
                 "errors": resume_serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
-        
-        resume_serializer.save(user=user)
-        created_resume = resume_serializer.instance
-        
-        # Generate cover letter using the tailored resume and job description
-        cover_letter_text = generate_cover_letter(normalized_resume, job_description)
-        
-        if not cover_letter_text:
-            # If cover letter generation failed due to rate limit or error, return 429
-            # Delete the created resume since we can't complete the application
-            created_resume.delete()
-            return Response({
-                "details": "Our service is currently handling a high volume of requests. Please try again shortly."
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
-        
-        # Create the application
+
         application_data = {
             "user": user.id,
             "job_description": job_description,
-            "resume": created_resume.id,
-            "cover_letter": cover_letter_text,
+            "cover_letter": documents.cover_letter,
             "job_link": job_link if job_link else None
         }
-        
-        application_serializer = ApplicationSerializer(data=application_data)
-        if application_serializer.is_valid():
+        # Save the resume and the application together: nothing is left behind if either fails.
+        with transaction.atomic():
+            resume_serializer.save(user=user)
+            created_resume = resume_serializer.instance
+            application_serializer = ApplicationSerializer(data={**application_data, "resume": created_resume.id})
+            if not application_serializer.is_valid():
+                transaction.set_rollback(True)
+                return Response({
+                    "details": "Failed to create application",
+                    "errors": application_serializer.errors
+                }, status=status.HTTP_400_BAD_REQUEST)
             application_serializer.save()
-            return Response(application_serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            print("Application serializer errors:", application_serializer.errors)
-            return Response({
-                "details": "Failed to create application",
-                "errors": application_serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
+            application = application_serializer.instance
+
+        # Keep both evaluations (linked to the application) so prompts, models and workflows can be compared.
+        evaluation = documents.evaluation_summary()
+        for kind, outcome in (("resume", documents.resume_outcome), ("cover_letter", documents.letter_outcome)):
+            if outcome.report:
+                record = ResumeEvaluation.record(user, job_description, outcome.report, document_type=kind, application=application)
+                if record and evaluation.get(kind):
+                    evaluation[kind] = {**evaluation[kind], "id": str(record.id)}
+
+        payload = dict(application_serializer.data)
+        payload["evaluation"] = evaluation
+        return Response(payload, status=status.HTTP_201_CREATED)
 
     def put(self, request, pk):
         """

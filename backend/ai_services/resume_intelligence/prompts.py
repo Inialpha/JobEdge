@@ -172,3 +172,80 @@ Also list:
 
 Return JSON:
 {{"relevance": 0.0, "summary_quality": 0.0, "naturalness": 0.0, "unsupported_claims": [], "copied_without_transformation": [], "generic_phrases": [], "feedback": []}}"""
+
+
+# --------------------------------------------------------------------------- cover letters
+
+LETTER_SYSTEM = """You write cover letters for one candidate applying to one specific job.
+
+TRUTH RULES (absolute):
+- Use only facts that are in the candidate's resume. Never invent achievements, tools, employers, numbers, years of experience or qualifications.
+- The job description may be used to describe the job and the company, never to describe the candidate.
+- If the job asks for something the candidate does not have, do not mention it or hint at it. Write about the strengths they do have.
+
+WRITING RULES:
+- Write 3 or 4 paragraphs, 250-350 words in total, in a warm, professional and natural voice.
+- Paragraph 1: why this role, naming the role once, and the candidate's strongest relevant background. No "I am writing to express my interest".
+- Middle paragraphs: two or three real achievements from the resume, retold in your own words and tied to what the job needs. Use real employers, projects and numbers from the resume.
+- Last paragraph: a short, confident close with a call to action.
+- Do not paste resume bullets or sentences from the job description. Do not repeat yourself. Vary how sentences begin.
+- Avoid cliches such as "perfect fit", "ideal candidate", "valuable asset", "hit the ground running", "passionate", "team player".
+- Do NOT write a header, contact details, a date, a sign-off or the candidate's name. They are added automatically.
+- Never use placeholders such as [Your Name].
+
+Return only JSON: {"greeting": "Dear Hiring Manager,", "paragraphs": ["...", "..."]}"""
+
+LETTER_STYLE_HINTS: List[str] = [
+    "Open with the single most relevant achievement from the resume.",
+    "Open with what attracts the candidate to this kind of work, then connect it to their real background.",
+    "Open with the candidate's core strengths for this role in one confident sentence.",
+]
+
+
+def pick_letter_style_hint(master: dict, job_description: str, seed: Optional[int] = None) -> str:
+    if seed is None:
+        digest = hashlib.sha256(("letter" + json.dumps(master, sort_keys=True, default=str) + job_description).encode()).hexdigest()
+        seed = int(digest[:8], 16)
+    return LETTER_STYLE_HINTS[seed % len(LETTER_STYLE_HINTS)]
+
+
+def build_letter_prompt(master: dict, job_description: str, analysis, style_hint: str, gaps: List[str]) -> str:
+    gap_block = ""
+    if gaps:
+        gap_block = f"\nThe job asks for these, but the candidate's resume has no evidence of them. Do not mention or imply them: {', '.join(gaps)}.\n"
+    return f"""Candidate's resume (the only source of truth about the candidate):
+{json.dumps(master, indent=2, default=str)}
+
+Job description:
+{job_description}
+
+Job analysis:
+{_analysis_block(analysis)}
+{gap_block}
+Style for this letter: {style_hint}
+
+Return JSON: {{"greeting": "Dear Hiring Manager,", "paragraphs": ["paragraph 1", "paragraph 2", "paragraph 3"]}}"""
+
+
+def build_letter_revise_prompt(master: dict, job_description: str, analysis, style_hint: str, gaps: List[str], previous_paragraphs: List[str], feedback: str) -> str:
+    gap_block = f"\nDo not mention or imply these (no evidence in the resume): {', '.join(gaps)}.\n" if gaps else ""
+    return f"""Candidate's resume (the only source of truth about the candidate):
+{json.dumps(master, indent=2, default=str)}
+
+Job description:
+{job_description}
+
+Job analysis:
+{_analysis_block(analysis)}
+{gap_block}
+Style for this letter: {style_hint}
+
+Your previous letter (body paragraphs):
+{json.dumps(previous_paragraphs, indent=2)}
+
+An independent evaluator found these problems:
+{feedback}
+
+Rewrite the letter to fix every problem. Keep what already works. Only use facts from the resume; remove anything the evaluator marks as unsupported. Still no header, contact details, date, sign-off or name.
+
+Return JSON: {{"greeting": "Dear Hiring Manager,", "paragraphs": ["...", "..."]}}"""
