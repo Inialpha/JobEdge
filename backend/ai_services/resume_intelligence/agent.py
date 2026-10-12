@@ -21,6 +21,8 @@ from .grounding import build_source_index, ground_resume, sanitize_summary, text
 from .job_analysis import JobAnalysis, analyze_job
 from .llm import LLMClient, model_name
 from .prompts import pick_style_hint
+from .trace import describe_error, log_evaluation, log_stage, set_stage
+import logging
 
 
 class GenerationError(Exception):
@@ -131,18 +133,23 @@ class ResumeAgent:
         index = build_source_index(master)
 
         # 1. Analyze
+        log_stage("resume", "start", max_revisions=self.max_revisions, budget_seconds=self.max_seconds)
         analysis = analyze_job(job_description, self.generator_llm)
+        log_stage("resume.analyze", "done", source=analysis.source, keywords=len(analysis.keywords), required=len(analysis.required_skills))
         style_hint = pick_style_hint(master, job_description, seed)
 
         # 2. Generate (+ ground) and 3. Evaluate
         call_started = self.clock()
+        set_stage("resume.draft0")
         try:
             raw = self.generator.generate(master, job_description, analysis, style_hint)
         except Exception as exc:  # network, rate limit, unusable output
+            log_stage("resume.draft0", "first draft FAILED, giving up", logging.ERROR, **describe_error(exc))
             raise GenerationError(str(exc)) from exc
         last_call_seconds = self.clock() - call_started
         resume, repairs = ground_resume(raw, master, index)
         evaluation = self.evaluator.evaluate(resume, master, job_description, analysis, index, repairs)
+        log_evaluation("resume.draft0", evaluation, len(repairs))
 
         records = [IterationRecord(0, "initial", evaluation, repairs)]
         candidates = [_Candidate(0, resume, evaluation)]
@@ -151,21 +158,27 @@ class ResumeAgent:
         # 4. Revise -> 5. Re-evaluate, a limited number of times
         for n in range(1, self.max_revisions + 1):
             if evaluation.passed:
+                log_stage("resume", "no revision needed", passed_at=n - 1)
                 break
             if self._out_of_time(started, last_call_seconds):
                 stopped_for_time = True
+                log_stage("resume", "revision skipped: time budget used", elapsed=self.clock() - started, budget=self.max_seconds)
                 break
             call_started = self.clock()
+            set_stage(f"resume.draft{n}")
+            log_stage(f"resume.draft{n}", "revising", failed=",".join(evaluation.failed_dimensions))
             try:
                 raw = self.generator.generate(
                     master, job_description, analysis, style_hint,
                     previous=resume, feedback=evaluation.feedback_text(),
                 )
-            except Exception:
+            except Exception as exc:
+                log_stage(f"resume.draft{n}", "revision FAILED, keeping best draft so far", logging.WARNING, **describe_error(exc))
                 break  # keep the best draft we already have
             last_call_seconds = self.clock() - call_started
             resume, repairs = ground_resume(raw, master, index)
             evaluation = self.evaluator.evaluate(resume, master, job_description, analysis, index, repairs)
+            log_evaluation(f"resume.draft{n}", evaluation, len(repairs))
             records.append(IterationRecord(n, "revision", evaluation, repairs))
             candidates.append(_Candidate(n, resume, evaluation))
 
@@ -178,6 +191,10 @@ class ResumeAgent:
             final_eval = self.evaluator.evaluate(final_resume, master, job_description, analysis, index, fixes)
             records.append(IterationRecord(len(records), "finalize", final_eval, fixes))
 
+        log_stage(
+            "resume", "finished", best_draft=best.iteration, drafts=len(candidates), passed=final_eval.passed,
+            overall=final_eval.overall, stopped_for_time=stopped_for_time, elapsed=self.clock() - started,
+        )
         metadata = {
             "workflow_version": config.WORKFLOW_VERSION,
             "prompt_version": config.PROMPT_VERSION,

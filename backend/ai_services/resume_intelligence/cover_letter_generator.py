@@ -5,7 +5,7 @@ from typing import List, Optional
 from . import config
 from .generator import prompt_master
 from .job_analysis import JobAnalysis
-from .json_utils import extract_json_dict
+from .json_utils import parse_model_json
 from .llm import LLMClient
 from .prompts import LETTER_SYSTEM, build_letter_prompt, build_letter_revise_prompt
 
@@ -38,4 +38,4 @@ class CoverLetterGenerator:
         else:
             user = build_letter_revise_prompt(shown, job_description, analysis, style_hint, gaps, previous, feedback or "")
             temperature = max(0.2, self.temperature - 0.2)
-        return extract_json_dict(self.llm.complete(LETTER_SYSTEM, user, temperature=temperature))
+        return parse_model_json(self.llm.complete(LETTER_SYSTEM, user, temperature=temperature))

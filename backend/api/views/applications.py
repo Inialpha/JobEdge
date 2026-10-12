@@ -76,9 +76,11 @@ class ApplicationAPIView(APIView):
         # The resume AND the cover letter are written, evaluated and revised by the agent.
         try:
             documents = generate_application_documents(job_description, master_data)
-        except DocumentsUnavailable:
+        except DocumentsUnavailable as exc:
+            # failed_stage / reason / trace_id say where it broke; the trace id finds the lines in logs/app.log
             return Response({
-                "details": "Our service is currently handling a high volume of requests. Please try again shortly."
+                "details": "Our service is currently handling a high volume of requests. Please try again shortly.",
+                **exc.to_dict(),
             }, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
         tailored_resume_data = dict(documents.resume)

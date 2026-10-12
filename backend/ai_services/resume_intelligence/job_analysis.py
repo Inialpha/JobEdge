@@ -4,6 +4,7 @@ Uses the LLM when one is available and always falls back to (or is topped up by)
 a deterministic keyword extractor, so the evaluator has requirements to check
 even when the model is unavailable.
 """
+import logging
 import re
 from collections import Counter
 from dataclasses import dataclass, field
@@ -12,6 +13,7 @@ from typing import Any, Dict, List, Optional
 from .json_utils import extract_json_dict
 from .llm import LLMClient
 from .prompts import ANALYZE_SYSTEM, build_analyze_prompt
+from .trace import describe_error, log_stage, set_stage
 from .text_utils import STOPWORDS, as_list, stem, tokenize
 
 GENERIC_JD_WORDS = frozenset(
@@ -106,6 +108,7 @@ def _clean_list(value: Any, limit: int = 30) -> List[str]:
 
 
 def analyze_job(job_description: str, llm: Optional[LLMClient] = None) -> JobAnalysis:
+    set_stage("analyze")
     heuristic = heuristic_keywords(job_description)
     if llm is None:
         return JobAnalysis(keywords=heuristic, required_skills=heuristic[:10], source="heuristic")
@@ -113,7 +116,9 @@ def analyze_job(job_description: str, llm: Optional[LLMClient] = None) -> JobAna
     try:
         raw = llm.complete(ANALYZE_SYSTEM, build_analyze_prompt(job_description), temperature=0.0)
         data = extract_json_dict(raw)
-    except Exception:
+    except Exception as exc:
+        # The analysis is optional: fall back to keywords found without the model, but say so.
+        log_stage("analyze", "model analysis failed, using heuristic keywords", logging.WARNING, **describe_error(exc))
         return JobAnalysis(keywords=heuristic, required_skills=heuristic[:10], source="heuristic")
 
     required = _clean_list(data.get("required_skills"))

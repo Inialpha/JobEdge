@@ -11,6 +11,7 @@ from typing import Any, Dict, Optional
 from ai_services.resume_intelligence import config
 from ai_services.resume_intelligence.agent import GenerationError, ResumeAgent
 from ai_services.resume_intelligence.llm import GroqLLM
+from ai_services.resume_intelligence.trace import describe_error, log_stage
 
 logger = logging.getLogger("api")
 
@@ -22,6 +23,7 @@ class GenerationOutcome:
     summary: Optional[Dict[str, Any]] = None  # small slice shown to the user
     used_agent: bool = False
     analysis: Any = None                   # job analysis, reused by the cover letter step
+    error: Optional[Dict[str, Any]] = None  # why no resume was produced (kind, error type, status code)
 
 
 def build_agent() -> ResumeAgent:
@@ -31,6 +33,10 @@ def build_agent() -> ResumeAgent:
 
 
 def generate_tailored_resume(job_description: str, master: dict) -> GenerationOutcome:
+    from ai_services.resume_intelligence.trace import current_trace, start_trace
+
+    if current_trace() == "-":  # called on its own (resume/generate endpoint), not from an application
+        start_trace("resume")
     if not config.AGENT_ENABLED:
         from ai_services.resume_extractor import generate_resume  # legacy single-shot path
 
@@ -40,10 +46,11 @@ def generate_tailored_resume(job_description: str, master: dict) -> GenerationOu
         result = build_agent().run(master, job_description)
     except GenerationError as exc:
         logger.warning("Resume generation failed: %s", exc)
-        return GenerationOutcome(resume=None, used_agent=True)
-    except Exception:  # never let an evaluation bug take resume generation down
+        return GenerationOutcome(resume=None, used_agent=True, error=describe_error(exc))
+    except Exception as exc:  # never let an evaluation bug take resume generation down
         logger.exception("Resume agent crashed")
-        return GenerationOutcome(resume=None, used_agent=True)
+        log_stage("resume", "CRASHED (bug in the pipeline, not the model)", logging.ERROR, **describe_error(exc))
+        return GenerationOutcome(resume=None, used_agent=True, error={**describe_error(exc), "kind": "pipeline_bug"})
 
     return GenerationOutcome(
         resume=result.resume,
@@ -60,6 +67,7 @@ class LetterOutcome:
     report: Optional[Dict[str, Any]] = None
     summary: Optional[Dict[str, Any]] = None
     used_agent: bool = False
+    error: Optional[Dict[str, Any]] = None
 
 
 def build_letter_agent():
@@ -82,8 +90,9 @@ def generate_tailored_cover_letter(master: dict, tailored_resume: dict, job_desc
         result = build_letter_agent().run(master, job_description, analysis=analysis, prompt_resume=tailored_resume)
     except GenerationError as exc:
         logger.warning("Cover letter generation failed: %s", exc)
-        return LetterOutcome(text=None, used_agent=True)
-    except Exception:
+        return LetterOutcome(text=None, used_agent=True, error=describe_error(exc))
+    except Exception as exc:
         logger.exception("Cover letter agent crashed")
-        return LetterOutcome(text=None, used_agent=True)
+        log_stage("letter", "CRASHED (bug in the pipeline, not the model)", logging.ERROR, **describe_error(exc))
+        return LetterOutcome(text=None, used_agent=True, error={**describe_error(exc), "kind": "pipeline_bug"})
     return LetterOutcome(text=result.text, report=result.report(), summary=result.summary_for_client(), used_agent=True)

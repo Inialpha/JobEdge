@@ -3,7 +3,7 @@ from typing import Optional
 
 from . import config
 from .job_analysis import JobAnalysis
-from .json_utils import extract_json_dict
+from .json_utils import parse_model_json
 from .llm import LLMClient
 from .prompts import GENERATE_SYSTEM, build_generate_prompt, build_revise_prompt
 
@@ -37,4 +37,4 @@ class ResumeGenerator:
             user = build_revise_prompt(shown, job_description, analysis, style_hint, previous, feedback or "")
             temperature = max(0.2, self.temperature - 0.2)  # revisions should be more conservative
         raw = self.llm.complete(GENERATE_SYSTEM, user, temperature=temperature)
-        return extract_json_dict(raw)
+        return parse_model_json(raw)
