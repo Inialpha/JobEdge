@@ -27,6 +27,7 @@ class FakeClient:
         self.completions = self
 
     def create(self, **kwargs):
+        self.kwargs = kwargs
         self.calls += 1
         if self.calls > self.ok_calls:
             raise FakeRateLimit("Rate limit reached for model")
@@ -78,3 +79,29 @@ class LoggingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ReasoningModelTests(unittest.TestCase):
+    def test_empty_reply_from_exhausted_output_budget_is_reported_not_parsed(self):
+        from ai_services.resume_intelligence.llm import OutputTruncated
+
+        class Client(FakeClient):
+            def create(self, **kwargs):
+                self.kwargs = kwargs
+                r = super().create(**kwargs)
+                r.choices[0].finish_reason = "length"
+                return r
+
+        client = Client(ok_calls=5, reply="")
+        llm = GroqLLM("openai/gpt-oss-20b", client=client)
+        with self.assertLogs("api", level="INFO") as logs, self.assertRaises(OutputTruncated):
+            llm.complete("sys", "user")
+        self.assertIn("output cap reached", "\n".join(logs.output))
+        self.assertGreaterEqual(client.kwargs["max_tokens"], 4000)
+        self.assertEqual(client.kwargs["extra_body"], {"reasoning_effort": "low"})
+        self.assertEqual(describe_error(OutputTruncated("x"))["kind"], "output_truncated")
+
+    def test_other_models_get_no_reasoning_parameter(self):
+        client = FakeClient(ok_calls=5, reply="{}")
+        GroqLLM("llama-3.3-70b-versatile", client=client).complete("s", "u")
+        self.assertNotIn("extra_body", client.kwargs if hasattr(client, "kwargs") else {})

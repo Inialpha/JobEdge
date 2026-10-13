@@ -3,6 +3,7 @@ import logging
 import time
 from typing import Optional, Protocol
 
+from . import config
 from .trace import current_stage, describe_error, log_stage, preview
 
 
@@ -13,6 +14,10 @@ class LLMClient(Protocol):
 
     def complete(self, system: str, user: str, temperature: float = 0.0) -> str:
         ...
+
+
+class OutputTruncated(ValueError):
+    """The model hit the output-token cap before writing any answer (typical of reasoning models)."""
 
 
 class GroqLLM:
@@ -41,7 +46,10 @@ class GroqLLM:
             temperature=temperature,
             top_p=1,
             stream=False,
+            max_tokens=config.MAX_OUTPUT_TOKENS,
         )
+        if config.REASONING_EFFORT and "gpt-oss" in self.model:
+            kwargs["extra_body"] = {"reasoning_effort": config.REASONING_EFFORT}
         stage = current_stage()
         started = time.monotonic()
         try:
@@ -62,15 +70,22 @@ class GroqLLM:
             )
             raise
         content = (completion.choices[0].message.content or "").strip()
+        finish_reason = getattr(completion.choices[0], "finish_reason", None)
         usage = getattr(completion, "usage", None)
         log_stage(
             stage, "llm_call ok",
             model=self.model, seconds=time.monotonic() - started,
             prompt_chars=len(system) + len(user), response_chars=len(content),
-            finish_reason=getattr(completion.choices[0], "finish_reason", None),
+            finish_reason=finish_reason,
             tokens_in=getattr(usage, "prompt_tokens", None), tokens_out=getattr(usage, "completion_tokens", None),
             preview=preview(content),
         )
+        if not content and finish_reason == "length":
+            log_stage(
+                stage, "llm_call EMPTY: output cap reached before any answer (reasoning model?)", logging.ERROR,
+                max_tokens=config.MAX_OUTPUT_TOKENS, hint="raise RESUME_MAX_OUTPUT_TOKENS or lower RESUME_REASONING_EFFORT",
+            )
+            raise OutputTruncated("The model used its whole output budget before writing an answer")
         return content
 
 

@@ -79,6 +79,9 @@ python manage.py compare_resume_evaluations --days 30
 | `RESUME_AGENT_TIME_BUDGET_SECONDS` | `40` | A revision is skipped if it would exceed this, so a slow model means fewer revisions, not a timeout. |
 | `RESUME_JUDGE_ENABLED` | `false` | Adds one LLM judge call per evaluation. Useful when benchmarking. |
 | `RESUME_GENERATOR_MODEL` / `RESUME_EVALUATOR_MODEL` | `llama-3.3-70b-versatile` | Groq model names. |
+| `RESUME_MAX_OUTPUT_TOKENS` | `4096` | Output cap per call. Reasoning models (gpt-oss) need room to think and answer; too small gives an empty reply. |
+| `RESUME_REASONING_EFFORT` | `low` | Sent to gpt-oss models only (low / medium / high). |
+| `RESUME_LOG_PREVIEW_CHARS` | `200` | Characters of each model reply written to the log; `0` logs no content. |
 
 ## Known limits
 

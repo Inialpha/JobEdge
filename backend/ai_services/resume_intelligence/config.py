@@ -15,6 +15,13 @@ PROMPT_VERSION = "grounded-transform-v1"
 GENERATOR_MODEL = os.getenv("RESUME_GENERATOR_MODEL", "llama-3.3-70b-versatile")
 EVALUATOR_MODEL = os.getenv("RESUME_EVALUATOR_MODEL", "llama-3.3-70b-versatile")
 
+# Output cap per model call. Reasoning models (e.g. openai/gpt-oss-*) spend part of this on hidden
+# thinking before writing the answer; with a small cap they return an EMPTY reply (finish_reason=length).
+MAX_OUTPUT_TOKENS = int(os.getenv("RESUME_MAX_OUTPUT_TOKENS", "4096"))
+# "low" keeps reasoning models from thinking for most of the budget. Sent only to gpt-oss models,
+# or to any model when RESUME_REASONING_EFFORT is set (low | medium | high).
+REASONING_EFFORT = os.getenv("RESUME_REASONING_EFFORT", "low")
+
 GENERATOR_TEMPERATURE = 0.5  # some variation in wording
 EVALUATOR_TEMPERATURE = 0.0  # judging should be repeatable
 

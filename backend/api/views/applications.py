@@ -78,10 +78,11 @@ class ApplicationAPIView(APIView):
             documents = generate_application_documents(job_description, master_data)
         except DocumentsUnavailable as exc:
             # failed_stage / reason / trace_id say where it broke; the trace id finds the lines in logs/app.log
-            return Response({
-                "details": "Our service is currently handling a high volume of requests. Please try again shortly.",
-                **exc.to_dict(),
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            if exc.error.get("kind") == "rate_limited":
+                code, details = status.HTTP_429_TOO_MANY_REQUESTS, "Our service is currently handling a high volume of requests. Please try again shortly."
+            else:  # not a rate limit: do not tell the user it is "busy"
+                code, details = status.HTTP_502_BAD_GATEWAY, "The AI service did not return a usable result. Please try again."
+            return Response({"details": details, **exc.to_dict()}, status=code)
 
         tailored_resume_data = dict(documents.resume)
         tailored_resume_data["is_master"] = False
