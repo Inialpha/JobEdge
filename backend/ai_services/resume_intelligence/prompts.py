@@ -41,10 +41,11 @@ def _avoid_words() -> str:
 GENERATE_SYSTEM = f"""You are a human resource expert specializing in tailoring resumes to fit specific job descriptions. Create a tailored resume from the candidate's master resume that aligns with the job description.
 
 How to build it:
-- Select only the professional experiences, educations, projects, certifications and awards that are relevant to the job, and return each selected item exactly as it is written in the master resume. Leave out the ones that are not relevant.
-- Include only the skills that are relevant to the job.
-- Write an optimised professional summary (2-4 sentences) that captures the candidate's value proposition and relevance to this job: who they are, the experience and strengths that matter here, and what they bring. Base it only on what the master resume says; do not add numbers, tools or achievements that are not in it.
-- Do not use these words: {_avoid_words()}.
+1. Select. Keep only the professional experiences, educations, projects, certifications and awards that are relevant to the job, and the skills that are relevant to the job. Leave out the rest.
+2. Tailor. Rewrite the selected experience bullets and project descriptions so they speak to this job. Use the job description's keywords and terminology wherever the candidate's own bullet supports them, put the most relevant points first, and keep each bullet to one clear sentence. Keep the original meaning and every real number, and keep names, employers, titles, dates, institutions and certification names exactly as in the master resume.
+3. Stay true to the master resume. The tailoring changes wording and emphasis only. It never adds achievements, tools, numbers or responsibilities that the master resume does not contain, and it uses a job keyword only where the candidate really did that.
+4. Summary. Write an optimised professional summary (2-4 sentences) that captures the candidate's value proposition and relevance to this job: who they are, the experience and strengths that matter here, and what they bring.
+5. Do not use these words: {_avoid_words()}.
 
 Return valid JSON in the requested schema."""
 
@@ -54,10 +55,10 @@ SCHEMA_BLOCK = """{
   "personal_information": {"name": "...", "email": "...", "phone": "...", "address": "...", "linkedin": "...", "website": "...", "profession": "..."},
   "professional_experiences": [
     {"organization": "exact", "role": "exact", "start_date": "exact", "end_date": "exact", "location": "exact",
-     "responsibilities": ["exactly as in the master resume"]}
+     "responsibilities": ["tailored bullets: job keywords where supported, same facts and numbers"]}
   ],
   "skills": [{"category": "category name", "skills": ["only skills from the master resume that are relevant to the job"]}],
-  "projects": [{"name": "exact name", "description": "exactly as in the master resume"}],
+  "projects": [{"name": "exact name", "description": "tailored description: job keywords where supported, same facts and numbers"}],
   "educations": [{"institution": "exact", "certificate": "exact", "start_date": "exact", "end_date": "exact"}],
   "certifications": [{"name": "exact", "issuer": "exact", "year": "exact"}],
   "awards": [{"title": "exact", "organization": "exact", "year": "exact"}],
@@ -117,7 +118,7 @@ Your previous draft:
 A reviewer checked the draft and found these problems:
 {feedback}
 
-Fix them. Keep what already works. Everything other than the summary must stay exactly as written in the master resume; anything the reviewer lists as not in the master resume must be removed.
+Fix them. Keep what already works. Facts, names, dates and numbers must stay as in the master resume; anything the reviewer lists as not in the master resume must be removed, and use job keywords only where the candidate's own experience supports them.
 
 Return the revised resume as JSON in exactly this schema:
 {SCHEMA_BLOCK}"""

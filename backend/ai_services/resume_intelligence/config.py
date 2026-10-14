@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 WORKFLOW_VERSION = "generator-evaluator-v2"
-PROMPT_VERSION = "select-and-summarise-v2"
+PROMPT_VERSION = "select-tailor-v3"
 
 GENERATOR_MODEL = os.getenv("RESUME_GENERATOR_MODEL", "llama-3.3-70b-versatile")
 EVALUATOR_MODEL = os.getenv("RESUME_EVALUATOR_MODEL", "llama-3.3-70b-versatile")
@@ -68,12 +68,11 @@ DIMENSION_THRESHOLDS = {
     "structure": 0.80,
 }
 
-# Bullet classification: an output bullet is "copied" when it matches a source bullet this closely.
-# Copying is what the generator is asked to do (it selects, it does not rewrite), so it is not penalised.
-COPY_SIMILARITY = 0.92
+# Bullet classification (similarity of an output bullet to its closest source bullet).
+COPY_SIMILARITY = 0.92          # at or above: copied without tailoring
 MATCH_SIMILARITY = 0.30         # below: not traceable to any source bullet
 MIN_GROUNDED_TOKEN_RATIO = 0.50  # share of a bullet's content words found in the source
-ALLOWED_COPY_RATIO = 1.0
+ALLOWED_COPY_RATIO = 0.4        # a few strong bullets may stay as they are
 
 SUMMARY_WORDS_MIN = 25
 SUMMARY_WORDS_MAX = 120

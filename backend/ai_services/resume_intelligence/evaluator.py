@@ -364,9 +364,19 @@ class ResumeEvaluator:
         else:
             selection = 1.0
 
+        total = classes["summary"]["total"]
+        copy_ratio = classes["summary"]["copied"] / total if total else 0.0
+        transformation = 1.0 - max(0.0, copy_ratio - config.ALLOWED_COPY_RATIO) / (1.0 - config.ALLOWED_COPY_RATIO)
+
+        deterministic = 0.6 * selection + 0.4 * transformation
         if selection < 0.4:
-            issues.append(Issue("relevance", "major", f"Only {int(selection * 100)}% of the bullets mention anything the job asks for.", "Select the experiences and projects that match the job's requirements and leave out the unrelated ones."))
-        return self._blend(selection, judge["relevance"] if judge else None)
+            issues.append(Issue("relevance", "major", f"Only {int(selection * 100)}% of the bullets mention anything the job asks for.", "Keep the experiences and projects that match the job's requirements, leave out unrelated ones, and use the job's keywords where the candidate's own work supports them."))
+        if copy_ratio > config.ALLOWED_COPY_RATIO:
+            examples = "; ".join(f'"{c}"' for c in classes["summary"]["copied_examples"])
+            issues.append(Issue("relevance", "major", f"{int(copy_ratio * 100)}% of the bullets are copied from the master resume without tailoring. Examples: {examples}", "Rewrite them to foreground what matters for this job, using its keywords where the candidate's work supports them. Keep every fact and number."))
+        if judge and judge["copied"]:
+            issues.append(Issue("relevance", "minor", f"Reviewer says these were copied without tailoring: {'; '.join(judge['copied'][:3])}", "Tailor the wording to the job."))
+        return self._blend(deterministic, judge["relevance"] if judge else None)
 
     # ------------------------------------------------------------------ selectivity
 

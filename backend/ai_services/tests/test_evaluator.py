@@ -27,12 +27,13 @@ class ScoringTests(unittest.TestCase):
                 self.assertTrue(result.passed, (result.scores, result.failed_dimensions))
                 self.assertEqual(result.remaining_violations, 0)
 
-    def test_untailored_copy_fails_on_the_summary(self):
-        # Bullets are meant to be copied exactly (the generator selects, it does not rewrite),
-        # so only the unchanged summary lets this fail.
+    def test_untailored_copy_fails_on_tailoring_and_summary(self):
+        # Selecting is not enough: bullets must be reworded for the job and the summary rewritten.
         result = evaluate(copied())
         self.assertFalse(result.passed)
+        self.assertIn("relevance", result.failed_dimensions)
         self.assertIn("summary_quality", result.failed_dimensions)
+        self.assertEqual(result.diagnostics["bullets"]["transformed"], 0)
         self.assertEqual(result.diagnostics["bullets"]["invented"], 0)
         self.assertEqual(result.diagnostics["bullets"]["copied"], result.diagnostics["bullets"]["total"])
 
