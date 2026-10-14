@@ -32,38 +32,32 @@ Use the job description's own wording. Do not invent requirements."""
 
 # --------------------------------------------------------------------------- generation
 
-GENERATE_SYSTEM = """You are an expert resume writer who tailors a candidate's resume to one specific job.
+def _avoid_words() -> str:
+    from .config import BUZZWORDS
 
-TRUTH RULES (absolute, they override everything else):
-- Use only facts that are in the master resume. Never add achievements, responsibilities, tools, technologies, metrics, numbers, percentages, employers, roles, dates, degrees or certifications that are not there.
-- Never state years of experience, team sizes, revenue, or any figure unless that exact figure is in the master resume.
-- Names, employers, job titles, dates, locations, institutions, degrees, certification names and project names must be copied exactly from the master resume.
-- If the job asks for something the candidate does not have, leave it out. Do not hint at it.
+    return ", ".join(BUZZWORDS)
 
-HOW TO TAILOR (this is the real job):
-- Do not copy bullets verbatim. Rewrite each selected bullet so it highlights what matters for THIS job, using the job's terminology only where the candidate's own bullet already supports it. Keep the original meaning and every real number.
-- Select and order content by relevance to the job: most relevant experiences, projects and skills first. Drop what is irrelevant.
-- Vary sentence structure. Do not start more than two bullets with the same verb. One sentence per bullet, at most 35 words.
-- Do not stuff keywords. A bullet should read like something a person wrote.
 
-SUMMARY:
-- 2-3 sentences, 40-80 words, written for this candidate and this role. No first person.
-- Name at least two real strengths of the candidate that matter to the job, grounded in their actual experience.
-- Do not copy the master resume's summary or sentences from the job description.
-- Avoid cliches such as "results-driven", "detail-oriented", "team player", "passionate", "proven track record", "seeking".
+GENERATE_SYSTEM = f"""You are a human resource expert specializing in tailoring resumes to fit specific job descriptions. Create a tailored resume from the candidate's master resume that aligns with the job description.
 
-Return only valid JSON in the requested schema."""
+How to build it:
+- Select only the professional experiences, educations, projects, certifications and awards that are relevant to the job, and return each selected item exactly as it is written in the master resume. Leave out the ones that are not relevant.
+- Include only the skills that are relevant to the job.
+- Write an optimised professional summary (2-4 sentences) that captures the candidate's value proposition and relevance to this job: who they are, the experience and strengths that matter here, and what they bring. Base it only on what the master resume says; do not add numbers, tools or achievements that are not in it.
+- Do not use these words: {_avoid_words()}.
+
+Return valid JSON in the requested schema."""
 
 SCHEMA_BLOCK = """{
   "keywords": ["terms from the candidate's real skills and experience that matter for this job"],
-  "summary": "tailored summary",
+  "summary": "the optimised professional summary",
   "personal_information": {"name": "...", "email": "...", "phone": "...", "address": "...", "linkedin": "...", "website": "...", "profession": "..."},
   "professional_experiences": [
     {"organization": "exact", "role": "exact", "start_date": "exact", "end_date": "exact", "location": "exact",
-     "responsibilities": ["rewritten, grounded bullets"]}
+     "responsibilities": ["exactly as in the master resume"]}
   ],
-  "skills": [{"category": "category name", "skills": ["only skills present in the master resume"]}],
-  "projects": [{"name": "exact name", "description": "rewritten, grounded description"}],
+  "skills": [{"category": "category name", "skills": ["only skills from the master resume that are relevant to the job"]}],
+  "projects": [{"name": "exact name", "description": "exactly as in the master resume"}],
   "educations": [{"institution": "exact", "certificate": "exact", "start_date": "exact", "end_date": "exact"}],
   "certifications": [{"name": "exact", "issuer": "exact", "year": "exact"}],
   "awards": [{"title": "exact", "organization": "exact", "year": "exact"}],
@@ -99,41 +93,31 @@ def _analysis_block(analysis) -> str:
     )
 
 
-def build_generate_prompt(master: dict, job_description: str, analysis, style_hint: str) -> str:
-    return f"""Master resume (the only source of truth):
+def build_generate_prompt(master: dict, job_description: str, analysis, style_hint: str = "") -> str:
+    return f"""Master Resume:
 {json.dumps(master, indent=2, default=str)}
 
-Job description:
+Job Description:
 {job_description}
-
-Job analysis (what the job asks for; only use items the master resume supports):
-{_analysis_block(analysis)}
-
-Style for this draft: {style_hint}
 
 Return the tailored resume as JSON in exactly this schema:
 {SCHEMA_BLOCK}"""
 
 
 def build_revise_prompt(master: dict, job_description: str, analysis, style_hint: str, previous: dict, feedback: str) -> str:
-    return f"""Master resume (the only source of truth):
+    return f"""Master Resume:
 {json.dumps(master, indent=2, default=str)}
 
-Job description:
+Job Description:
 {job_description}
-
-Job analysis:
-{_analysis_block(analysis)}
-
-Style for this draft: {style_hint}
 
 Your previous draft:
 {json.dumps(previous, indent=2, default=str)}
 
-An independent evaluator found these problems with the previous draft:
+A reviewer checked the draft and found these problems:
 {feedback}
 
-Revise the draft to fix every problem. Keep what already works. You may only use facts from the master resume: if the evaluator lists something as invented or unsupported, remove it or restore the master resume's wording. Do not add keywords that the master resume does not support.
+Fix them. Keep what already works. Everything other than the summary must stay exactly as written in the master resume; anything the reviewer lists as not in the master resume must be removed.
 
 Return the revised resume as JSON in exactly this schema:
 {SCHEMA_BLOCK}"""
@@ -176,24 +160,19 @@ Return JSON:
 
 # --------------------------------------------------------------------------- cover letters
 
-LETTER_SYSTEM = """You write cover letters for one candidate applying to one specific job.
+LETTER_SYSTEM = f"""You are a professional cover letter writer with expertise in creating compelling, personalized cover letters that highlight a candidate's qualifications and align them with job requirements. Your letters are professional, warm, engaging and tailored to each role.
 
-TRUTH RULES (absolute):
-- Use only facts that are in the candidate's resume. Never invent achievements, tools, employers, numbers, years of experience or qualifications.
-- The job description may be used to describe the job and the company, never to describe the candidate.
-- If the job asks for something the candidate does not have, do not mention it or hint at it. Write about the strengths they do have.
+What to write:
+1. Start with a proper opening that greets the reader and shows enthusiasm for the role and an understanding of it (for example that you are excited to apply).
+2. Highlight 2-3 key experiences or achievements from the candidate's resume that relate directly to the job.
+3. Explain why the candidate is a good fit for this role and company, using what the job description says about them.
+4. Close with a call to action and a polite thank-you.
+5. Write 3-4 paragraphs, about 250-350 words, in a professional but warm tone.
+6. Only mention experience, tools and numbers that appear in the candidate's resume.
+7. The header, date, sign-off and the candidate's name are added automatically, so do not write them.
+8. Do not use these words: {_avoid_words()}.
 
-WRITING RULES:
-- Write 3 or 4 paragraphs, 250-350 words in total, in a warm, professional and natural voice.
-- Paragraph 1: why this role, naming the role once, and the candidate's strongest relevant background. No "I am writing to express my interest".
-- Middle paragraphs: two or three real achievements from the resume, retold in your own words and tied to what the job needs. Use real employers, projects and numbers from the resume.
-- Last paragraph: a short, confident close with a call to action.
-- Do not paste resume bullets or sentences from the job description. Do not repeat yourself. Vary how sentences begin.
-- Avoid cliches such as "perfect fit", "ideal candidate", "valuable asset", "hit the ground running", "passionate", "team player".
-- Do NOT write a header, contact details, a date, a sign-off or the candidate's name. They are added automatically.
-- Never use placeholders such as [Your Name].
-
-Return only JSON: {"greeting": "Dear Hiring Manager,", "paragraphs": ["...", "..."]}"""
+Return only JSON: {{"greeting": "Dear Hiring Manager,", "paragraphs": ["...", "..."]}}"""
 
 LETTER_STYLE_HINTS: List[str] = [
     "Open with the single most relevant achievement from the resume.",
@@ -222,8 +201,6 @@ Job description:
 Job analysis:
 {_analysis_block(analysis)}
 {gap_block}
-Style for this letter: {style_hint}
-
 Return JSON: {{"greeting": "Dear Hiring Manager,", "paragraphs": ["paragraph 1", "paragraph 2", "paragraph 3"]}}"""
 
 
@@ -238,8 +215,6 @@ Job description:
 Job analysis:
 {_analysis_block(analysis)}
 {gap_block}
-Style for this letter: {style_hint}
-
 Your previous letter (body paragraphs):
 {json.dumps(previous_paragraphs, indent=2)}
 

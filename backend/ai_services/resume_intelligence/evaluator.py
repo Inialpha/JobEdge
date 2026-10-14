@@ -154,6 +154,7 @@ class ResumeEvaluator:
         scores["factual_accuracy"] = self._factual(resume, index, classes, repairs, judge, issues)
         scores["keyword_alignment"] = self._keywords(keyword_info, issues)
         scores["relevance"] = self._relevance(bullets, resume, index, classes, keyword_info, judge, issues)
+        scores["selectivity"], selectivity_info = self._selectivity(resume, keyword_info, issues)
         scores["summary_quality"] = self._summary(summary, master, job_description, keyword_info, index, judge, issues)
         scores["naturalness"] = self._naturalness(summary, bullets, keyword_info, judge, issues)
         scores["redundancy"], redundancy_info = self._redundancy(summary, bullets, issues)
@@ -168,6 +169,7 @@ class ResumeEvaluator:
         diagnostics = {
             "bullets": classes["summary"],
             "keywords": keyword_info,
+            "selectivity": selectivity_info,
             "violations": violations,
             "grounding_repairs": len(repairs),
             "redundancy": redundancy_info,
@@ -362,19 +364,62 @@ class ResumeEvaluator:
         else:
             selection = 1.0
 
-        total = classes["summary"]["total"]
-        copy_ratio = classes["summary"]["copied"] / total if total else 0.0
-        transformation = 1.0 - max(0.0, copy_ratio - config.ALLOWED_COPY_RATIO) / (1.0 - config.ALLOWED_COPY_RATIO)
-
-        deterministic = 0.65 * selection + 0.35 * transformation
         if selection < 0.4:
-            issues.append(Issue("relevance", "major", f"Only {int(selection * 100)}% of the bullets mention anything the job asks for.", "Prioritise and rewrite content that matches the job's requirements; drop unrelated bullets."))
-        if copy_ratio > config.ALLOWED_COPY_RATIO:
-            examples = "; ".join(f'"{c}"' for c in classes["summary"]["copied_examples"])
-            issues.append(Issue("relevance", "major", f"{int(copy_ratio * 100)}% of the bullets are copied from the master resume without tailoring. Examples: {examples}", "Rewrite them to foreground what matters for this job, keeping every fact."))
-        if judge and judge["copied"]:
-            issues.append(Issue("relevance", "minor", f"Reviewer says these were copied without tailoring: {'; '.join(judge['copied'][:3])}", "Tailor the wording to the job."))
-        return self._blend(deterministic, judge["relevance"] if judge else None)
+            issues.append(Issue("relevance", "major", f"Only {int(selection * 100)}% of the bullets mention anything the job asks for.", "Select the experiences and projects that match the job's requirements and leave out the unrelated ones."))
+        return self._blend(selection, judge["relevance"] if judge else None)
+
+    # ------------------------------------------------------------------ selectivity
+
+    def _selectivity(self, resume, kw, issues):
+        """Did the generator pick what matters, or hand back (nearly) the whole master resume?
+
+        Projects and skills are checked against the job's keywords the candidate really has: a project
+        that never touches any of them, or a skill the job does not ask for, counts as noise.
+        """
+        supported = kw["supported"]
+        if not supported:
+            return 1.0, {"projects_kept": None, "skills_kept": None}
+
+        def relevant(text: str) -> bool:
+            return any(_contains_phrase(text, k) or contains_term_text(text, k) for k in supported)
+
+        parts, weights, info = [], [], {}
+
+        projects = [p for p in as_list(resume.get("projects")) if isinstance(p, dict)]
+        if projects:
+            noise = [str(p.get("name") or "") for p in projects if not relevant(f"{p.get('name') or ''} {p.get('description') or ''}")]
+            info["projects_kept"], info["projects_unrelated"] = len(projects), noise
+            parts.append(1.0 - len(noise) / len(projects))
+            weights.append(0.4)
+            if noise:
+                issues.append(Issue("selectivity", "major", f"These projects do not relate to the job: {', '.join(noise[:4])}.", "Return only the projects relevant to the job description."))
+
+        skills = [(cat.get("category"), s) for cat in as_list(resume.get("skills")) if isinstance(cat, dict) for s in as_list(cat.get("skills")) if isinstance(s, str)]
+        if skills:
+            matched = [s for _, s in skills if relevant(s)]
+            ratio = len(matched) / len(skills)
+            info["skills_kept"], info["skills_relevant"] = len(skills), len(matched)
+            parts.append(min(1.0, ratio / 0.6))  # a skills list where 60% matches the job is tight enough
+            weights.append(0.4)
+            unrelated = [s for _, s in skills if not relevant(s)]
+            if ratio < 0.4 and unrelated:
+                issues.append(Issue("selectivity", "major", f"Only {len(matched)} of {len(skills)} skills relate to the job (for example not: {', '.join(unrelated[:6])}).", "Include only the skills relevant to the job description."))
+
+        experiences = [e for e in as_list(resume.get("professional_experiences")) if isinstance(e, dict)]
+        if len(experiences) > 1:
+            def exp_relevant(e):
+                return relevant(" ".join([str(e.get("role") or "")] + [str(b) for b in as_bullets(e.get("responsibilities"))]))
+            noise = [str(e.get("organization") or "") for e in experiences if not exp_relevant(e)]
+            info["experiences_unrelated"] = noise
+            parts.append(1.0 - len(noise) / len(experiences))
+            weights.append(0.2)
+            if noise:
+                issues.append(Issue("selectivity", "minor", f"These experiences do not relate to the job: {', '.join(noise[:3])}.", "Keep only the experiences relevant to the job."))
+
+        if not parts:
+            return 1.0, info
+        average = sum(p * w for p, w in zip(parts, weights)) / sum(weights)
+        return 0.4 * average + 0.6 * min(parts), info  # one bloated section is enough to fail
 
     # ------------------------------------------------------------------ summary
 
@@ -387,12 +432,6 @@ class ResumeEvaluator:
         length = 1.0 if config.SUMMARY_WORDS_MIN <= words <= config.SUMMARY_WORDS_MAX else 0.4
         if length < 1.0:
             issues.append(Issue("summary_quality", "minor", f"The summary is {words} words.", f"Aim for {config.SUMMARY_WORDS_MIN}-{config.SUMMARY_WORDS_MAX} words."))
-
-        lowered = summary.lower()
-        generic_hits = [p for p in config.GENERIC_SUMMARY_PHRASES if p in lowered]
-        generic = max(0.0, 1.0 - 0.34 * len(generic_hits))
-        if generic_hits:
-            issues.append(Issue("summary_quality", "major", f"The summary uses generic phrases: {', '.join(generic_hits)}.", "Replace them with specific strengths drawn from the candidate's real experience."))
 
         in_summary = [k for k in kw["supported"] if _contains_phrase(summary, k) or contains_term_text(summary, k)]
         keyword_part = min(1.0, len(in_summary) / 2)
@@ -415,7 +454,7 @@ class ResumeEvaluator:
                 issues.append(Issue("summary_quality", "major", "The summary copies a sentence from the job description.", "Describe the candidate, not the job."))
                 break
 
-        deterministic = (length + generic + specificity + originality) / 4
+        deterministic = (length + specificity + originality) / 3
         return self._blend(deterministic, judge["summary_quality"] if judge else None)
 
     # ------------------------------------------------------------------ naturalness

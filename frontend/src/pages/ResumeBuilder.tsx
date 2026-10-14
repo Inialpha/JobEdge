@@ -21,6 +21,7 @@ import { usePageTour } from '@/hooks/usePageTour';
 const JOB_MATCH_LABELS: Record<string, string> = {
   factual_accuracy: 'Factual accuracy',
   relevance: 'Relevance to the job',
+  selectivity: 'Only what fits the job',
   keyword_alignment: 'Keyword match',
   summary_quality: 'Summary',
   naturalness: 'Natural wording',

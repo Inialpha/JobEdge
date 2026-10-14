@@ -36,8 +36,9 @@ class LoopTests(unittest.TestCase):
 
         revision_prompt = llm.generate_prompts[1]
         self.assertIn("Your previous draft", revision_prompt)
+        self.assertIn("A reviewer checked the draft", revision_prompt)
         self.assertIn("[MAJOR]", revision_prompt)                 # structured feedback reached the generator
-        self.assertIn("copied from the master resume", revision_prompt)
+        self.assertIn("summary, unchanged", revision_prompt)
 
     def test_revisions_are_limited(self):
         a, llm = agent([copied()], max_revisions=2)

@@ -9,8 +9,8 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-WORKFLOW_VERSION = "agent-loop-v1"
-PROMPT_VERSION = "grounded-transform-v1"
+WORKFLOW_VERSION = "generator-evaluator-v2"
+PROMPT_VERSION = "select-and-summarise-v2"
 
 GENERATOR_MODEL = os.getenv("RESUME_GENERATOR_MODEL", "llama-3.3-70b-versatile")
 EVALUATOR_MODEL = os.getenv("RESUME_EVALUATOR_MODEL", "llama-3.3-70b-versatile")
@@ -43,12 +43,13 @@ AGENT_ENABLED = os.getenv("RESUME_AGENT_ENABLED", "true").lower() in ("1", "true
 
 # Weights must sum to 1.0.
 WEIGHTS = {
-    "relevance": 0.20,
-    "keyword_alignment": 0.20,
+    "relevance": 0.15,
+    "selectivity": 0.20,   # only the projects and skills that relate to the job were kept
+    "keyword_alignment": 0.15,
     "factual_accuracy": 0.25,
     "summary_quality": 0.10,
-    "naturalness": 0.10,
-    "redundancy": 0.10,
+    "naturalness": 0.05,
+    "redundancy": 0.05,
     "structure": 0.05,
 }
 
@@ -58,6 +59,7 @@ WEIGHTS = {
 OVERALL_THRESHOLD = 0.75
 DIMENSION_THRESHOLDS = {
     "relevance": 0.55,
+    "selectivity": 0.50,
     "keyword_alignment": 0.50,
     "factual_accuracy": 0.95,
     "summary_quality": 0.55,
@@ -66,25 +68,20 @@ DIMENSION_THRESHOLDS = {
     "structure": 0.80,
 }
 
-# Bullet classification (similarity of an output bullet to its closest source bullet).
-COPY_SIMILARITY = 0.92          # at or above: copied without transformation
+# Bullet classification: an output bullet is "copied" when it matches a source bullet this closely.
+# Copying is what the generator is asked to do (it selects, it does not rewrite), so it is not penalised.
+COPY_SIMILARITY = 0.92
 MATCH_SIMILARITY = 0.30         # below: not traceable to any source bullet
 MIN_GROUNDED_TOKEN_RATIO = 0.50  # share of a bullet's content words found in the source
-ALLOWED_COPY_RATIO = 0.40       # up to 40% of bullets may be kept as-is (they may already be strong)
+ALLOWED_COPY_RATIO = 1.0
 
 SUMMARY_WORDS_MIN = 25
 SUMMARY_WORDS_MAX = 120
 BULLET_WORDS_MAX = 45
 BULLETS_PER_ROLE_MAX = 7
 
-GENERIC_SUMMARY_PHRASES = (
-    "results-driven", "results driven", "detail-oriented", "detail oriented",
-    "team player", "hard-working", "hard working", "passionate", "dynamic",
-    "self-motivated", "proven track record", "seeking", "looking for",
-    "fast-paced", "highly motivated", "go-getter", "think outside the box",
-    "excellent communication skills", "motivated professional",
-)
 
+# The only words the generator is told to avoid, and the only style the evaluator checks.
 BUZZWORDS = (
     "synergy", "synergize", "spearheaded", "cutting-edge", "best-in-class",
     "world-class", "seamless", "holistic", "game-changing", "paradigm",
@@ -94,7 +91,7 @@ BUZZWORDS = (
 
 # --------------------------------------------------------------------------- cover letters
 
-LETTER_PROMPT_VERSION = "cover-letter-grounded-v1"
+LETTER_PROMPT_VERSION = "cover-letter-simple-v2"
 
 # Same idea as the resume budget; the application endpoint runs the resume loop and then this one.
 LETTER_MAX_SECONDS = float(os.getenv("RESUME_LETTER_TIME_BUDGET_SECONDS", "30"))
@@ -124,10 +121,3 @@ LETTER_PARAGRAPHS_MIN = 3
 LETTER_PARAGRAPHS_MAX = 5
 LETTER_COPY_SIMILARITY = 0.85  # a sentence this close to a resume bullet was pasted, not written
 
-LETTER_CLICHES = (
-    "i am writing to express my interest", "i am writing to apply", "i am writing to express my",
-    "i believe i would be a great fit", "i would be a great fit", "perfect fit", "ideal candidate",
-    "valuable asset", "hit the ground running", "to whom it may concern",
-    "i am a quick learner", "hard worker", "go above and beyond", "dream job",
-    "make a significant contribution", "take my career to the next level",
-)

@@ -207,13 +207,11 @@ class CoverLetterEvaluator:
 
     def _naturalness(self, body: str, sentences: List[str], job_description: str, present_keywords: List[str], issues: List[Issue]) -> float:
         lowered = body.lower()
-        cliches = [c for c in config.LETTER_CLICHES if c in lowered]
-        generic = [g for g in config.GENERIC_SUMMARY_PHRASES if g in lowered and g not in {"seeking", "looking for"}]
         buzz = [b for b in config.BUZZWORDS if re.search(r"(?<![a-z0-9])" + re.escape(b) + r"(?![a-z0-9])", lowered)]
-        hits = list(dict.fromkeys(cliches + generic + buzz))
+        hits = list(dict.fromkeys(buzz))
         penalty = min(0.5, 0.15 * len(hits))
         if hits:
-            issues.append(Issue("naturalness", "major", f"Cliches or buzzwords: {', '.join(hits)}.", "Say it plainly and specifically."))
+            issues.append(Issue("naturalness", "major", f"Buzzwords: {', '.join(hits)}.", "Use plain, specific words instead."))
 
         job_sentences = [s for s in split_sentences(job_description) if word_count(s) >= 8]
         lifted = [s for s in sentences if word_count(s) >= 8 and any(similarity(s, j) >= 0.8 for j in job_sentences)]

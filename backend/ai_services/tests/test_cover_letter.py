@@ -93,6 +93,19 @@ class LetterEvaluatorTests(unittest.TestCase):
         self.assertGreater(ev.remaining_violations, 0)
         self.assertLess(ev.scores["factual_accuracy"], 0.95)
 
+    def test_a_warm_conventional_opening_is_not_penalised(self):
+        opening = "I am excited to apply for the Backend Engineer role on your payments team, and I am thrilled by the chance to work on APIs that move real money. " + GOLD_LETTER["paragraphs"][0].split(". ", 1)[1]
+        paragraphs = [opening] + GOLD_LETTER["paragraphs"][1:]
+        ev = self.evaluate(compose_letter(["Amara Eze", "Port Harcourt, Nigeria", "+234 800 000 0001", "amara.eze@example.com", "4 October 2026"], "Dear Hiring Manager,", paragraphs, "Amara Eze"))
+        self.assertEqual(ev.scores["naturalness"], 1.0)
+        self.assertTrue(ev.passed, (ev.scores, [i.detail for i in ev.issues]))
+
+    def test_a_made_up_percentage_is_caught_even_when_the_number_appears_elsewhere(self):
+        paragraphs = list(GOLD_LETTER["paragraphs"])
+        paragraphs[1] += " I also optimised backend queries by 40%."
+        a, _ = letter_agent([{"greeting": "Dear Hiring Manager,", "paragraphs": paragraphs}], max_revisions=0)
+        self.assertNotIn("40%", a.run(MASTER, JD).text)
+
     def test_placeholders_fail_structure(self):
         text = compose_letter(["[Your Name]"], "Dear Hiring Manager,", GOLD_LETTER["paragraphs"], "[Your Name]")
         self.assertFalse(self.evaluate(text).passed)

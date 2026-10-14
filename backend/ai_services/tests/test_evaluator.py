@@ -27,13 +27,31 @@ class ScoringTests(unittest.TestCase):
                 self.assertTrue(result.passed, (result.scores, result.failed_dimensions))
                 self.assertEqual(result.remaining_violations, 0)
 
-    def test_untailored_copy_fails_on_relevance_and_summary(self):
+    def test_untailored_copy_fails_on_the_summary(self):
+        # Bullets are meant to be copied exactly (the generator selects, it does not rewrite),
+        # so only the unchanged summary lets this fail.
         result = evaluate(copied())
         self.assertFalse(result.passed)
-        self.assertIn("relevance", result.failed_dimensions)
         self.assertIn("summary_quality", result.failed_dimensions)
-        self.assertEqual(result.diagnostics["bullets"]["transformed"], 0)
+        self.assertEqual(result.diagnostics["bullets"]["invented"], 0)
         self.assertEqual(result.diagnostics["bullets"]["copied"], result.diagnostics["bullets"]["total"])
+
+    def test_returning_every_project_and_skill_fails_selectivity(self):
+        master = copy.deepcopy(MASTER)
+        master["projects"] += [
+            {"name": "Recipe Blog", "description": "A WordPress blog about cooking with photos and videos."},
+            {"name": "Football Fan App", "description": "A mobile app for fixtures and scores built with Flutter."},
+        ]
+        master["skills"].append({"category": "Hobbies", "skills": ["Photography", "Flutter", "Video editing", "Cooking", "WordPress"]})
+        everything = copy.deepcopy(gold())
+        everything["projects"] = copy.deepcopy(master["projects"])
+        everything["skills"] = copy.deepcopy(master["skills"])
+        result = ResumeEvaluator().evaluate(everything, master, JD, analyze_job(JD))
+        self.assertLess(result.scores["selectivity"], config.DIMENSION_THRESHOLDS["selectivity"])
+        self.assertIn("selectivity", result.failed_dimensions)
+        self.assertTrue(any("Recipe Blog" in i.detail for i in result.issues))
+        tight = ResumeEvaluator().evaluate(gold(), master, JD, analyze_job(JD))
+        self.assertGreaterEqual(tight.scores["selectivity"], config.DIMENSION_THRESHOLDS["selectivity"])
 
     def test_fabrication_fails_factual_accuracy(self):
         result = evaluate(hallucinated())
@@ -96,12 +114,16 @@ class DimensionTests(unittest.TestCase):
         self.assertGreaterEqual(result.diagnostics["redundancy"]["near_duplicate_pairs"], 1)
         self.assertIn("built", result.diagnostics["redundancy"]["repeated_openers"])
 
-    def test_generic_summary_is_penalised(self):
+    def test_only_buzzwords_are_policed_not_ordinary_phrasing(self):
         resume = gold()
-        resume["summary"] = "Results-driven team player who is passionate about technology and seeking a challenging role."
+        resume["summary"] = "I am a software engineer who is passionate about payments and excited to build reliable Django APIs, with experience in Python, Redis and PostgreSQL."
         result = evaluate(resume)
-        self.assertLess(result.scores["summary_quality"], config.DIMENSION_THRESHOLDS["summary_quality"])
-        self.assertTrue(any("generic phrases" in i.detail for i in result.issues))
+        self.assertFalse(any("generic" in i.detail.lower() for i in result.issues))
+        self.assertEqual(result.scores["naturalness"], 1.0)
+        resume["summary"] = "Engineer who will leverage synergy to build robust Django APIs with Python, Redis and PostgreSQL for the payments team."
+        flagged = evaluate(resume)
+        self.assertLess(flagged.scores["naturalness"], 1.0)
+        self.assertTrue(any("synergy" in i.detail for i in flagged.issues))
 
     def test_unchanged_master_summary_is_flagged(self):
         resume = gold()

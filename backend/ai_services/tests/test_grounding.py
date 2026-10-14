@@ -22,8 +22,12 @@ class TermAndNumberTests(unittest.TestCase):
         self.assertFalse(contains_term(INDEX, "Java"))          # not a substring match inside "JavaScript"
         self.assertFalse(contains_term(INDEX, "Kubernetes"))
 
+    def test_percentage_is_not_supported_by_a_plain_number(self):
+        # "40 store managers" in the resume must not vouch for an invented "40%"
+        self.assertEqual(ungrounded_numbers("Improved speed by 40%", INDEX), ["40%"])
+
     def test_invented_numbers_are_found(self):
-        self.assertEqual(ungrounded_numbers("Cut costs by 62% for 15,000 users", INDEX), ["62"])
+        self.assertEqual(ungrounded_numbers("Cut costs by 62% for 15,000 users", INDEX), ["62%"])
         self.assertEqual(ungrounded_numbers("Raised coverage from 45% to 85%", INDEX), [])
 
     def test_unsupported_terms(self):

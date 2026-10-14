@@ -65,8 +65,10 @@ class BenchmarkRunTests(unittest.TestCase):
         self.assertEqual(self.reference["aggregate"]["pass_rate"], 1.0)
         self.assertEqual(self.reference["aggregate"]["total_violations"], 0)
 
-    def test_untailored_baseline_fails_every_case(self):
-        self.assertEqual(self.lazy["aggregate"]["pass_rate"], 0.0)
+    def test_untailored_baseline_scores_below_the_reference(self):
+        self.assertLess(self.lazy["aggregate"]["pass_rate"], 1.0)
+        self.assertLess(self.lazy["aggregate"]["mean_overall"], self.reference["aggregate"]["mean_overall"])
+        self.assertIn("summary_quality", next(c for c in self.lazy["cases"] if c["case_id"] == "backend_engineer")["failed_dimensions"])
 
     def test_fabrication_is_caught_even_though_the_loop_repairs_it(self):
         self.assertGreater(self.fake["aggregate"]["total_grounding_repairs"], 0)
@@ -115,7 +117,7 @@ class AgentOnBenchmarkTests(unittest.TestCase):
         delta = compare_reports(single_report, loop_report)
         self.assertEqual(delta["winner"], "agent-loop")
         self.assertEqual(loop_report["aggregate"]["pass_rate"], 1.0)
-        self.assertEqual(single_report["aggregate"]["pass_rate"], 0.0)
+        self.assertLess(single_report["aggregate"]["pass_rate"], 1.0)
 
 
 if __name__ == "__main__":

@@ -102,3 +102,10 @@ python manage.py compare_resume_evaluations --days 30
 Cover letter specifics: the model returns only a greeting and body paragraphs. The header (name, city/country, phone, email, date) and the "Sincerely," + name sign-off are built from the master resume, so contact details cannot be invented and placeholders cannot appear. After every draft, sentences with numbers/tools/names unsupported by the master resume (or the job post) are dropped, as are first-person sentences claiming job tools the candidate lacks. The evaluator scores factual accuracy, relevance, specificity, naturalness, redundancy and structure (`LETTER_*` in `config.py`).
 
 The resume and application are saved in one transaction only after both documents exist. Both evaluations are stored as `ResumeEvaluation` rows (`document_type` = `resume` / `cover_letter`, linked to the `application`) and a score summary is returned as `evaluation` in the response. `compare_resume_evaluations` groups by document type. `RESUME_AGENT_ENABLED=false` restores the single-shot generators; `RESUME_LETTER_TIME_BUDGET_SECONDS` bounds letter revisions. Apply migration `0024` before deploying.
+
+
+## Generator and evaluator (v2: select, don't rewrite)
+
+The resume generator follows the original `resume_extractor.generate_resume` approach: it **selects** the experiences, projects, education, certifications, awards and skills relevant to the job, returns them exactly as written in the master resume, and rewrites only the **summary**. The only style instruction is a list of buzzwords not to use (`BUZZWORDS` in `config.py`); openings such as "I am excited to apply" are normal and not penalised, in the resume summary or the cover letter.
+
+The evaluator is separate and checks: factual accuracy (numbers keep their `%`, so "40 store managers" cannot vouch for an invented "40%"), selectivity (unrelated projects, skills and experiences are flagged), relevance, keyword alignment, summary quality, buzzwords, repetition and structure. Failures go back to the generator as feedback for up to `RESUME_MAX_REVISIONS` revisions.

@@ -13,7 +13,7 @@ STOPWORDS = frozenset(
 )
 
 _TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9+#./_-]*[A-Za-z0-9+#]|[A-Za-z0-9]")
-_NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
+_NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?%?")
 
 
 def normalize(text: str) -> str:
@@ -44,13 +44,18 @@ def stemmed_tokens(text: str) -> Set[str]:
 
 
 def extract_numbers(text: str) -> Set[str]:
-    """Bare numeric values found in ``text`` ("$1,200" -> "1200", "40%" -> "40")."""
+    """Numeric values found in ``text`` ("$1,200" -> "1200", "40%" -> "40%").
+
+    A percentage keeps its sign: "40%" is not supported by a resume that only says "40 store
+    managers", which is how a made-up "improved speed by 40%" used to slip through.
+    """
     out = set()
     for match in _NUMBER.findall(text or ""):
-        value = match.replace(",", "").rstrip(".")
+        percent = match.endswith("%")
+        value = match.rstrip("%").replace(",", "").rstrip(".")
         if "." in value:
             value = value.rstrip("0").rstrip(".")
-        out.add(value)
+        out.add(value + ("%" if percent else ""))
     return out
 
 
