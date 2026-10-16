@@ -1,6 +1,6 @@
 """Run the resume benchmark against a real model and (optionally) compare it with an earlier run.
 
-    python manage.py run_resume_benchmark --model llama-3.3-70b-versatile --out runs/baseline.json
+    python manage.py run_resume_benchmark --model <model name> --out runs/baseline.json
     python manage.py run_resume_benchmark --model other-model --out runs/other.json --compare runs/baseline.json
 
 Every run is scored by the same offline evaluator on the same cases
@@ -10,6 +10,7 @@ import json
 
 from django.core.management.base import BaseCommand, CommandError
 
+from ai_services import model_config
 from ai_services.resume_intelligence import config
 from ai_services.resume_intelligence.agent import ResumeAgent
 from ai_services.resume_intelligence.benchmark import agent_workflow, compare_reports, run_benchmark, save_report
@@ -20,7 +21,7 @@ class Command(BaseCommand):
     help = "Run the resume benchmark with the generation loop and print/save the scores"
 
     def add_arguments(self, parser):
-        parser.add_argument("--model", default=config.GENERATOR_MODEL, help="Generator model name")
+        parser.add_argument("--model", default=None, help="Generator model name (default: the RESUME_GENERATOR_MODEL environment variable)")
         parser.add_argument("--max-revisions", type=int, default=config.MAX_REVISIONS)
         parser.add_argument("--judge", action="store_true", help="Also use an LLM judge while the loop runs")
         parser.add_argument("--label", default="", help="Name for this run (defaults to the model name)")
@@ -28,10 +29,10 @@ class Command(BaseCommand):
         parser.add_argument("--compare", help="Path of an earlier JSON report to compare against")
 
     def handle(self, *args, **options):
-        generator = GroqLLM(options["model"])
-        judge = GroqLLM(config.EVALUATOR_MODEL) if options["judge"] else None
+        generator = GroqLLM(options["model"] or model_config.generator_model())
+        judge = GroqLLM(model_config.evaluator_model()) if options["judge"] else None
         agent = ResumeAgent(generator, evaluator_llm=judge, max_revisions=options["max_revisions"])
-        label = options["label"] or options["model"]
+        label = options["label"] or options["model"] or model_config.generator_model()
 
         report = run_benchmark(agent_workflow(agent), label=label)
 

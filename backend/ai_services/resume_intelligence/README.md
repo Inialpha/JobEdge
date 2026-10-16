@@ -63,7 +63,7 @@ offline evidence, and its "unsupported claim" reports are checked against the so
 cd backend && python -m unittest discover -s ai_services/tests -t .
 
 # benchmark a real model (needs GROQ_API_KEY) and compare with an earlier run
-python manage.py run_resume_benchmark --model llama-3.3-70b-versatile --out runs/baseline.json
+python manage.py run_resume_benchmark --model <model name> --out runs/baseline.json
 python manage.py run_resume_benchmark --model <other-model> --out runs/other.json --compare runs/baseline.json
 
 # summarise stored production evaluations by workflow / prompt / model
@@ -78,9 +78,9 @@ python manage.py compare_resume_evaluations --days 30
 | `RESUME_MAX_REVISIONS` | `2` | Revision rounds after the first draft. |
 | `RESUME_AGENT_TIME_BUDGET_SECONDS` | `40` | A revision is skipped if it would exceed this, so a slow model means fewer revisions, not a timeout. |
 | `RESUME_JUDGE_ENABLED` | `false` | Adds one LLM judge call per evaluation. Useful when benchmarking. |
-| `RESUME_GENERATOR_MODEL` / `RESUME_EVALUATOR_MODEL` | `llama-3.3-70b-versatile` | Groq model names. |
-| `RESUME_MAX_OUTPUT_TOKENS` | `4096` | Output cap per call. Reasoning models (gpt-oss) need room to think and answer; too small gives an empty reply. |
-| `RESUME_REASONING_EFFORT` | `low` | Sent to gpt-oss models only (low / medium / high). |
+| `RESUME_GENERATOR_MODEL` / `RESUME_EVALUATOR_MODEL` | none (required) | Model names. Also `RESUME_EXTRACTION_MODEL` and `JOB_EXTRACTION_MODEL`. Read only in `ai_services/model_config.py`; see `backend/.env.example`. |
+| `RESUME_MAX_OUTPUT_TOKENS` | `4096` | Output cap per call. Reasoning models need room to think and answer; too small gives an empty reply. |
+| `RESUME_REASONING_EFFORT` | unset | low / medium / high. Sent with every call when set; set it only for reasoning models. |
 | `RESUME_LOG_PREVIEW_CHARS` | `200` | Characters of each model reply written to the log; `0` logs no content. |
 
 ## Known limits

@@ -1,3 +1,4 @@
+from ai_services import model_config
 from groq import Groq
 import groq
 import json
@@ -118,7 +119,7 @@ Return the extracted information as a JSON object following this structure.
 """
 
         completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model=model_config.resume_extraction_model(),
             messages=[
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": user_prompt},
@@ -242,7 +243,7 @@ Return the extracted information as a JSON object following this structure.
 
 
         completion = client.chat.completions.create(
-            model="openai/gpt-oss-20b",
+            model=model_config.generator_model(),
             messages=[
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": user_prompt},

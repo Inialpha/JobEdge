@@ -1,3 +1,4 @@
+from ai_services import model_config
 import json
 from langchain_core.prompts import PromptTemplate
 from langchain_groq import ChatGroq
@@ -11,7 +12,7 @@ prompt = PromptTemplate(
 )
 
 llm = ChatGroq(
-    model="llama3-70b-8192",  # Use correct Groq model name
+    model=model_config.job_extraction_model(),
     temperature=0.7,
     max_tokens=None,
     timeout=None,

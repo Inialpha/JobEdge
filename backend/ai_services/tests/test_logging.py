@@ -1,5 +1,8 @@
 import logging
 import unittest
+from unittest import mock
+
+from ai_services.resume_intelligence import config
 
 from ai_services.application_generation import DocumentsUnavailable, generate_application_documents
 from ai_services import resume_generation as rg
@@ -93,8 +96,8 @@ class ReasoningModelTests(unittest.TestCase):
                 return r
 
         client = Client(ok_calls=5, reply="")
-        llm = GroqLLM("openai/gpt-oss-20b", client=client)
-        with self.assertLogs("api", level="INFO") as logs, self.assertRaises(OutputTruncated):
+        llm = GroqLLM("reasoning-model", client=client)
+        with mock.patch.object(config, "REASONING_EFFORT", "low"), self.assertLogs("api", level="INFO") as logs, self.assertRaises(OutputTruncated):
             llm.complete("sys", "user")
         self.assertIn("output cap reached", "\n".join(logs.output))
         self.assertGreaterEqual(client.kwargs["max_tokens"], 4000)
@@ -103,5 +106,5 @@ class ReasoningModelTests(unittest.TestCase):
 
     def test_other_models_get_no_reasoning_parameter(self):
         client = FakeClient(ok_calls=5, reply="{}")
-        GroqLLM("llama-3.3-70b-versatile", client=client).complete("s", "u")
+        GroqLLM("plain-model", client=client).complete("s", "u")
         self.assertNotIn("extra_body", client.kwargs if hasattr(client, "kwargs") else {})

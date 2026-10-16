@@ -1,3 +1,4 @@
+from ai_services import model_config
 import os
 from dotenv import load_dotenv
 
@@ -60,7 +61,7 @@ class Resume(BaseModel):
 def ai(text):
 
     llm1 = ChatGroq(
-        model="mixtral-8x7b-32768",
+        model=model_config.resume_extraction_model(),
         temperature=0.7,
         max_tokens=None,
         timeout=None,
@@ -69,7 +70,7 @@ def ai(text):
     model1 = llm1.with_structured_output(schema=Resume2)
 
     llm2 = ChatGroq(
-        model="llama3-70b-8192",
+        model=model_config.resume_extraction_model(),
         temperature=0.7,
         max_tokens=None,
         timeout=None,
@@ -129,7 +130,7 @@ def generate_resume(job, resume):
     )
 
     llm = ChatGroq(
-        model="llama3-70b-8192",
+        model=model_config.generator_model(),
         temperature=0.7,
         max_tokens=None,
         timeout=None,

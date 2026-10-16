@@ -72,6 +72,8 @@ def describe_error(exc: BaseException) -> dict:
     name = type(cause).__name__
     if status == 429 or "RateLimit" in name:
         kind = "rate_limited"
+    elif name == "ModelNotConfigured":
+        kind = "model_not_configured"
     elif name == "OutputTruncated":
         kind = "output_truncated"
     elif isinstance(cause, ValueError):

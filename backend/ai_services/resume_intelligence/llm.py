@@ -48,7 +48,7 @@ class GroqLLM:
             stream=False,
             max_tokens=config.MAX_OUTPUT_TOKENS,
         )
-        if config.REASONING_EFFORT and "gpt-oss" in self.model:
+        if config.REASONING_EFFORT:
             kwargs["extra_body"] = {"reasoning_effort": config.REASONING_EFFORT}
         stage = current_stage()
         started = time.monotonic()

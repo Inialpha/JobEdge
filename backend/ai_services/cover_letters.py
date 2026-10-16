@@ -1,3 +1,4 @@
+from ai_services import model_config
 from groq import Groq
 import groq
 import json
@@ -68,7 +69,7 @@ Return ONLY the cover letter text, no additional commentary or formatting marker
 """
 
         completion = client.chat.completions.create(
-            model="openai/gpt-oss-20b",
+            model=model_config.generator_model(),
             messages=[
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": user_prompt},

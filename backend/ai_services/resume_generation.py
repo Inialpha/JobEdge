@@ -8,6 +8,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
+from ai_services import model_config
 from ai_services.resume_intelligence import config
 from ai_services.resume_intelligence.agent import GenerationError, ResumeAgent
 from ai_services.resume_intelligence.llm import GroqLLM
@@ -27,8 +28,8 @@ class GenerationOutcome:
 
 
 def build_agent() -> ResumeAgent:
-    generator = GroqLLM(config.GENERATOR_MODEL)
-    judge = GroqLLM(config.EVALUATOR_MODEL) if config.JUDGE_ENABLED else None
+    generator = GroqLLM(model_config.generator_model())
+    judge = GroqLLM(model_config.evaluator_model()) if config.JUDGE_ENABLED else None
     return ResumeAgent(generator, evaluator_llm=judge)
 
 
@@ -73,7 +74,7 @@ class LetterOutcome:
 def build_letter_agent():
     from ai_services.resume_intelligence.cover_letter_agent import CoverLetterAgent
 
-    return CoverLetterAgent(GroqLLM(config.GENERATOR_MODEL))
+    return CoverLetterAgent(GroqLLM(model_config.generator_model()))
 
 
 def generate_tailored_cover_letter(master: dict, tailored_resume: dict, job_description: str, analysis=None) -> LetterOutcome:
