@@ -1,3 +1,4 @@
+from ai_services import model_config
 from groq import Groq
 import json
 import os
@@ -6,7 +7,7 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 def extract_job_details(job_text):
     completion = client.chat.completions.create(
-        model="groq/compound",
+        model=model_config.job_extraction_model(),
         messages=[
             {
                 "role": "system",

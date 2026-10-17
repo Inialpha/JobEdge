@@ -4,10 +4,11 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.core.validators import URLValidator, validate_email
 from django.core.exceptions import ValidationError
-from ..models import Resume, Job, User
+from ..models import Resume, Job, User, ResumeEvaluation
 from ..serializers.resume import ResumeSerializer
 from file_reader import File, extract_text_safe
 from ai_services.resume_extractor import ai, generate_resume
+from ai_services.resume_generation import generate_tailored_resume
 from django.db.models import Q
 from ..serializers.job import JobSerializer 
 from rest_framework.authentication import TokenAuthentication
@@ -195,9 +196,12 @@ class GenerateResumeFromJobDescription(APIView):
         data.pop("id", None)
         data.pop("user", None)
         data.pop("text", None)
-        
-        tailored_resume = generate_resume(job_description, data)
-        
+        data.pop("section_order", None)  # a tailored resume starts from the default section order
+
+        # Analyze -> generate -> evaluate -> revise -> finalize (see ai_services/resume_intelligence)
+        outcome = generate_tailored_resume(job_description, data)
+        tailored_resume = outcome.resume
+
         if not tailored_resume:
             return Response({"details": "Our service is currently handling a high volume of requests. Please try again shortly."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
         
@@ -216,7 +220,14 @@ class GenerateResumeFromJobDescription(APIView):
         new_resume = ResumeSerializer(data=tailored_resume)
         if new_resume.is_valid():
             try:
-                return Response(new_resume.data, status=status.HTTP_200_OK)
+                payload = dict(new_resume.data)
+                if outcome.summary:
+                    evaluation = dict(outcome.summary)
+                    record = ResumeEvaluation.record(user, job_description, outcome.report)
+                    if record:
+                        evaluation["id"] = str(record.id)
+                    payload["evaluation"] = evaluation
+                return Response(payload, status=status.HTTP_200_OK)
             except Exception as e:
                 print("error", e)
                 return Response({"details": "Failed to save resume"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

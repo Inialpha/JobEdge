@@ -18,8 +18,9 @@ class ProfileAPIView(APIView):
     def get(self, request, *args, **kwargs):
         try:
             serializer = ProfileSerializer(request.user)
-            serializer.data.pop("password", None)
-            return Response(serializer.data)
+            data = serializer.data
+            data.pop("password", None)
+            return Response(data)
         except Exception as e:
             print(e)
             raise e
