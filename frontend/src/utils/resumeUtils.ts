@@ -1,4 +1,5 @@
 import { ResumeData, Skill } from "@/types/resume"
+import { hasCustomOrder, normalizeSectionOrder } from "@/utils/sectionOrder"
 
 /**
  * Parses skills from string, array, or categorized format into a Skill array
@@ -90,5 +91,7 @@ export const getEditableResume = (resume: any): ResumeData => {
     skills: parseSkillsArray(resume.skills),
     certifications: resume.certifications || [],
     awards: resume.awards || [],
+    // Saved as an empty list until the user reorders, which means "use the template's default order".
+    sectionOrder: hasCustomOrder(resume.section_order) ? normalizeSectionOrder(resume.section_order) : [],
   }
 }
