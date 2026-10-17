@@ -1,6 +1,6 @@
 from django.urls import path
 from .views.resumes import ResumeAPIView, GenerateResume, GenerateResumeFromJobDescription, ResumeFromObjectAPIView
-from .views.users import UserAPIView, CustomSignup, ProfileAPIView
+from .views.users import UserAPIView, CustomSignup, ProfileAPIView, GoogleSignInAPIView
 from .views.jobs import JobSearchAPIView, JobAPIView, SearchJobsAPIView
 from .views.applications import ApplicationAPIView
 from .views.stats import AdminStatsAPIView, AdminAnalyticsAPIView
@@ -39,6 +39,8 @@ urlpatterns = [
     
 
     path('auth/login/', views.Login.as_view(), name='authemail-login'),
+    path('auth/google/', GoogleSignInAPIView.as_view(), name='google-sign-in'),
+    path('auth/google', GoogleSignInAPIView.as_view(), name='google-sign-in-no-slash'),
     path('auth/logout/', views.Logout.as_view(), name='authemail-logout'),
 
     path('auth/password/reset/', views.PasswordReset.as_view(),
@@ -62,6 +64,5 @@ urlpatterns = [
     path('admin/stats/', AdminStatsAPIView.as_view(), name='admin-stats'),
     path('admin/analytics/', AdminAnalyticsAPIView.as_view(), name='admin-analytics'),
 ]
-
 
 

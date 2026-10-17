@@ -185,6 +185,9 @@ GROQ_API_KEY=your_groq_api_key
 BREVO_API_KEY=your_brevo_api_key
 EMAIL_HOST_PASSWORD=your_gmail_app_password
 
+# Google Sign-In (comma-separated if multiple clients)
+GOOGLE_OAUTH_CLIENT_IDS=your_google_web_client_id.apps.googleusercontent.com
+
 # Job Search
 SERPAPI_KEY=your_serpapi_key
 ```
@@ -195,6 +198,7 @@ SERPAPI_KEY=your_serpapi_key
 VITE_API_URL=http://localhost:8000/api
 VITE_AUTH_URL=http://localhost:8000/auth
 VITE_EMAIL_API_URL=http://localhost:8000/email
+VITE_GOOGLE_CLIENT_ID=your_google_web_client_id.apps.googleusercontent.com
 ```
 
 ---
