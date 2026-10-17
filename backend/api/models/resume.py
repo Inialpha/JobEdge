@@ -21,6 +21,11 @@ class Resume(BaseModel):
         blank=True
     )
     languages = models.JSONField(default=list, help_text="Languages spoken by the user")
+    section_order = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Order of the movable resume sections (contact and summary are always first). Empty means the default order",
+    )
 
     created_at = models.DateTimeField(auto_now_add=True, help_text="Timestamp when the resume was created")
     updated_at = models.DateTimeField(auto_now=True, help_text="Timestamp when the resume was last updated")

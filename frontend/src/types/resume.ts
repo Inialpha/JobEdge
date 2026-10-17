@@ -1,4 +1,7 @@
 // Shared types for Resume functionality
+import type { SectionId } from '@/utils/sectionOrder'
+
+export type { SectionId }
 
 export type PersonalInformation = {
   name: string
@@ -58,6 +61,20 @@ export type ResumeData = {
   skills: Skill[]
   certifications: Certification[]
   awards: Award[]
+  // Order of the movable sections. Contact and Summary are always first. Empty/missing = default order.
+  sectionOrder?: SectionId[]
+}
+
+// Returned by the generate endpoint next to a tailored resume (see backend resume_intelligence).
+export type ResumeEvaluationSummary = {
+  id?: string
+  overall_score: number
+  passed: boolean
+  scores: Record<string, number>
+  matched_keywords: string[]
+  missing_keywords: string[]
+  gaps: string[]
+  revisions: number
 }
 
 export type Template = 'classic' | 'modern' | 'minimal' | 'creative'
