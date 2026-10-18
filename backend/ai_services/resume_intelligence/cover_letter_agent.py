@@ -23,6 +23,7 @@ from .grounding import build_source_index
 from .job_analysis import JobAnalysis, analyze_job
 from .llm import LLMClient, model_name
 from .prompts import pick_letter_style_hint
+from .reviewer import CoverLetterReviewer
 from .trace import describe_error, log_evaluation, log_stage, set_stage
 
 
@@ -57,7 +58,7 @@ class LetterResult:
             "overall_score": self.evaluation.overall,
             "passed": self.passed,
             "scores": self.evaluation.scores,
-            "revisions": len([i for i in self.iterations if i.kind == "revision"]),
+            "revisions": len([i for i in self.iterations if i.kind in ("revision", "review")]),
         }
 
 
@@ -70,7 +71,14 @@ class CoverLetterAgent:
         max_seconds: Optional[float] = config.LETTER_MAX_SECONDS,
         clock: Callable[[], float] = time.monotonic,
         today: Optional[datetime.date] = None,
+        reviewer_llm: Optional[LLMClient] = None,
+        review_mode: Optional[str] = None,
     ):
+        self.review_mode = review_mode or config.REVIEW_MODE
+        if self.review_mode not in config.REVIEW_MODES:
+            raise ValueError(f"RESUME_REVIEW_MODE must be one of {', '.join(config.REVIEW_MODES)} (got '{self.review_mode}')")
+        self.reviewer_llm = reviewer_llm or generator_llm
+        self.reviewer = CoverLetterReviewer(self.reviewer_llm)
         self.generator_llm = generator_llm
         self.generator = CoverLetterGenerator(generator_llm)
         self.evaluator = evaluator or CoverLetterEvaluator()
@@ -93,10 +101,10 @@ class CoverLetterAgent:
         """``master`` is the source of truth for grounding and evaluation. ``prompt_resume`` (the
         tailored resume, a subset of master) is what the model writes from, so the letter matches it."""
         started = self.clock()
-        log_stage("letter", "start", max_revisions=self.max_revisions, budget_seconds=self.max_seconds)
+        log_stage("letter", "start", mode=self.review_mode, max_revisions=self.max_revisions, budget_seconds=self.max_seconds)
         index = build_source_index(master)
         job_index = build_source_index({"job": job_description})
-        analysis = analysis or analyze_job(job_description, self.generator_llm)
+        analysis = analysis or analyze_job(job_description, None)  # keywords found in code, no model call
         gaps = job_gaps(analysis, index, job_description)
         log_stage("letter.analyze", "done", source=analysis.source, gaps=",".join(gaps) or "none")
         style_hint = pick_letter_style_hint(master, job_description, seed)
@@ -126,7 +134,27 @@ class CoverLetterAgent:
         candidates = [_LetterCandidate(0, text, evaluation)]
         stopped_for_time = False
 
-        for n in range(1, self.max_revisions + 1):
+        # reviewer_revises: the evaluator reads the draft and the job, and rewrites the letter itself (one call).
+        reviewer_mode = self.review_mode == "reviewer_revises"
+        if reviewer_mode:
+            if self._out_of_time(started, last_call_seconds):
+                stopped_for_time = True
+                log_stage("letter", "review skipped: time budget used", elapsed=self.clock() - started, budget=self.max_seconds)
+            else:
+                set_stage("letter.review")
+                log_stage("letter.review", "reviewer rewriting", failed=",".join(evaluation.failed_dimensions) or "none")
+                try:
+                    raw = self.reviewer.review(shown, job_description, gaps, paragraphs, evaluation.feedback_text())
+                except Exception as exc:
+                    log_stage("letter.review", "review FAILED, keeping the writer's draft", logging.WARNING, **describe_error(exc))
+                else:
+                    text, paragraphs, repairs = assemble(raw)
+                    evaluation = self.evaluator.evaluate(text, master, job_description, analysis, index, repairs, gaps)
+                    log_evaluation("letter.review", evaluation, len(repairs))
+                    records.append(IterationRecord(1, "review", evaluation, repairs))
+                    candidates.append(_LetterCandidate(1, text, evaluation))
+
+        for n in range(1, (0 if reviewer_mode else self.max_revisions) + 1):
             if evaluation.passed:
                 log_stage("letter", "no revision needed", passed_at=n - 1)
                 break
@@ -152,7 +180,7 @@ class CoverLetterAgent:
             records.append(IterationRecord(n, "revision", evaluation, repairs))
             candidates.append(_LetterCandidate(n, text, evaluation))
 
-        best = max(candidates, key=_selection_key)
+        best = max(candidates, key=lambda c: _selection_key(c) + (c.iteration,))  # a tie goes to the reviewed letter
         if not any(c.evaluation.diagnostics.get("paragraphs") for c in candidates):
             log_stage("letter", "no usable paragraphs in any draft", logging.ERROR)
             raise GenerationError("The model returned no usable letter paragraphs")
@@ -164,7 +192,8 @@ class CoverLetterAgent:
             "workflow_version": config.WORKFLOW_VERSION,
             "prompt_version": config.LETTER_PROMPT_VERSION,
             "generator_model": model_name(self.generator_llm),
-            "evaluator_model": "none",
+            "review_mode": self.review_mode,
+            "evaluator_model": model_name(self.reviewer_llm) if reviewer_mode else "none",
             "style_hint": style_hint,
             "max_revisions": self.max_revisions,
             "judge_used": False,

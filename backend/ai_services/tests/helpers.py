@@ -4,7 +4,7 @@ import json
 from typing import Callable, List, Optional
 
 from ai_services.resume_intelligence.benchmark import build_reference_resume, load_cases, passthrough_workflow
-from ai_services.resume_intelligence.prompts import ANALYZE_SYSTEM, GENERATE_SYSTEM, JUDGE_SYSTEM, LETTER_SYSTEM
+from ai_services.resume_intelligence.prompts import ANALYZE_SYSTEM, GENERATE_SYSTEM, JUDGE_SYSTEM, LETTER_REVIEW_SYSTEM, LETTER_SYSTEM, REVIEW_SYSTEM
 
 CASES = {c["id"]: c for c in load_cases()}
 BACKEND = CASES["backend_engineer"]
@@ -17,7 +17,12 @@ class ScriptedLLM:
     model = "scripted"
 
     def __init__(self, generations: Optional[List] = None, judge: Optional[dict] = None, analysis: Optional[dict] = None,
-                 generation_fn: Optional[Callable[[str], dict]] = None, letters: Optional[List] = None):
+                 generation_fn: Optional[Callable[[str], dict]] = None, letters: Optional[List] = None,
+                 reviews: Optional[List] = None, letter_reviews: Optional[List] = None):
+        self.reviews, self.letter_reviews = list(reviews or []), list(letter_reviews or [])
+        self.review_prompts: List[str] = []
+        self.review_calls = 0
+        self.analysis_calls = 0
         self.letters = list(letters or [])
         self.letter_prompts: List[str] = []
         self.letter_calls = 0
@@ -30,6 +35,7 @@ class ScriptedLLM:
 
     def complete(self, system: str, user: str, temperature: float = 0.0) -> str:
         if system == ANALYZE_SYSTEM:
+            self.analysis_calls += 1
             if self.analysis is None:
                 raise RuntimeError("analysis unavailable")
             return json.dumps(self.analysis)
@@ -37,6 +43,16 @@ class ScriptedLLM:
             if self.judge is None:
                 raise RuntimeError("judge unavailable")
             return json.dumps(self.judge)
+        if system in (REVIEW_SYSTEM, LETTER_REVIEW_SYSTEM):
+            self.review_calls += 1
+            self.review_prompts.append(user)
+            queue = self.reviews if system == REVIEW_SYSTEM else self.letter_reviews
+            if not queue:
+                raise RuntimeError("no scripted review")
+            item = queue.pop(0) if len(queue) > 1 else queue[0]
+            if isinstance(item, Exception):
+                raise item
+            return json.dumps(item)
         if system == LETTER_SYSTEM:
             self.letter_calls += 1
             self.letter_prompts.append(user)
