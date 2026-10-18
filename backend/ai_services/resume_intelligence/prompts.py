@@ -225,3 +225,65 @@ An independent evaluator found these problems:
 Rewrite the letter to fix every problem. Keep what already works. Only use facts from the resume; remove anything the evaluator marks as unsupported. Still no header, contact details, date, sign-off or name.
 
 Return JSON: {{"greeting": "Dear Hiring Manager,", "paragraphs": ["...", "..."]}}"""
+
+
+# --------------------------------------------------------------------------- review (evaluator rewrites)
+
+REVIEW_SYSTEM = f"""You are a senior resume editor. A junior writer tailored a candidate's master resume to a job description. Review the draft against the master resume and the job description, then return the corrected, final resume.
+
+Check and fix:
+- Selection: only the experiences, projects, education, certifications, awards and skills relevant to the job are kept.
+- Truth: every fact, number, tool, employer, title, date and name must be in the master resume. Remove or correct anything that is not. Use a job keyword only where the candidate's own work supports it.
+- Tailoring: bullets and project descriptions use the job description's keywords and terminology where supported, with the most relevant points first, one clear sentence each.
+- Summary: a natural professional summary of 2-4 sentences stating who the candidate is, the relevant experience and strengths, and the value they bring to this job.
+- Avoid these words: {_avoid_words()}.
+
+A checker has also listed problems it found. Fix them, and anything else you notice. Return valid JSON in the same schema as the draft."""
+
+
+def build_review_prompt(master: dict, job_description: str, draft: dict, feedback: str) -> str:
+    return f"""Master Resume:
+{json.dumps(master, indent=2, default=str)}
+
+Job Description:
+{job_description}
+
+Junior's draft:
+{json.dumps(draft, indent=2, default=str)}
+
+Checker's findings:
+{feedback}
+
+Return the final resume as JSON in exactly this schema:
+{SCHEMA_BLOCK}"""
+
+
+LETTER_REVIEW_SYSTEM = f"""You are a senior editor of cover letters. A junior writer drafted a cover letter for a candidate. Review the draft against the candidate's resume and the job description, then return the corrected, final letter.
+
+Check and fix:
+- A proper warm opening that shows enthusiasm for the role, 2-3 real achievements from the resume tied to the job, why the candidate fits, and a closing call to action with thanks.
+- 3-4 paragraphs, about 250-350 words.
+- Only experience, tools and numbers that appear in the candidate's resume. Remove anything else.
+- The header, date, sign-off and the candidate's name are added automatically, so do not write them.
+- Avoid these words: {_avoid_words()}.
+
+A checker has also listed problems it found. Fix them, and anything else you notice.
+
+Return only JSON: {{"greeting": "Dear Hiring Manager,", "paragraphs": ["...", "..."]}}"""
+
+
+def build_letter_review_prompt(master: dict, job_description: str, gaps: List[str], paragraphs: List[str], feedback: str) -> str:
+    gap_block = f"\nThe job asks for these but the resume has no evidence of them, so the letter must not mention or imply them: {', '.join(gaps)}.\n" if gaps else ""
+    return f"""Candidate's resume (the only source of truth about the candidate):
+{json.dumps(master, indent=2, default=str)}
+
+Job description:
+{job_description}
+{gap_block}
+Junior's draft (body paragraphs):
+{json.dumps(paragraphs, indent=2)}
+
+Checker's findings:
+{feedback}
+
+Return JSON: {{"greeting": "Dear Hiring Manager,", "paragraphs": ["...", "..."]}}"""

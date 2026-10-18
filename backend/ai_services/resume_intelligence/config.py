@@ -9,7 +9,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-WORKFLOW_VERSION = "generator-evaluator-v2"
+WORKFLOW_VERSION = "writer-reviewer-v3"
 PROMPT_VERSION = "select-tailor-v3"
 
 # Model names come only from the environment, through ai_services/model_config.py (no defaults).
@@ -26,7 +26,15 @@ REASONING_EFFORT = os.getenv("RESUME_REASONING_EFFORT", "").strip()
 GENERATOR_TEMPERATURE = 0.5  # some variation in wording
 EVALUATOR_TEMPERATURE = 0.0  # judging should be repeatable
 
-# Number of Revise -> Re-evaluate rounds after the first draft.
+# Who fixes a draft that the evaluator found fault with:
+#   reviewer_revises  the evaluator (a "senior") reviews the writer's draft and rewrites it itself.
+#                     One writer call + one reviewer call per document, always.
+#   writer_revises    the evaluator's feedback goes back to the writer, which revises (up to
+#                     RESUME_MAX_REVISIONS rounds, each re-evaluated).
+REVIEW_MODES = ("reviewer_revises", "writer_revises")
+REVIEW_MODE = os.getenv("RESUME_REVIEW_MODE", "reviewer_revises").strip() or "reviewer_revises"
+
+# Number of Revise -> Re-evaluate rounds after the first draft (writer_revises mode only).
 MAX_REVISIONS = int(os.getenv("RESUME_MAX_REVISIONS", "2"))
 
 # The loop makes several model calls inside one web request. A revision is skipped when

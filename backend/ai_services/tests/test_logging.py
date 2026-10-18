@@ -53,10 +53,10 @@ class LoggingTests(unittest.TestCase):
 
     def test_failure_names_the_stage_and_reason_and_logs_every_step(self):
         import json
-        client = FakeClient(ok_calls=1, reply=json.dumps({"title": "Backend Engineer", "required_skills": ["Python"]}))  # analysis ok, first draft rate limited
+        client = FakeClient(ok_calls=0, reply=json.dumps({"title": "Backend Engineer", "required_skills": ["Python"]}))  # the writer's first call is rate limited
         llm = GroqLLM("test-model", client=client)
         original = rg.build_agent
-        rg.build_agent = lambda: ResumeAgent(llm)
+        rg.build_agent = lambda: ResumeAgent(llm, review_mode="writer_revises")
         try:
             with self.assertLogs("api", level="INFO") as logs, self.assertRaises(DocumentsUnavailable) as caught:
                 generate_application_documents(JD, MASTER)
@@ -66,7 +66,7 @@ class LoggingTests(unittest.TestCase):
         self.assertEqual(caught.exception.to_dict()["failed_stage"], "resume")
         self.assertEqual(caught.exception.to_dict()["reason"], "rate_limited")
         self.assertIn(caught.exception.trace_id, text)
-        for expected in ("analyze llm_call ok", "resume.draft0 llm_call FAILED", "kind=rate_limited", "status_code=429", "retry_after=12", "ABORTED at resume"):
+        for expected in ("resume.draft0 llm_call FAILED", "kind=rate_limited", "status_code=429", "retry_after=12", "ABORTED at resume"):
             self.assertIn(expected, text)
         self.assertTrue(all(len(line) < 700 for line in logs.output))
 
@@ -74,7 +74,7 @@ class LoggingTests(unittest.TestCase):
         from ai_services.tests.helpers import ScriptedLLM
         llm = ScriptedLLM(generations=[gold()])
         with self.assertLogs("api", level="INFO") as logs:
-            ResumeAgent(llm).run(MASTER, JD)
+            ResumeAgent(llm, review_mode="writer_revises").run(MASTER, JD)
         text = "\n".join(logs.output)
         self.assertIn("resume.draft0 evaluated", text)
         self.assertIn("resume finished", text)
