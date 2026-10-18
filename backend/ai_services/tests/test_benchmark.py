@@ -110,8 +110,8 @@ class AgentOnBenchmarkTests(unittest.TestCase):
                 return passthrough_workflow(case["master_resume"], "") if calls == 0 else build_reference_resume(case)
             return fn
 
-        single = ResumeAgent(ScriptedLLM(generation_fn=generation_fn_factory({})), max_revisions=0)
-        loop = ResumeAgent(ScriptedLLM(generation_fn=generation_fn_factory({})), max_revisions=2)
+        single = ResumeAgent(ScriptedLLM(generation_fn=generation_fn_factory({})), max_revisions=0, review_mode="writer_revises")
+        loop = ResumeAgent(ScriptedLLM(generation_fn=generation_fn_factory({})), max_revisions=2, review_mode="writer_revises")
         single_report = run_benchmark(agent_workflow(single), label="single-shot")
         loop_report = run_benchmark(agent_workflow(loop), label="agent-loop")
         delta = compare_reports(single_report, loop_report)

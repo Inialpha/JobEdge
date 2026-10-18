@@ -109,3 +109,20 @@ The resume and application are saved in one transaction only after both document
 The resume generator first **selects** what is relevant to the job (experiences, projects, education, certifications, awards, skills) and then **tailors** it: bullets and project descriptions are reworded with the job description's keywords wherever the candidate's own work supports them, and the summary is rewritten. Facts, names, dates and numbers stay as in the master resume. The only style instruction is the buzzword list (`BUZZWORDS` in `config.py`); openings such as "I am excited to apply" are normal and not penalised, in the summary or the cover letter.
 
 The separate evaluator checks: factual accuracy (numbers keep their `%`, so "40 store managers" cannot vouch for an invented "40%"), selectivity (unrelated projects, skills and experiences are flagged), relevance and tailoring (bullets copied unchanged are flagged), keyword alignment, summary quality, buzzwords, repetition and structure. Grounding then removes anything unsupported. Failures go back to the generator as feedback for up to `RESUME_MAX_REVISIONS` revisions.
+
+
+## Writer and reviewing evaluator (v3)
+
+There is no separate job-analysis model call (keywords are found in code). Per document:
+
+1. **Writer** (`RESUME_GENERATOR_MODEL`) receives the master resume and the job description and writes the draft.
+2. **Evaluator** checks the draft in code, then a **reviewer** model (`RESUME_EVALUATOR_MODEL`, or the generator's model if unset) receives the job description, the master resume, the draft and the checker's findings, and rewrites it itself. The rewrite is grounded and scored like any draft, and the better of the two is kept (a tie goes to the reviewed one).
+
+That is 2 model calls per document and 4 per application (resume and cover letter), fixed. If a call fails the previous draft is kept.
+
+`RESUME_REVIEW_MODE` chooses who fixes a weak draft:
+
+| Value | Behaviour |
+|---|---|
+| `reviewer_revises` (default) | The evaluator rewrites the draft itself: writer 1 call + reviewer 1 call. |
+| `writer_revises` | The evaluator's findings go back to the writer, which revises, up to `RESUME_MAX_REVISIONS` times, re-checking in code each round. Up to 1 + `RESUME_MAX_REVISIONS` calls per document. |

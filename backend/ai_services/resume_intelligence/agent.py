@@ -21,6 +21,7 @@ from .grounding import build_source_index, ground_resume, sanitize_summary, text
 from .job_analysis import JobAnalysis, analyze_job
 from .llm import LLMClient, model_name
 from .prompts import pick_style_hint
+from .reviewer import ResumeReviewer
 from .trace import describe_error, log_evaluation, log_stage, set_stage
 import logging
 
@@ -89,7 +90,7 @@ class AgentResult:
             "matched_keywords": kw.get("present", []),
             "missing_keywords": kw.get("missed_supported", []),
             "gaps": kw.get("unsupported_requirements", []),
-            "revisions": max(0, len([i for i in self.iterations if i.kind == "revision"])),
+            "revisions": len([i for i in self.iterations if i.kind in ("revision", "review")]),
         }
 
 
@@ -114,7 +115,14 @@ class ResumeAgent:
         evaluator: Optional[ResumeEvaluator] = None,
         max_seconds: Optional[float] = config.MAX_SECONDS,
         clock: Callable[[], float] = time.monotonic,
+        reviewer_llm: Optional[LLMClient] = None,
+        review_mode: Optional[str] = None,
     ):
+        self.review_mode = review_mode or config.REVIEW_MODE
+        if self.review_mode not in config.REVIEW_MODES:
+            raise ValueError(f"RESUME_REVIEW_MODE must be one of {', '.join(config.REVIEW_MODES)} (got '{self.review_mode}')")
+        self.reviewer_llm = reviewer_llm or generator_llm
+        self.reviewer = ResumeReviewer(self.reviewer_llm)
         self.generator_llm = generator_llm
         self.generator = ResumeGenerator(generator_llm)
         self.evaluator_llm = evaluator_llm
@@ -132,9 +140,9 @@ class ResumeAgent:
         started = self.clock()
         index = build_source_index(master)
 
-        # 1. Analyze
-        log_stage("resume", "start", max_revisions=self.max_revisions, budget_seconds=self.max_seconds)
-        analysis = analyze_job(job_description, self.generator_llm)
+        # 1. Analyze: keywords found in code, no model call. The writer reads the job description itself.
+        log_stage("resume", "start", mode=self.review_mode, max_revisions=self.max_revisions, budget_seconds=self.max_seconds)
+        analysis = analyze_job(job_description, None)
         log_stage("resume.analyze", "done", source=analysis.source, keywords=len(analysis.keywords), required=len(analysis.required_skills))
         style_hint = pick_style_hint(master, job_description, seed)
 
@@ -155,8 +163,29 @@ class ResumeAgent:
         candidates = [_Candidate(0, resume, evaluation)]
         stopped_for_time = False
 
-        # 4. Revise -> 5. Re-evaluate, a limited number of times
-        for n in range(1, self.max_revisions + 1):
+        # 4a. reviewer_revises: the evaluator reads the draft and the job, and rewrites it itself (one call).
+        reviewer_mode = self.review_mode == "reviewer_revises"
+        if reviewer_mode:
+            if self._out_of_time(started, last_call_seconds):
+                stopped_for_time = True
+                log_stage("resume", "review skipped: time budget used", elapsed=self.clock() - started, budget=self.max_seconds)
+            else:
+                set_stage("resume.review")
+                log_stage("resume.review", "reviewer rewriting", failed=",".join(evaluation.failed_dimensions) or "none")
+                try:
+                    raw = self.reviewer.review(master, job_description, resume, evaluation.feedback_text())
+                except Exception as exc:
+                    log_stage("resume.review", "review FAILED, keeping the writer's draft", logging.WARNING, **describe_error(exc))
+                else:
+                    reviewed, repairs = ground_resume(raw, master, index)
+                    reviewed_eval = self.evaluator.evaluate(reviewed, master, job_description, analysis, index, repairs)
+                    log_evaluation("resume.review", reviewed_eval, len(repairs))
+                    records.append(IterationRecord(1, "review", reviewed_eval, repairs))
+                    candidates.append(_Candidate(1, reviewed, reviewed_eval))
+                    resume, evaluation = reviewed, reviewed_eval
+
+        # 4b. writer_revises: evaluator feedback goes back to the writer, a limited number of times
+        for n in range(1, (0 if reviewer_mode else self.max_revisions) + 1):
             if evaluation.passed:
                 log_stage("resume", "no revision needed", passed_at=n - 1)
                 break
@@ -183,7 +212,8 @@ class ResumeAgent:
             candidates.append(_Candidate(n, resume, evaluation))
 
         # 6. Finalize
-        best = max(candidates, key=_selection_key)
+        # On a tie the reviewed version wins (it is the later iteration).
+        best = max(candidates, key=lambda c: _selection_key(c) + (c.iteration,))
         final_resume, final_eval = best.resume, best.evaluation
         if text_violations(final_resume.get("summary") or "", index):
             summary, fixes = sanitize_summary(final_resume["summary"], master, index)
@@ -198,8 +228,9 @@ class ResumeAgent:
         metadata = {
             "workflow_version": config.WORKFLOW_VERSION,
             "prompt_version": config.PROMPT_VERSION,
+            "review_mode": self.review_mode,
             "generator_model": model_name(self.generator_llm),
-            "evaluator_model": model_name(self.evaluator_llm),
+            "evaluator_model": model_name(self.reviewer_llm if reviewer_mode else self.evaluator_llm),
             "style_hint": style_hint,
             "max_revisions": self.max_revisions,
             "judge_used": final_eval.judge_used,
