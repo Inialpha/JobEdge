@@ -34,7 +34,7 @@ def aggregate_evaluations(rows: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]
         revisions = []
         for r in items:
             iterations = ((r.get("report") or {}).get("iterations")) or []
-            revisions.append(sum(1 for i in iterations if i.get("kind") == "revision"))
+            revisions.append(sum(1 for i in iterations if i.get("kind") in ("revision", "review")))
         summaries.append({
             **dict(zip(GROUP_KEYS, key)),
             "count": n,

@@ -18,7 +18,7 @@ TODAY = datetime.date(2026, 10, 4)
 
 def letter_agent(letters, max_revisions=2):
     llm = ScriptedLLM(letters=letters)
-    return CoverLetterAgent(llm, max_revisions=max_revisions, today=TODAY), llm
+    return CoverLetterAgent(llm, max_revisions=max_revisions, today=TODAY, review_mode="writer_revises"), llm
 
 
 class LetterLoopTests(unittest.TestCase):
@@ -150,8 +150,8 @@ class ApplicationWorkflowTests(unittest.TestCase):
         from ai_services.resume_intelligence.agent import ResumeAgent
         llm = ScriptedLLM(generations=[gold()], letters=[BAD_LETTER, GOLD_LETTER])
         rg_build_agent, rg_build_letter = rg.build_agent, rg.build_letter_agent
-        rg.build_agent = lambda: ResumeAgent(llm)
-        rg.build_letter_agent = lambda: CoverLetterAgent(llm, today=TODAY)
+        rg.build_agent = lambda: ResumeAgent(llm, review_mode="writer_revises")
+        rg.build_letter_agent = lambda: CoverLetterAgent(llm, today=TODAY, review_mode="writer_revises")
         try:
             docs = generate_application_documents(JD, MASTER)
         finally:

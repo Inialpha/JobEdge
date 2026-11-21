@@ -52,6 +52,30 @@ class SourceIndex:
     personal_information: dict
     skill_names: List[str] = field(default_factory=list)
 
+    def add_aliases(self, pairs: Any, job_description: str) -> Tuple[List[dict], List[dict]]:
+        """Accept the model's terminology swaps ("Software Developer" -> "Software Engineer").
+
+        A swap is accepted only when the old term really is in the master resume and the new term
+        really is in the job description. An accepted new term then counts as supported, so using
+        the job's wording for something the candidate did is not mistaken for an invention.
+        """
+        job_text = normalize(job_description)
+        accepted: List[dict] = []
+        rejected: List[dict] = []
+        for pair in pairs if isinstance(pairs, list) else []:
+            if not isinstance(pair, dict):
+                continue
+            old, new = str(pair.get("from") or "").strip(), str(pair.get("to") or "").strip()
+            if not old or not new:
+                continue
+            in_master = contains_term(self, old)
+            in_job = bool(re.search(r"(?<![a-z0-9])" + re.escape(normalize(new)) + r"(?![a-z0-9])", job_text))
+            (accepted if in_master and in_job else rejected).append({"from": old, "to": new})
+        for pair in accepted:
+            self.text += " " + normalize(pair["to"])
+            self.tokens |= stemmed_tokens(pair["to"])
+        return accepted, rejected
+
 
 def _dicts(value: Any) -> List[dict]:
     return [v for v in as_list(value) if isinstance(v, dict)]

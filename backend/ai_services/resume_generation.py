@@ -29,8 +29,8 @@ class GenerationOutcome:
 
 def build_agent() -> ResumeAgent:
     generator = GroqLLM(model_config.generator_model())
-    judge = GroqLLM(model_config.evaluator_model()) if config.JUDGE_ENABLED else None
-    return ResumeAgent(generator, evaluator_llm=judge)
+    reviewer = GroqLLM(model_config.reviewer_model()) if config.REVIEW_MODE == "reviewer_revises" else None
+    return ResumeAgent(generator, reviewer_llm=reviewer)
 
 
 def generate_tailored_resume(job_description: str, master: dict) -> GenerationOutcome:
@@ -74,7 +74,8 @@ class LetterOutcome:
 def build_letter_agent():
     from ai_services.resume_intelligence.cover_letter_agent import CoverLetterAgent
 
-    return CoverLetterAgent(GroqLLM(model_config.generator_model()))
+    reviewer = GroqLLM(model_config.reviewer_model()) if config.REVIEW_MODE == "reviewer_revises" else None
+    return CoverLetterAgent(GroqLLM(model_config.generator_model()), reviewer_llm=reviewer)
 
 
 def generate_tailored_cover_letter(master: dict, tailored_resume: dict, job_description: str, analysis=None) -> LetterOutcome:

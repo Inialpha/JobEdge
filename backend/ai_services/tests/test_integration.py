@@ -37,8 +37,8 @@ class TimeBudgetTests(unittest.TestCase):
 
     def test_revision_is_skipped_when_it_would_blow_the_budget(self):
         clock = FakeClock()
-        llm = self.slow_llm(clock, 25.0, [copied(), gold()])   # analysis 25s + first draft 25s
-        agent = ResumeAgent(llm, max_revisions=2, max_seconds=60.0, clock=clock)
+        llm = self.slow_llm(clock, 40.0, [copied(), gold()])   # the draft takes 25s, the next call would not fit in 60s
+        agent = ResumeAgent(llm, max_revisions=2, max_seconds=60.0, clock=clock, review_mode="writer_revises")
         result = agent.run(MASTER, JD)
         self.assertTrue(result.metadata["stopped_for_time"])
         self.assertEqual([i.kind for i in result.iterations], ["initial"])
@@ -47,7 +47,7 @@ class TimeBudgetTests(unittest.TestCase):
     def test_revision_runs_when_there_is_time(self):
         clock = FakeClock()
         llm = self.slow_llm(clock, 5.0, [copied(), gold()])
-        result = ResumeAgent(llm, max_revisions=2, max_seconds=60.0, clock=clock).run(MASTER, JD)
+        result = ResumeAgent(llm, max_revisions=2, max_seconds=60.0, clock=clock, review_mode="writer_revises").run(MASTER, JD)
         self.assertFalse(result.metadata["stopped_for_time"])
         self.assertEqual(len(result.iterations), 2)
         self.assertTrue(result.passed)
@@ -55,13 +55,13 @@ class TimeBudgetTests(unittest.TestCase):
     def test_no_budget_means_no_limit(self):
         clock = FakeClock()
         llm = self.slow_llm(clock, 1000.0, [copied(), gold()])
-        result = ResumeAgent(llm, max_revisions=2, max_seconds=None, clock=clock).run(MASTER, JD)
+        result = ResumeAgent(llm, max_revisions=2, max_seconds=None, clock=clock, review_mode="writer_revises").run(MASTER, JD)
         self.assertEqual(len(result.iterations), 2)
 
 
 class EntryPointTests(unittest.TestCase):
     def test_success_returns_resume_report_and_client_summary(self):
-        agent = ResumeAgent(ScriptedLLM(generations=[gold()]))
+        agent = ResumeAgent(ScriptedLLM(generations=[gold()]), review_mode="writer_revises")
         with mock.patch.object(resume_generation, "build_agent", return_value=agent):
             outcome = resume_generation.generate_tailored_resume(JD, MASTER)
         self.assertTrue(outcome.used_agent)
@@ -70,7 +70,7 @@ class EntryPointTests(unittest.TestCase):
         self.assertTrue(outcome.summary["passed"])
 
     def test_model_failure_returns_no_resume_so_the_view_can_answer_503_style_message(self):
-        agent = ResumeAgent(ScriptedLLM(generations=[RuntimeError("rate limited")]))
+        agent = ResumeAgent(ScriptedLLM(generations=[RuntimeError("rate limited")]), review_mode="writer_revises")
         with mock.patch.object(resume_generation, "build_agent", return_value=agent):
             outcome = resume_generation.generate_tailored_resume(JD, MASTER)
         self.assertIsNone(outcome.resume)
@@ -131,7 +131,7 @@ class AgentBenchmarkStatsTests(unittest.TestCase):
                 return hallucinated()
             return resume
 
-        agent = ResumeAgent(ScriptedLLM(generation_fn=generation_fn), max_revisions=1)
+        agent = ResumeAgent(ScriptedLLM(generation_fn=generation_fn), max_revisions=1, review_mode="writer_revises")
         report = run_benchmark(agent_workflow(agent), label="agent")
         by_case = {c["case_id"]: c for c in report["cases"]}
         self.assertGreater(by_case["backend_engineer"]["grounding_repairs"], 0)

@@ -3,7 +3,7 @@
 Set these in the environment (or the .env file); there are deliberately no defaults:
 
     RESUME_GENERATOR_MODEL     writes tailored resumes and cover letters (also the older single-shot writers)
-    RESUME_EVALUATOR_MODEL     optional LLM judge for the evaluator (only needed when RESUME_JUDGE_ENABLED=true)
+    RESUME_EVALUATOR_MODEL     the reviewing "senior" that checks and rewrites drafts (falls back to the generator's model if unset)
     RESUME_EXTRACTION_MODEL    turns an uploaded resume's text into structured data
     JOB_EXTRACTION_MODEL       turns a job posting into structured data
 
@@ -38,6 +38,11 @@ def generator_model() -> str:
 
 def evaluator_model() -> str:
     return _require("RESUME_EVALUATOR_MODEL")
+
+
+def reviewer_model() -> str:
+    """The evaluator that reviews and rewrites: RESUME_EVALUATOR_MODEL, or the generator's model if that is unset."""
+    return _read("RESUME_EVALUATOR_MODEL") or generator_model()
 
 
 def resume_extraction_model() -> str:

@@ -90,7 +90,7 @@ def agent_workflow(agent) -> Workflow:
         result = agent.run(master, job_description)
         stats = {
             "agent_grounding_repairs": sum(len(i.repairs) for i in result.iterations),
-            "revisions": sum(1 for i in result.iterations if i.kind == "revision"),
+            "revisions": sum(1 for i in result.iterations if i.kind in ("revision", "review")),
             "elapsed_seconds": result.metadata.get("elapsed_seconds", 0.0),
         }
         return result.resume, stats

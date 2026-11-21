@@ -13,7 +13,7 @@ JD = BACKEND["job_description"]
 def agent(generations, max_revisions=2, judge=None):
     llm = ScriptedLLM(generations=generations)
     evaluator_llm = ScriptedLLM(judge=judge) if judge else None
-    return ResumeAgent(llm, evaluator_llm=evaluator_llm, max_revisions=max_revisions), llm
+    return ResumeAgent(llm, evaluator_llm=evaluator_llm, max_revisions=max_revisions, review_mode="writer_revises"), llm
 
 
 class LoopTests(unittest.TestCase):
@@ -105,7 +105,7 @@ class FailureTests(unittest.TestCase):
         llm = ScriptedLLM(generation_fn=lambda prompt: {})
         llm.complete = lambda system, user, temperature=0.0: "not json at all"
         with self.assertRaises(GenerationError):
-            ResumeAgent(llm).run(MASTER, JD)
+            ResumeAgent(llm, review_mode="writer_revises").run(MASTER, JD)
 
     def test_failed_revision_keeps_the_first_draft(self):
         a, _ = agent([copied(), RuntimeError("timeout")])
@@ -116,7 +116,7 @@ class FailureTests(unittest.TestCase):
 
     def test_evaluator_judge_outage_does_not_break_the_loop(self):
         llm = ScriptedLLM(generations=[gold()])
-        result = ResumeAgent(llm, evaluator_llm=ScriptedLLM()).run(MASTER, JD)   # judge raises
+        result = ResumeAgent(llm, evaluator_llm=ScriptedLLM(), review_mode="writer_revises").run(MASTER, JD)   # judge raises
         self.assertTrue(result.passed)
         self.assertFalse(result.evaluation.judge_used)
 
