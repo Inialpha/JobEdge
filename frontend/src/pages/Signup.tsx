@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Link } from 'react-router-dom';
 import { FormType, NewData } from '../utils/types'
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 
 
 export default function Signup() {
@@ -58,7 +59,7 @@ export default function Signup() {
           setFeedback(null)
         }, 5000);
       }
-    } catch (error) {
+    } catch {
       setFeedback({type: 'error', message: 'An error occurred. Please try again later.'})
       setTimeout(() => {
         setFeedback(null)
@@ -173,11 +174,20 @@ export default function Signup() {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-2 text-gray-500">or</span>
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-3 gap-3">
-
+            <div className="mt-6">
+              <GoogleSignInButton
+                onFeedback={({ message, variant }) => {
+                  setFeedback({ type: variant === 'error' ? 'error' : 'success', message });
+                  setTimeout(() => setFeedback(null), 5000);
+                }}
+              />
             </div>
           </div>
 
