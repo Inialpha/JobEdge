@@ -3,6 +3,7 @@ import hashlib
 import json
 from typing import List, Optional
 
+from .yaml_utils import to_yaml
 from .config import PROMPT_VERSION  # noqa: F401  (re-exported for convenience)
 
 # --------------------------------------------------------------------------- analysis
@@ -96,7 +97,7 @@ def _analysis_block(analysis) -> str:
 
 def build_generate_prompt(master: dict, job_description: str, analysis, style_hint: str = "") -> str:
     return f"""Master Resume:
-{json.dumps(master, indent=2, default=str)}
+{to_yaml(master)}
 
 Job Description:
 {job_description}
@@ -107,7 +108,7 @@ Return the tailored resume as JSON in exactly this schema:
 
 def build_revise_prompt(master: dict, job_description: str, analysis, style_hint: str, previous: dict, feedback: str) -> str:
     return f"""Master Resume:
-{json.dumps(master, indent=2, default=str)}
+{to_yaml(master)}
 
 Job Description:
 {job_description}
@@ -194,7 +195,7 @@ def build_letter_prompt(master: dict, job_description: str, analysis, style_hint
     if gaps:
         gap_block = f"\nThe job asks for these, but the candidate's resume has no evidence of them. Do not mention or imply them: {', '.join(gaps)}.\n"
     return f"""Candidate's resume (the only source of truth about the candidate):
-{json.dumps(master, indent=2, default=str)}
+{to_yaml(master)}
 
 Job description:
 {job_description}
@@ -208,7 +209,7 @@ Return JSON: {{"greeting": "Dear Hiring Manager,", "paragraphs": ["paragraph 1",
 def build_letter_revise_prompt(master: dict, job_description: str, analysis, style_hint: str, gaps: List[str], previous_paragraphs: List[str], feedback: str) -> str:
     gap_block = f"\nDo not mention or imply these (no evidence in the resume): {', '.join(gaps)}.\n" if gaps else ""
     return f"""Candidate's resume (the only source of truth about the candidate):
-{json.dumps(master, indent=2, default=str)}
+{to_yaml(master)}
 
 Job description:
 {job_description}
@@ -243,7 +244,7 @@ A checker has also listed problems it found. Fix them, and anything else you not
 
 def build_review_prompt(master: dict, job_description: str, draft: dict, feedback: str) -> str:
     return f"""Master Resume:
-{json.dumps(master, indent=2, default=str)}
+{to_yaml(master)}
 
 Job Description:
 {job_description}
@@ -275,7 +276,7 @@ Return only JSON: {{"greeting": "Dear Hiring Manager,", "paragraphs": ["...", ".
 def build_letter_review_prompt(master: dict, job_description: str, gaps: List[str], paragraphs: List[str], feedback: str) -> str:
     gap_block = f"\nThe job asks for these but the resume has no evidence of them, so the letter must not mention or imply them: {', '.join(gaps)}.\n" if gaps else ""
     return f"""Candidate's resume (the only source of truth about the candidate):
-{json.dumps(master, indent=2, default=str)}
+{to_yaml(master)}
 
 Job description:
 {job_description}
@@ -287,3 +288,90 @@ Checker's findings:
 {feedback}
 
 Return JSON: {{"greeting": "Dear Hiring Manager,", "paragraphs": ["...", "..."]}}"""
+
+
+# --------------------------------------------------------------------------- single call (v4)
+# One model call writes the whole resume, working through the tasks in order. All teaching material
+# (principles and wrong/right examples) lives in the SYSTEM prompt; the user prompt carries only the
+# candidate's data and the task. Examples are from unrelated fields and show shape only.
+
+SINGLE_SYSTEM = f"""You are an expert resume writer and recruiter. You tailor a candidate's master resume to one job description so that it is truthful, relevant, measurable where possible, and readable by both applicant tracking systems (ATS) and human recruiters.
+
+You will receive the candidate's master resume (YAML) and a job description. Work through the tasks below in order, and use what you decided in earlier tasks in later ones. Return the result as JSON whose fields follow the same order.
+
+TASKS
+
+1. Read the job description. Note the required and preferred skills and tools, the main responsibilities, the qualifications and the industry terminology it uses.
+
+2. Skills. Select only the skills from the master resume that this job needs. Do not list every skill the candidate has. Compare the candidate's wording with the job's wording. When they mean the same thing, use the job's wording (for example the master resume says "Software Developer" or "ReactJS" and the job says "Software Engineer" or "React"), and record every such change in keyword_alignments as {{"from": "term as in the master resume", "to": "term as in the job description"}}. Never add a skill, tool or technology the master resume does not support.
+
+3. Professional experience. Select the experiences that align with the job, then check the keywords and tailor the bullets of each selected experience. Keep organizations, job titles, dates and locations exactly as in the master resume.
+
+4. Projects. Select the projects that are relevant to the job and tailor their descriptions in the same way.
+
+5. Education, certifications and awards. Keep the qualifications that support this job. Omit secondary school certificates when the candidate has a higher qualification, unless the job asks for them. Keep only the certifications and awards that are relevant to the job.
+
+6. Summary, written last. Use everything you selected above. The summary is at most three sentences and states: (a) the candidate's professional identity, (b) two or three of the most important tools or skills for this job, and (c) their relevant experience and impact, with a measurable result only if the master resume contains one. Adapt it to the candidate: an experienced professional emphasises years of experience, proven expertise, tools and results; a recent graduate or entry-level candidate emphasises education, training, projects, relevant skills and the role being targeted; a career changer emphasises transferable skills and relevant training or certification for the new direction. Never claim achievements the candidate does not have.
+
+HOW TO WRITE EXPERIENCE BULLETS AND PROJECT DESCRIPTIONS
+- Start with a strong action verb (Developed, Designed, Implemented, Optimised, Automated, Managed, Led) instead of a passive phrase such as "Responsible for" or "Worked on".
+- Each bullet shows the action, the method (the tools or approach used) and the result. Include a metric only when the master resume contains it; otherwise describe the concrete outcome without a number.
+- Use present tense for the current job and past tense for previous jobs.
+- A project description says what was built, the tools and methods used, and what it achieved or solved. A project does not need thousands of users to be worth showing.
+- Weave job keywords into bullets naturally, where the candidate really did that work. Do not repeat keywords for the sake of it.
+
+TRUTH
+- Every fact, number, tool, employer, title, date and name comes from the master resume. You change wording, order and emphasis, and you may swap terminology as described in task 2. You never add achievements, tools, numbers or responsibilities.
+- Do not use these words: {_avoid_words()}.
+
+EXAMPLES (from unrelated fields; they show the shape of good and bad writing only. Never reuse their facts, numbers or wording.)
+
+Summary, wrong:
+- "Hardworking professional looking for an opportunity to grow in a dynamic company where I can use my skills."
+  Why it fails: no identity, no tools, no evidence, could describe anyone.
+- "Nurse with many skills who is good at working with patients and team members and is passionate about healthcare and learning new things and growing."
+  Why it fails: vague, filler, no specifics, too long.
+Summary, right:
+- "Registered nurse with 6 years of emergency-ward experience in triage, patient monitoring and electronic health records, who cut average triage time through a revised intake checklist."
+- "Logistics coordinator with 4 years of experience in route planning, SAP and warehouse reporting, improving on-time delivery by streamlining dispatch schedules."
+
+Experience bullet, wrong:
+- "Responsible for handling customer complaints."
+  Why it fails: passive, no method, no result.
+- "Worked on the website and did many different tasks for the team."
+  Why it fails: vague, no action, tools or outcome.
+Experience bullet, right:
+- "Resolved an average of 40 customer complaints daily by applying a ticket-priority system, keeping first-response time within one hour."
+- "Redesigned the monthly stock-count process in Excel with lookup formulas, removing manual re-entry and reducing counting errors."
+
+Project description, wrong:
+- "Made a website for a school."
+  Why it fails: no tools, no purpose, no outcome.
+- "A mobile app project that I worked on with friends."
+  Why it fails: says nothing about what it does or what was built.
+Project description, right:
+- "Built a class-attendance tracker with Flask and SQLite that lets teachers record attendance in two taps and export weekly reports."
+- "Designed a booking site for a local clinic in HTML, CSS and JavaScript, replacing phone scheduling with an online appointment form."
+"""
+
+SINGLE_SCHEMA = """{
+  "keyword_alignments": [{"from": "term as in the master resume", "to": "term as in the job description"}],
+  "skills": [{"category": "category name", "skills": ["only relevant skills from the master resume"]}],
+  "professional_experiences": [{"organization": "exact", "role": "exact", "responsibilities": ["tailored bullets"]}],
+  "projects": [{"name": "exact name", "description": "tailored description"}],
+  "educations": [{"institution": "exact"}],
+  "certifications": [{"name": "exact"}],
+  "awards": [{"title": "exact"}],
+  "summary": "written last, from everything above"
+}"""
+
+
+def build_single_prompt(master: dict, job_description: str) -> str:
+    return f"""Master resume (YAML):
+{to_yaml(master)}
+
+Job description:
+{job_description}
+
+Do the tasks in order and return only JSON in exactly this shape (fields in this order, leave out nothing that applies, use an empty list when a section does not apply):
+{SINGLE_SCHEMA}"""
