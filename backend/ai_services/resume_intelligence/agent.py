@@ -147,15 +147,32 @@ class ResumeAgent:
         style_hint = pick_style_hint(master, job_description, seed)
 
         # 2. Generate (+ ground) and 3. Evaluate
+        def ground(raw: dict):
+            # terminology swaps the model reports are checked against the master resume and the job
+            accepted, rejected = index.add_aliases(raw.get("keyword_alignments") if isinstance(raw, dict) else None, job_description)
+            if accepted or rejected:
+                log_stage("resume.align", "keyword alignments", accepted=len(accepted), rejected=len(rejected),
+                          swaps="; ".join(f"{a['from']}->{a['to']}" for a in accepted[:6]))
+            return ground_resume(raw, master, index)
+
+        single = self.review_mode == "single_call"
         call_started = self.clock()
         set_stage("resume.draft0")
-        try:
-            raw = self.generator.generate(master, job_description, analysis, style_hint)
-        except Exception as exc:  # network, rate limit, unusable output
-            log_stage("resume.draft0", "first draft FAILED, giving up", logging.ERROR, **describe_error(exc))
-            raise GenerationError(str(exc)) from exc
+        raw, attempts = None, 1 + (config.UNUSABLE_RETRIES if single else 0)
+        for attempt in range(1, attempts + 1):
+            try:
+                raw = (self.generator.generate_single(master, job_description) if single
+                       else self.generator.generate(master, job_description, analysis, style_hint))
+                break
+            except Exception as exc:  # network, rate limit, unusable output
+                info = describe_error(exc)
+                if attempt < attempts and info["kind"] in ("unusable_output", "output_truncated"):
+                    log_stage("resume.draft0", "unusable reply, retrying once", logging.WARNING, attempt=attempt, **info)
+                    continue
+                log_stage("resume.draft0", "first draft FAILED, giving up", logging.ERROR, **info)
+                raise GenerationError(str(exc)) from exc
         last_call_seconds = self.clock() - call_started
-        resume, repairs = ground_resume(raw, master, index)
+        resume, repairs = ground(raw)
         evaluation = self.evaluator.evaluate(resume, master, job_description, analysis, index, repairs)
         log_evaluation("resume.draft0", evaluation, len(repairs))
 
@@ -177,7 +194,7 @@ class ResumeAgent:
                 except Exception as exc:
                     log_stage("resume.review", "review FAILED, keeping the writer's draft", logging.WARNING, **describe_error(exc))
                 else:
-                    reviewed, repairs = ground_resume(raw, master, index)
+                    reviewed, repairs = ground(raw)
                     reviewed_eval = self.evaluator.evaluate(reviewed, master, job_description, analysis, index, repairs)
                     log_evaluation("resume.review", reviewed_eval, len(repairs))
                     records.append(IterationRecord(1, "review", reviewed_eval, repairs))
@@ -185,7 +202,7 @@ class ResumeAgent:
                     resume, evaluation = reviewed, reviewed_eval
 
         # 4b. writer_revises: evaluator feedback goes back to the writer, a limited number of times
-        for n in range(1, (0 if reviewer_mode else self.max_revisions) + 1):
+        for n in range(1, (0 if (reviewer_mode or single) else self.max_revisions) + 1):
             if evaluation.passed:
                 log_stage("resume", "no revision needed", passed_at=n - 1)
                 break
@@ -205,7 +222,7 @@ class ResumeAgent:
                 log_stage(f"resume.draft{n}", "revision FAILED, keeping best draft so far", logging.WARNING, **describe_error(exc))
                 break  # keep the best draft we already have
             last_call_seconds = self.clock() - call_started
-            resume, repairs = ground_resume(raw, master, index)
+            resume, repairs = ground(raw)
             evaluation = self.evaluator.evaluate(resume, master, job_description, analysis, index, repairs)
             log_evaluation(f"resume.draft{n}", evaluation, len(repairs))
             records.append(IterationRecord(n, "revision", evaluation, repairs))

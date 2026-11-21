@@ -4,7 +4,7 @@ import json
 from typing import Callable, List, Optional
 
 from ai_services.resume_intelligence.benchmark import build_reference_resume, load_cases, passthrough_workflow
-from ai_services.resume_intelligence.prompts import ANALYZE_SYSTEM, GENERATE_SYSTEM, JUDGE_SYSTEM, LETTER_REVIEW_SYSTEM, LETTER_SYSTEM, REVIEW_SYSTEM
+from ai_services.resume_intelligence.prompts import ANALYZE_SYSTEM, GENERATE_SYSTEM, JUDGE_SYSTEM, LETTER_REVIEW_SYSTEM, LETTER_SYSTEM, REVIEW_SYSTEM, SINGLE_SYSTEM
 
 CASES = {c["id"]: c for c in load_cases()}
 BACKEND = CASES["backend_engineer"]
@@ -62,7 +62,7 @@ class ScriptedLLM:
             if isinstance(item, Exception):
                 raise item
             return json.dumps(item)
-        assert system == GENERATE_SYSTEM
+        assert system in (GENERATE_SYSTEM, SINGLE_SYSTEM), "unexpected system prompt"
         self.generate_calls += 1
         self.generate_prompts.append(user)
         if self.generation_fn:

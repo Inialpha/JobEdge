@@ -120,11 +120,19 @@ class CoverLetterAgent:
 
         call_started = self.clock()
         set_stage("letter.draft0")
-        try:
-            raw = self.generator.generate(shown, job_description, analysis, style_hint, gaps)
-        except Exception as exc:
-            log_stage("letter.draft0", "first draft FAILED, giving up", logging.ERROR, **describe_error(exc))
-            raise GenerationError(str(exc)) from exc
+        single = self.review_mode == "single_call"
+        raw, attempts = None, 1 + (config.UNUSABLE_RETRIES if single else 0)
+        for attempt in range(1, attempts + 1):
+            try:
+                raw = self.generator.generate(shown, job_description, analysis, style_hint, gaps)
+                break
+            except Exception as exc:
+                info = describe_error(exc)
+                if attempt < attempts and info["kind"] in ("unusable_output", "output_truncated"):
+                    log_stage("letter.draft0", "unusable reply, retrying once", logging.WARNING, attempt=attempt, **info)
+                    continue
+                log_stage("letter.draft0", "first draft FAILED, giving up", logging.ERROR, **info)
+                raise GenerationError(str(exc)) from exc
         last_call_seconds = self.clock() - call_started
         text, paragraphs, repairs = assemble(raw)
         evaluation = self.evaluator.evaluate(text, master, job_description, analysis, index, repairs, gaps)
@@ -154,7 +162,7 @@ class CoverLetterAgent:
                     records.append(IterationRecord(1, "review", evaluation, repairs))
                     candidates.append(_LetterCandidate(1, text, evaluation))
 
-        for n in range(1, (0 if reviewer_mode else self.max_revisions) + 1):
+        for n in range(1, (0 if (reviewer_mode or single) else self.max_revisions) + 1):
             if evaluation.passed:
                 log_stage("letter", "no revision needed", passed_at=n - 1)
                 break

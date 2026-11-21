@@ -9,8 +9,8 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-WORKFLOW_VERSION = "writer-reviewer-v3"
-PROMPT_VERSION = "select-tailor-v3"
+WORKFLOW_VERSION = "single-call-v4"
+PROMPT_VERSION = "tasks-examples-yaml-v4"
 
 # Model names come only from the environment, through ai_services/model_config.py (no defaults).
 # They are read when needed, so a missing variable is reported where it is used.
@@ -27,12 +27,18 @@ GENERATOR_TEMPERATURE = 0.5  # some variation in wording
 EVALUATOR_TEMPERATURE = 0.0  # judging should be repeatable
 
 # Who fixes a draft that the evaluator found fault with:
+#   single_call       (default) ONE model call writes the whole resume, working through the tasks in
+#                     order with the summary last. Code checks ground and score the result; no second model call.
 #   reviewer_revises  the evaluator (a "senior") reviews the writer's draft and rewrites it itself.
 #                     One writer call + one reviewer call per document, always.
 #   writer_revises    the evaluator's feedback goes back to the writer, which revises (up to
 #                     RESUME_MAX_REVISIONS rounds, each re-evaluated).
-REVIEW_MODES = ("reviewer_revises", "writer_revises")
-REVIEW_MODE = os.getenv("RESUME_REVIEW_MODE", "reviewer_revises").strip() or "reviewer_revises"
+REVIEW_MODES = ("single_call", "reviewer_revises", "writer_revises")
+REVIEW_MODE = os.getenv("RESUME_REVIEW_MODE", "single_call").strip() or "single_call"
+
+# single_call only: how many times to repeat the one call when the reply is unusable (not valid JSON,
+# cut off). Rate limits are never retried.
+UNUSABLE_RETRIES = int(os.getenv("RESUME_UNUSABLE_RETRIES", "1"))
 
 # Number of Revise -> Re-evaluate rounds after the first draft (writer_revises mode only).
 MAX_REVISIONS = int(os.getenv("RESUME_MAX_REVISIONS", "2"))
